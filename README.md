@@ -1,2 +1,13 @@
-# L3-INFO-2026-2027-PETERANO-Dylan-DM
-Repository pour notre projet en groupe de Génie Logiciel avec ARAI Hivanui et TEMEHARO Noah.
+<div align="center">
+    <h1>Génie Logiciel - Gestionnaire Stock Library</h1>
+    <p>Gestionnaire de stock de library</p>
+</div>
+
+## Description
+
+Application Web
+
+### Collaborateurs
+
+PETERANO Dylan & ARAI Hivanui & TEMEHARO Noah.
+
