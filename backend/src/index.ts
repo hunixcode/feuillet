@@ -1,20 +1,18 @@
 import "dotenv/config";
+import mongoose from "mongoose";
 import { createApp } from "./app.js";
-import { loadEnv } from "./config/env.js";
-import { connectDb } from "./db/connection.js";
 
-async function main(): Promise<void> {
-  const env = loadEnv();
+const port = Number(process.env.PORT ?? 3000);
+const mongoUri = process.env.MONGODB_URI;
 
-  await connectDb(env.mongoUri);
-  console.log(`MongoDB connecté → ${env.mongoUri}`);
-
-  createApp().listen(env.port, () => {
-    console.log(`API → http://localhost:${env.port}`);
-  });
+if (!mongoUri) {
+  console.error("MONGODB_URI manquante — copier .env.example vers .env");
+  process.exit(1);
 }
 
-main().catch((err) => {
-  console.error("Démarrage impossible :", err);
-  process.exit(1);
+await mongoose.connect(mongoUri);
+console.log("MongoDB connecté");
+
+createApp().listen(port, () => {
+  console.log(`API → http://localhost:${port}`);
 });
