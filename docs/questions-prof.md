@@ -1,4 +1,4 @@
-Questions pour le prof :
+Questions pour le rendez-vous :
 
 Général
 
@@ -38,11 +38,10 @@ Demandes et mises de côté
 
 Réapprovisionnement
 
-19. Le seuil d'alerte de chaque produit est-il fixé à la main ou doit-il être calculé à partir des ventes ?
-20. Faut-il gérer plusieurs fournisseurs ? Un même produit peut-il venir de plusieurs fournisseurs ?
-21. À la réception, que faire si le fournisseur livre plus que commandé, un article non commandé ou des articles abîmés ?
+19. Faut-il gérer plusieurs fournisseurs ? Un même produit peut-il venir de plusieurs fournisseurs ?
+20. À la réception, que faire si le fournisseur livre plus que commandé, un article non commandé ou des articles abîmés ?
 
 Rapports
 
-22. La semaine des rapports va-t-elle du lundi au dimanche ? Faut-il aussi pouvoir choisir n'importe quelle période ?
-23. En plus des ventes, retours et stocks restants, faut-il d'autres informations dans le rapport (chiffre d'affaires, articles les plus vendus) ?
+21. La semaine des rapports va-t-elle du lundi au dimanche ? Faut-il aussi pouvoir choisir n'importe quelle période ?
+22. En plus des ventes, retours et stocks restants, faut-il d'autres informations dans le rapport (chiffre d'affaires, articles les plus vendus) ?
