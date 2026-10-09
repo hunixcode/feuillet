@@ -20,6 +20,7 @@ réapprovisionnement), Projet de Génie Logiciel, à rendre le <b>date à confir
 - Réapprovisionnement : seuils d'alerte, commandes fournisseurs, réceptions partielles
 - Retours de ventes
 - Rapports hebdomadaires avec export CSV
+- Deux espaces dans l'application : client et responsable ; les employés au comptoir n'ont pas de compte ni de session individuelle
 
 ## Build
 - Front : React + Vite + TypeScript
@@ -30,6 +31,7 @@ réapprovisionnement), Projet de Génie Logiciel, à rendre le <b>date à confir
 
 ## Documentation
 - [`docs/rapport.md`](docs/rapport.md) : choix techniques, spécification, périmètre des écrans
+- [`docs/ecrans.md`](docs/ecrans.md) : description des écrans client et responsable
 - [`docs/architecture.md`](docs/architecture.md) : diagrammes UML
 
 ## Conventions Git
