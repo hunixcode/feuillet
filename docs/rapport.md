@@ -20,7 +20,7 @@ Même langage que le front → un seul typage, un seul outillage, partage de cod
 
 ### Interface — **React + Vite**
 
-Composants réutilisables, build instantané, une seule base de code pour les 3 espaces (client / vendeur / responsable). Alternative écartée : Vue.js (écosystème moins large), React Native / Electron (pas de besoin mobile ou desktop).
+Composants réutilisables, build instantané, une seule base de code pour les 2 espaces (client / responsable). Les employés en magasin sont des personnes physiques, sans compte ni session dans l'application ; leurs opérations au comptoir sont saisies dans l'espace du responsable. Alternative écartée : Vue.js (écosystème moins large), React Native / Electron (pas de besoin mobile ou desktop).
 
 ### Base de données — **MongoDB + Mongoose**
 
@@ -64,8 +64,7 @@ Lance les tests et le build TypeScript à chaque PR. Déjà utilisé pour le dé
 | Acteur | Droits |
 |---|---|
 | **Client** | Consulter le catalogue, commander, demander des articles épuisés |
-| **Vendeur** | Enregistrer ventes et retours, consulter le stock |
-| **Responsable de stock** | Gérer le catalogue, approvisionnements, inventaires, rapports |
+| **Responsable de stock** | Gérer le catalogue, les approvisionnements, les inventaires et les rapports ; accéder aux fonctions de vente, de retour et de consultation du stock utilisées au comptoir par les employés, sans compte ni session individuelle pour ceux-ci |
 
 ### Exigences fonctionnelles
 
@@ -117,13 +116,9 @@ Lance les tests et le build TypeScript à chaque PR. Déjà utilisé pour le dé
 - Panier et validation de commande
 - Mes demandes d'articles épuisés (alerte, mise de côté)
 
-### Espace vendeur
-- Enregistrement d'une vente (panier multi-articles)
-- Retrait de stock
-- Retours (recherche de la vente d'origine, enregistrement du retour)
-- Historique des ventes
-
 ### Espace responsable de stock
+- Enregistrement des ventes, retours et consultation de l'historique des ventes au comptoir, sans espace ni session propre aux employés
+- Retrait de stock
 - Gestion du catalogue (création, modification, archivage, suppression)
 - Mouvements de stock (journal avec date, quantité, motif, opérateur)
 - Corrections d'inventaire (quantités avant et après)
@@ -133,7 +128,7 @@ Lance les tests et le build TypeScript à chaque PR. Déjà utilisé pour le dé
 - Rapports (ventes, retours, stock restant, période, filtre catégorie, export CSV)
 
 ### Transverses
-- Connexion et gestion des rôles (client, vendeur, responsable)
+- Connexion et compte client ; espace responsable utilisé pour la gestion et les opérations au comptoir, sans compte ni session employé
 - Notifications (réapprovisionnement d'un article attendu)
 - Paramètres métier (durée des mises de côté, délais de retour, définition de la semaine de rapport)
 
