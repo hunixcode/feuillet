@@ -1,0 +1,93 @@
+:root {
+  --fond: #f8f3ed;
+  --texte: #3b2a21;
+  --texte-doux: #7a6352;
+  --bordure: #e3d5c6;
+  --accent: #8b5a3c;
+  --entete-fond: #4b3226;
+  --entete-texte: #f5ebe0;
+  --entete-lien-actif: #d4a373;
+  --pied-fond: #efe5da;
+
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  color: var(--texte);
+  background: var(--fond);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+a {
+  color: var(--accent);
+}
+
+.client-layout {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+.client-entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 24px;
+  background: var(--entete-fond);
+}
+
+.client-logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--entete-texte);
+  text-decoration: none;
+}
+
+.client-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.client-menu a {
+  color: var(--entete-texte);
+  text-decoration: none;
+}
+
+.client-menu a:hover,
+.client-menu a.active {
+  color: var(--entete-lien-actif);
+}
+
+.client-menu a.active {
+  font-weight: 600;
+}
+
+.client-contenu {
+  flex: 1;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.client-pied {
+  padding: 16px 24px;
+  background: var(--pied-fond);
+  border-top: 1px solid var(--bordure);
+  color: var(--texte-doux);
+  font-size: 0.875rem;
+  text-align: center;
+}
