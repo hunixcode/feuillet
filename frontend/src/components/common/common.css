@@ -1,0 +1,86 @@
+.common-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.common-button--primary {
+  color: #fff;
+  background: var(--accent, #8b5a3c);
+}
+
+.common-button--secondary {
+  color: var(--texte, #3b2a21);
+  background: transparent;
+  border-color: var(--bordure, #e3d5c6);
+}
+
+.common-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.common-button__spinner,
+.common-loader__spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: common-spin 0.7s linear infinite;
+}
+
+.common-input {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.common-input__label {
+  font-weight: 600;
+}
+
+.common-input__field {
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--bordure, #e3d5c6);
+  border-radius: 0.375rem;
+  color: inherit;
+  background: #fff;
+  font: inherit;
+}
+
+.common-input__field[aria-invalid='true'] {
+  border-color: #b42318;
+}
+
+.common-input__error,
+.common-error {
+  margin: 0;
+  color: #b42318;
+}
+
+.common-loader {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@keyframes common-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .common-button__spinner,
+  .common-loader__spinner {
+    animation-duration: 1.5s;
+  }
+}

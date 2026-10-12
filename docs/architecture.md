@@ -14,8 +14,10 @@
 
 ```
 ├── backend/       Express + Mongoose (logique métier, services, API REST)
-├── frontend/      React + Vite (3 espaces : client, vendeur, responsable)
+├── frontend/      React + Vite (2 espaces : client et responsable)
 └── docs/          Rapport et diagrammes
 ```
 
-Règle : la logique métier vit dans `backend/` et reste testable **sans interface**.
+Note de cadrage : le frontend est la base de travail actuelle. Les endpoints backend et le contrat API seront ajoutés ensuite, après validation des écrans et des flux utilisateur. La logique métier est prévue pour vivre dans `backend/` et rester testable **sans interface**, mais cette couche n'est pas encore implémentée dans le dépôt.
+
+Les employés au comptoir n'ont pas de compte ni d'espace applicatif propre ; leurs opérations passent par l'espace responsable.

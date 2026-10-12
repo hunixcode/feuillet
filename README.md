@@ -24,10 +24,17 @@ réapprovisionnement), Projet de Génie Logiciel, à rendre le <b>date à confir
 
 ## Build
 - Front : React + Vite + TypeScript
-- Back : Node.js + Express + TypeScript
+- Back : Node.js + Express + TypeScript (à ajouter après le socle frontend, endpoints non encore définis)
 - Base de données : MongoDB (Mongoose)
 - Tests : Vitest
 - CI : GitHub Actions
+
+Note de cadrage : le frontend est la priorité actuelle du projet. Les écrans, flux utilisateur et validations de l'interface sont conçus et validés avant l'ajout des endpoints backend et des contrats API.
+
+Commandes du frontend (depuis `frontend/`) :
+- `npm test` : exécute les tests Vitest (routes, socle HTTP, composants et formatage)
+- `npm run build` : vérifie TypeScript et construit le frontend
+- `npm run lint` : exécute Oxlint
 
 ## Documentation
 - [`docs/rapport.md`](docs/rapport.md) : choix techniques, spécification, périmètre des écrans
