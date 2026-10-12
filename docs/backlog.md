@@ -22,4 +22,14 @@ Reste à faire :
 À voir avec l'équipe :
 - Qui fait la fiche produit, le panier et la commande ? Le guide frontend et l'emploi du temps ne disent pas la même chose
 - Ajouter le build et les tests du frontend dans la CI (pas encore de GitHub Actions dans le dépôt)
-- docs/architecture.md parle encore de 3 espaces avec le vendeur
+
+11/10/2026 - Front B
+
+Socle commun B0 ajouté sur la branche `feature/front-socle-commun` (changements locaux, non commités) :
+- Types proposés pour les erreurs API, produits, ventes, utilisateurs et demandes ; contrats à valider avec le backend
+- Client HTTP générique dans `frontend/src/services/api.ts` : préfixe `/api`, JSON, token `localStorage` et normalisation des erreurs réseau/HTTP
+- Composants communs `Button`, `Input`, `ErrorMessage` et `Loader`
+- Formatage des montants entiers XPF et des dates en français
+- Tests Vitest du client HTTP, du formatage, des composants communs et des routes
+- Vérifications locales : 78 tests, build et lint passent
+- Le client HTTP n'est relié à aucun formulaire ni page ; aucun endpoint n'est supposé
