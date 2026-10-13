@@ -1,0 +1,166 @@
+@startuml 2_Classes_librairie
+!include style.iuml
+hide circle
+hide empty methods
+skinparam nodesep 55
+skinparam ranksep 60
+
+abstract class Produit <<abstract>> {
+  -reference {unique}
+  -designation
+  -categorie
+  -prix {entier TTC ≥ 0}
+  -tauxTva {%}
+  -archive : boolean
+}
+class Livre {
+  -isbn
+  -auteur
+}
+class NumeroMagazine {
+  -issn
+  -numero
+  -dateParution
+}
+class ArticlePapeterie {
+  -marque
+}
+class Promotion {
+  -remise {%}
+  -debut
+  -fin
+}
+class HistoriquePrix {
+  -date
+  -prix
+}
+class Stock {
+  -quantitePhysique
+  -quantiteMiseDeCote
+  -quantiteDefectueuse
+  -quantiteAcheteeOrigine
+  -seuilAlerte {%}
+  +quantiteVendable() : int
+}
+abstract class Mouvement <<abstract>> {
+  -date
+  -quantite {entier}
+  -motif
+  -operateur : Operateur
+  -type : TypeMouvement
+}
+class Ajustement {
+  -quantiteAvant
+  -quantiteApres
+}
+class Retour {
+  -montant
+  -issue : IssueRetour
+  -revendable : boolean
+}
+class Vente {
+  -date
+  -canal : CanalVente
+  -statut : StatutVente
+  -occasionCadeau [0..1]
+  -emballageCadeau : boolean
+  -adresseLivraison [0..1]
+  -frais
+  -total
+}
+class LigneVente {
+  -quantite {entier > 0}
+  -prixUnitaire {figé}
+  -remise {figée}
+  -tauxTva {figé}
+}
+class Utilisateur {
+  -nom
+  -email {unique}
+  -motDePasseHash
+  -role : Role
+  -typeClient [0..1]
+}
+class Demande {
+  -titre
+  -auteur [0..1]
+  -isbn [0..1]
+  -quantiteSouhaitee
+  -dateDemande
+  -statut : StatutDemande
+  -quantiteMiseDeCote
+  -echeance [0..1]
+}
+class Notification {
+  -type
+  -date
+  -lue : boolean
+}
+class Fournisseur {
+  -nom
+  -contact
+}
+class CommandeFournisseur {
+  -date
+  -quantiteCommandee
+  -dateArriveePrevue
+  -statut : StatutCommande
+}
+class Reception {
+  -date
+  -quantiteRecue
+  -validee : boolean
+}
+class Parametres <<singleton>> {
+  -dureeMiseDeCoteJours = 7
+  -delaiRetourJours = 14
+  -delaiRetourCadeauJours = 30
+  -fraisEmballage
+  -fraisLivraison
+  -seuilAlerteDefaut {%}
+}
+
+Produit <|-down- Livre
+Produit <|-down- NumeroMagazine
+Produit <|-down- ArticlePapeterie
+
+Produit "1" -up- "1" Stock
+Produit "1" *-up- "*" Promotion
+Produit "1" *-up- "1..*" HistoriquePrix
+
+Fournisseur "1" -right- "*" CommandeFournisseur
+CommandeFournisseur "1" *-down- "*" Reception
+Produit "1" -left- "*" CommandeFournisseur
+
+Produit "1" -right- "*" Mouvement
+Mouvement <|-down- Ajustement
+Mouvement <|-down- Retour
+
+Produit "1" -down- "*" LigneVente
+LigneVente "1..*" -right-* "1" Vente
+Retour "*" -down- "1" LigneVente : concerne
+Retour "*" -down- "0..1" Vente : échange
+
+Vente "*" -right- "0..1" Utilisateur : "  client  "
+Demande "*" -down- "1" Utilisateur
+Notification "*" -down- "1" Utilisateur
+Produit "0..1" -- "*" Demande
+Produit "1" -down- "*" Notification
+
+legend bottom left
+  Énumérations : Role = client | responsable · TypeClient = jeunesse | etudiant | adulte | professionnel
+  Operateur = responsable | client | systeme · TypeMouvement = entree | vente | retour | remplacement | ajustement
+  CanalVente = en_ligne | comptoir · StatutVente = a_preparer | remise · OccasionCadeau = noel | anniversaire | fete
+  IssueRetour = remboursement | echange | remplacement · StatutCommande = en_cours | partiellement_recue | recue
+  StatutDemande = en_attente | mise_de_cote | honoree | expiree | annulee
+
+  Contraintes : Vente.client, Demande et Notification ne concernent que des utilisateurs de rôle client.
+  Le produit d'un Retour est celui de sa LigneVente. Chaque ligne de vente et chaque réception validée génère exactement un Mouvement.
+  Un Retour d'issue echange est lié à la vente du nouvel article (la différence de prix y est réglée ou remboursée).
+
+  Historiques, jamais modifiés ni supprimés : Mouvement, Ajustement, Retour, Vente, LigneVente, Reception, HistoriquePrix
+  Stock vendable = quantitePhysique − quantiteMiseDeCote (jamais < 0). Le stock défectueux est compté à part.
+  Une demande a soit un produit, soit un titre (livre hors catalogue). Au plus une promotion active par produit à une date.
+  Σ retours d'une ligne ≤ quantité vendue · Σ réceptions validées ≤ quantité commandée
+endlegend
+@enduml
