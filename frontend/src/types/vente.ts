@@ -1,4 +1,3 @@
-// Contrat d'API proposé, à valider avec le backend.
 import type { ApiError } from './api'
 
 export interface LigneCommande {
@@ -6,20 +5,36 @@ export interface LigneCommande {
   quantite: number
 }
 
-export interface CommandePayload {
-  lignes: LigneCommande[]
+export type OccasionCadeau = 'noel' | 'anniversaire' | 'fete'
+
+export interface OptionsVente {
+  occasionCadeau?: OccasionCadeau
   emballageCadeau?: boolean
-  livraison?: boolean
+  adresseLivraison?: string
 }
 
-export interface Vente {
-  id: string
+export interface CommandePayload extends OptionsVente {
   lignes: LigneCommande[]
-  date: string
 }
 
-export interface VenteResultat {
-  vente: Vente
+export interface LigneVente extends LigneCommande {
+  designation: string
+  prixUnitaire: number
+  remise: number
+  tauxTva: number
+}
+
+export type CanalVente = 'en_ligne' | 'comptoir'
+
+export type StatutVente = 'a_preparer' | 'remise'
+
+export interface Vente extends OptionsVente {
+  id: string
+  date: string
+  canal: CanalVente
+  statut: StatutVente
+  lignes: LigneVente[]
+  frais: number
   total: number
 }
 
