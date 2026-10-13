@@ -56,9 +56,10 @@ Thème café / moka. Les couleurs sont des variables au début de src/index.css 
 
 - Pas de fetch dans les pages ni dans les composants : tout passe par services/
 - Pas de règle métier dans le front, c'est le backend qui calcule
-- Prix en XPF, nombres entiers
+- Prix en XPF, nombres entiers, TTC ; prix remisé et TVA calculés par le backend (RG11)
+- Les écrans suivent `docs/ecrans.md`
 - Pas de commentaires dans le code
-- Une branche par tâche (feature/front-...), une PR relue par l'autre front avant de fusionner dans main
+- Branche personnelle ou par tâche (`feature/front-...`), une PR relue par l'autre front avant de fusionner dans main
 - Les fichiers partagés (router.tsx, types/, services/api.ts, layouts/) se modifient par petite PR
 
 Les fichiers `*.test.ts` et `*.test.tsx` sont exécutés par Vitest en environnement jsdom. Les tests du socle couvrent le client HTTP, le formatage, les composants communs et le routeur.

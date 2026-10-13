@@ -1,0 +1,42 @@
+@startuml Sequence_reception_fournisseur
+!include style.iuml
+hide footbox
+skinparam sequenceMessageAlign left
+
+actor "Responsable" as R
+participant ":EcranCommandes" as E
+participant ":ReapproService" as RS
+participant ":DemandeService" as DS
+participant ":BaseDeDonnees" as DB
+
+R -> E : validerReception(commande, quantite)
+E -> RS : enregistrerReception(r)
+RS -> DB : estDejaValidee(r)
+DB --> RS : dejaValidee
+
+alt dejaValidee
+  RS --> E : erreur RECEPTION_DEJA_VALIDEE
+  E --> R : message d'erreur (aucun mouvement créé)
+else quantite > quantité restant à recevoir
+  RS --> E : erreur QUANTITE_SUPERIEURE_AU_RESTANT
+  E --> R : message d'erreur
+else réception acceptée
+  group transaction
+    RS -> DB : enregistrerEntree(mouvement, operateur = responsable)
+    RS -> DB : majCommande(quantiteRecue, statut)
+    opt commande entièrement reçue
+      RS -> DB : majQuantiteAcheteeOrigine(produit)
+    end
+    RS -> DS : traiterDemandes(produit, quantite)
+    loop pour chaque demande en_attente du produit, par ordre d'arrivée, tant que stock vendable > 0
+      DS -> DB : mettreDeCote(demande, min(quantiteSouhaitee, stock vendable),\n échéance = aujourd'hui + dureeMiseDeCoteJours)
+      opt pas déjà notifié (client, produit, type)
+        DS -> DB : creerNotification(client, produit)
+      end
+    end
+    DS --> RS : demandesTraitees
+  end
+  RS --> E : receptionEnregistree
+  E --> R : confirmation
+end
+@enduml

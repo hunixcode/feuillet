@@ -1,16 +1,32 @@
-// Contrat d'API proposé, à valider avec le backend.
+export type TypeProduit = 'livre' | 'magazine' | 'papeterie'
+
+export type Disponibilite = 'disponible' | 'epuise'
+
+export interface Promotion {
+  remise: number
+  debut: string
+  fin: string
+}
+
 export interface Produit {
   id: string
   reference: string
-  nom: string
+  designation: string
+  type: TypeProduit
   categorie: string
   prix: number
-  promotion?: number
-  disponible: boolean
+  prixApplique: number
+  promotion?: Promotion
+  disponibilite: Disponibilite
 }
 
 export interface ProduitDetail extends Produit {
-  description: string
-  tva: number
-  quantiteVendable?: number
+  tauxTva: number
+  arriveePrevue?: string
+  isbn?: string
+  auteur?: string
+  issn?: string
+  numero?: number
+  dateParution?: string
+  marque?: string
 }

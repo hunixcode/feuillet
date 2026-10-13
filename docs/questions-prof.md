@@ -1,5 +1,7 @@
 Questions pour le rendez-vous :
 
+Les réponses de l'enseignant sont en bas de page. Leur traduction en décisions (et les choix de l'équipe pour les questions restées sans réponse) est dans `rapport.md` §3.
+
 Général
 
 1. Quel niveau de détail attendez-vous dans la spécification : seulement les grandes fonctionnalités ou chaque cas particulier ?
@@ -45,3 +47,25 @@ Rapports
 
 21. La semaine des rapports va-t-elle du lundi au dimanche ? Faut-il aussi pouvoir choisir n'importe quelle période ?
 22. En plus des ventes, retours et stocks restants, faut-il d'autres informations dans le rapport (chiffre d'affaires, articles les plus vendus) ?
+
+---
+
+Réponses de l'enseignant (notes prises pendant le rendez-vous, reformulées)
+
+- Prix en francs XPF ; gérer les promotions et la TVA
+- Historique des prix à garder : afficher une courbe d'évolution du prix
+- Un article dans le panier n'est pas réservé
+- Le client peut commander en ligne, avec option d'emballage et de livraison ; option cadeau pour quelqu'un
+- Le client peut demander un livre non disponible, même absent du catalogue
+- Retour : délai classique d'environ 14 jours, porté à 1 mois pour un cadeau lié à une occasion déjà passée (Noël, fête, anniversaire)
+- Si le plastique de protection n'est pas ouvert, le client peut remplacer (échanger) le livre
+- Produit défectueux : le livre revient et va dans un stock de produits défectueux, le client reçoit un exemplaire neuf ; s'il était emballé, il peut être renvoyé dans un emballage type cellophane
+- Gérer plusieurs fournisseurs
+- On peut consulter le stock, ce qui arrive et quand ça arrive
+- Rapports : alerte sur les articles bas en stock, en pourcentage de la quantité achetée à l'origine, pour les réapprovisionner ; statistiques
+- Employés : pas de statistique sur qui a vendu quoi
+- Pas d'emprunt
+- Meilleures ventes sur la première page à la connexion, selon le type du client
+- Catégories de livres pour orienter le client et lui donner envie d'acheter
+
+Questions sans réponse : 1, 2, 4, 5, 8, 11, 17, 18, 20, 21 (choix de l'équipe dans `rapport.md` §3).
