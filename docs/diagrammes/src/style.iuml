@@ -1,0 +1,63 @@
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 13
+skinparam defaultFontColor #222222
+skinparam dpi 120
+skinparam roundCorner 12
+skinparam packageStyle rectangle
+skinparam ArrowColor #333333
+skinparam ArrowThickness 1.1
+skinparam ClassAttributeIconSize 0
+skinparam LineColor #333333
+
+skinparam rectangle {
+  BorderColor #333333
+  BorderThickness 1.2
+  FontStyle bold
+  FontSize 14
+}
+skinparam usecase {
+  BackgroundColor #FAFAFA
+  BorderColor #333333
+  BorderThickness 1.1
+}
+skinparam actor {
+  BackgroundColor white
+  BorderColor #333333
+}
+skinparam class {
+  BackgroundColor white
+  HeaderBackgroundColor #EFEFEF
+  BorderColor #333333
+  BorderThickness 1.1
+  FontStyle bold
+  StereotypeFontColor #555555
+}
+skinparam legend {
+  BackgroundColor #FAFAFA
+  BorderColor #999999
+  FontSize 12
+}
+skinparam note {
+  BackgroundColor #FAFAFA
+  BorderColor #999999
+}
+skinparam sequence {
+  ParticipantBackgroundColor #EFEFEF
+  ParticipantBorderColor #333333
+  ParticipantFontStyle bold
+  ActorBackgroundColor white
+  ActorBorderColor #333333
+  LifeLineBorderColor #888888
+  GroupBackgroundColor #EFEFEF
+  GroupBorderColor #333333
+  GroupBodyBackgroundColor transparent
+}
+skinparam sequenceMessageAlign left
+
+<style>
+document {
+  Margin 30
+}
+</style>
