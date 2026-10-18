@@ -47,3 +47,24 @@ Reste à faire :
 - Créer le workflow GitHub Actions (tests, lint, build front et back), plus tard
 - Écrire le contrat d'API à partir du modèle de référence avant de brancher les pages
 - Choisir une bibliothèque de graphiques pour la courbe des prix
+
+17/10/2026 - Noah (front A) : connexion à l'API d'authentification (issue #12)
+
+Fait :
+- services/authService.ts : connexion, inscription, utilisateur connecté (/auth/moi) et déconnexion, d'après docs/api.md de la branche feat/auth-backend
+- Le token est gardé dans localStorage sous la clé token, celle que lit déjà services/api.ts
+- Contexte utilisateur (AuthProvider et useAuth) : retrouve la session au chargement si un token existe, supprime le token si le serveur le refuse (NON_AUTHENTIFIE), le garde si le serveur est injoignable
+- ProtectedRoute : renvoie vers /connexion si personne n'est connecté (en gardant la page demandée), et vers l'accueil de son espace si le rôle n'est pas le bon
+- /demandes est réservée au client connecté
+- routes/redirection.ts : où aller après la connexion selon le rôle (client vers /catalogue, responsable vers /responsable)
+- utils/erreurs.ts : message d'erreur à afficher et erreurs par champ (details.champs) pour les formulaires
+- 34 nouveaux tests avec un fetch simulé : 112 tests, le build et le lint passent
+
+Reste à faire :
+- Brancher le formulaire d'Hiva (issue #11) sur useAuth une fois sa PR fusionnée
+- Tester avec le vrai backend quand feat/auth-backend sera fusionnée (npm run dev:local puis npm run seed)
+- Afficher le nom du client et un bouton Déconnexion dans l'en-tête
+
+À voir avec l'équipe :
+- L'inscription demande un type de client (jeunesse, étudiant, adulte, professionnel) : le champ manque dans la maquette
+- La route /responsable n'existe pas encore : le responsable connecté tombe sur la page introuvable en attendant

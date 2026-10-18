@@ -7,6 +7,7 @@ import DemandesPage from '../pages/client/DemandesPage.tsx'
 import InscriptionPage from '../pages/client/InscriptionPage.tsx'
 import PanierPage from '../pages/client/PanierPage.tsx'
 import ProduitPage from '../pages/client/ProduitPage.tsx'
+import ProtectedRoute from './ProtectedRoute.tsx'
 
 export const routes: RouteObject[] = [
   {
@@ -17,7 +18,10 @@ export const routes: RouteObject[] = [
       { path: 'catalogue', element: <CataloguePage /> },
       { path: 'produits/:id', element: <ProduitPage /> },
       { path: 'panier', element: <PanierPage /> },
-      { path: 'demandes', element: <DemandesPage /> },
+      {
+        element: <ProtectedRoute role="client" />,
+        children: [{ path: 'demandes', element: <DemandesPage /> }],
+      },
       { path: 'connexion', element: <ConnexionPage /> },
       { path: 'inscription', element: <InscriptionPage /> },
       { path: '*', element: <NotFoundPage /> },
