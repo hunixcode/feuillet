@@ -1,11 +1,46 @@
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/useAuth'
 
 const liens = [
   { to: '/catalogue', label: 'Catalogue' },
   { to: '/demandes', label: 'Mes demandes' },
   { to: '/panier', label: 'Panier' },
-  { to: '/connexion', label: 'Connexion' },
 ]
+
+function MenuCompte() {
+  const { utilisateur, chargement, deconnexion } = useAuth()
+  const navigate = useNavigate()
+
+  if (chargement) {
+    return null
+  }
+
+  if (!utilisateur) {
+    return (
+      <li>
+        <NavLink to="/connexion">Connexion</NavLink>
+      </li>
+    )
+  }
+
+  function seDeconnecter() {
+    deconnexion()
+    navigate('/catalogue')
+  }
+
+  return (
+    <>
+      <li>
+        <span className="client-menu-nom">{utilisateur.nom}</span>
+      </li>
+      <li>
+        <button type="button" className="client-menu-bouton" onClick={seDeconnecter}>
+          Déconnexion
+        </button>
+      </li>
+    </>
+  )
+}
 
 function ClientLayout() {
   return (
@@ -21,6 +56,7 @@ function ClientLayout() {
                 <NavLink to={lien.to}>{lien.label}</NavLink>
               </li>
             ))}
+            <MenuCompte />
           </ul>
         </nav>
       </header>

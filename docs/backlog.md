@@ -80,9 +80,9 @@ Fait :
 - Les noms de classes ne changent pas (common-..., client-...), les 112 tests, le build et le lint passent
 - Vérifié à l'écran en largeur ordinateur et téléphone (390 px)
 - README du frontend : partie Style mise à jour
+- En-tête connecté : le nom du client et un bouton Déconnexion remplacent le lien Connexion, rien ne s'affiche pendant la vérification de la session, la déconnexion ramène au catalogue (4 tests, 116 au total)
 
 Reste à faire :
-- Afficher le nom du client et un bouton Déconnexion dans l'en-tête
 - Ajouter Notifications au menu quand la page existera
 
 À voir avec l'équipe :
