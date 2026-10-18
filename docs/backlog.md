@@ -61,10 +61,29 @@ Fait :
 - 34 nouveaux tests avec un fetch simulé : 112 tests, le build et le lint passent
 
 Reste à faire :
-- Brancher le formulaire d'Hiva (issue #11) sur useAuth une fois sa PR fusionnée
+- Brancher le formulaire de Hivanui (issue #11) sur useAuth une fois sa PR fusionnée
 - Tester avec le vrai backend quand feat/auth-backend sera fusionnée (npm run dev:local puis npm run seed)
 - Afficher le nom du client et un bouton Déconnexion dans l'en-tête
 
 À voir avec l'équipe :
 - L'inscription demande un type de client (jeunesse, étudiant, adulte, professionnel) : le champ manque dans la maquette
 - La route /responsable n'existe pas encore : le responsable connecté tombe sur la page introuvable en attendant
+
+17/10/2026 - Noah (front A) : style de la maquette V2
+
+Fait :
+- index.css : les variables de la maquette V2 remplacent le thème café (--encre, --gris, --ligne, --laiton, --laiton-fonce, --manque, --marge...), avec les mêmes noms que dans la maquette
+- Polices Geist et Archivo chargées dans index.html, titre de l'onglet « Feuillet »
+- ClientLayout : en-tête noir avec le logo Feuillet, menu avec le lien actif souligné en laiton, pied de page de la maquette
+- Composants communs : boutons en pilule (noir ou contour), champs arrondis avec le focus laiton, erreur dans un bandeau rouge pâle, chargement en laiton
+- Page introuvable reprise de la maquette (grand 404 en Archivo)
+- Les noms de classes ne changent pas (common-..., client-...), les 112 tests, le build et le lint passent
+- Vérifié à l'écran en largeur ordinateur et téléphone (390 px)
+- README du frontend : partie Style mise à jour
+
+Reste à faire :
+- Afficher le nom du client et un bouton Déconnexion dans l'en-tête
+- Ajouter Notifications au menu quand la page existera
+
+À voir avec l'équipe :
+- Les anciennes variables (--fond, --texte, --accent, --bordure, --entete-...) n'existent plus : utiliser les nouvelles dans les pages

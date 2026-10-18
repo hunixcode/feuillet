@@ -1,18 +1,29 @@
 :root {
-  --fond: #f8f3ed;
-  --texte: #3b2a21;
-  --texte-doux: #7a6352;
-  --bordure: #e3d5c6;
-  --accent: #8b5a3c;
-  --entete-fond: #4b3226;
-  --entete-texte: #f5ebe0;
-  --entete-lien-actif: #d4a373;
-  --pied-fond: #efe5da;
+  --sans: 'Geist', system-ui, -apple-system, sans-serif;
+  --etroit: 'Archivo', 'Arial Narrow', sans-serif;
 
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.5;
-  color: var(--texte);
-  background: var(--fond);
+  --noir: #0a0a0b;
+  --nuit: #10131a;
+  --blanc: #ffffff;
+  --gris-fond: #f5f5f7;
+  --gris-fond-2: #ebebef;
+  --encre: #1d1d1f;
+  --gris: #6e6e73;
+  --gris-clair: #a1a1a6;
+  --ligne: #d2d2d7;
+  --ligne-douce: #e5e5ea;
+  --laiton: #c9a86a;
+  --laiton-fonce: #876a33;
+  --laiton-pale: #f3eee4;
+  --ok: #1f7a3a;
+  --bas: #9a5b00;
+  --manque: #c0362c;
+  --manque-pale: #fdf0ee;
+
+  --rayon-pilule: 980px;
+  --rayon-carte: 18px;
+  --rayon-champ: 12px;
+  --marge: clamp(20px, 5vw, 64px);
 }
 
 *,
@@ -23,71 +34,180 @@
 
 body {
   margin: 0;
+  background: var(--blanc);
+  color: var(--encre);
+  font-family: var(--sans);
+  font-size: 1.0625rem;
+  line-height: 1.47;
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+
+p,
+ul,
+ol,
+dl,
+dd,
+figure,
+blockquote {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
 }
 
 a {
-  color: var(--accent);
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--laiton-fonce);
+  outline-offset: 3px;
+}
+
+.visuellement-cache {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .client-layout {
-  min-height: 100svh;
   display: flex;
   flex-direction: column;
+  min-height: 100svh;
 }
 
 .client-entete {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px 24px;
-  background: var(--entete-fond);
+  gap: 8px 32px;
+  min-height: 52px;
+  padding: 0 var(--marge);
+  background: rgba(10, 10, 11, 0.95);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  color: var(--gris-fond);
+}
+
+.client-entete :focus-visible {
+  outline-color: var(--laiton);
 }
 
 .client-logo {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--entete-texte);
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
   text-decoration: none;
+}
+
+.client-logo::after {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 3px;
+  border-radius: 50%;
+  background: var(--laiton);
 }
 
 .client-menu {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: 4px 28px;
+  font-size: 0.8125rem;
 }
 
 .client-menu a {
-  color: var(--entete-texte);
+  display: inline-block;
+  padding: 6px 0;
+  color: rgba(245, 245, 247, 0.75);
   text-decoration: none;
 }
 
 .client-menu a:hover,
-.client-menu a.active {
-  color: var(--entete-lien-actif);
+.client-menu a[aria-current='page'] {
+  color: var(--blanc);
 }
 
-.client-menu a.active {
-  font-weight: 600;
+.client-menu a[aria-current='page'] {
+  box-shadow: inset 0 -1px 0 var(--laiton);
 }
 
 .client-contenu {
   flex: 1;
   width: 100%;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 24px;
+  padding: 56px var(--marge) 120px;
 }
 
 .client-pied {
-  padding: 16px 24px;
-  background: var(--pied-fond);
-  border-top: 1px solid var(--bordure);
-  color: var(--texte-doux);
-  font-size: 0.875rem;
-  text-align: center;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 12px 40px;
+  padding: 28px var(--marge) 36px;
+  border-top: 1px solid var(--ligne-douce);
+  background: var(--gris-fond);
+  color: var(--gris);
+  font-size: 0.8125rem;
+}
+
+.client-pied .client-logo {
+  color: var(--encre);
+  font-size: 1rem;
+}
+
+.client-pied-liens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+}
+
+.client-pied-liens a {
+  text-decoration: none;
+}
+
+.client-pied-liens a:hover {
+  color: var(--encre);
+  text-decoration: underline;
+}
+
+@media (max-width: 880px) {
+  .client-pied {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .client-entete {
+    padding-block: 10px;
+  }
 }

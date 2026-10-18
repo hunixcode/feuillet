@@ -50,7 +50,7 @@ Pour l'espace responsable : créer layouts/ResponsableLayout.tsx sur le modèle 
 
 ## Style
 
-Thème café / moka. Les couleurs sont des variables au début de src/index.css (--fond, --texte, --accent, --entete-fond...). On utilise ces variables plutôt que d'écrire des couleurs en dur, comme ça le thème reste le même partout.
+Le style suit la maquette V2 : noir, blanc et laiton, polices Geist (texte) et Archivo étroite (gros chiffres). Les couleurs, les arrondis et la marge sont des variables au début de src/index.css (--encre, --gris, --ligne, --laiton, --laiton-fonce, --manque, --marge...), avec les mêmes noms que dans la maquette : on peut reprendre le CSS d'une page de la maquette presque tel quel. On utilise ces variables plutôt que d'écrire des couleurs en dur, comme ça le thème reste le même partout.
 
 ## Règles de l'équipe
 
