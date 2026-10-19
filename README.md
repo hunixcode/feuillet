@@ -13,7 +13,7 @@ réapprovisionnement), Projet de Génie Logiciel, à rendre le <b>date à confir
 
 ## Fonctionnalités prévues
 - Catalogue (création, modification, archivage, recherche, filtres par type et catégorie), prix TTC avec TVA, promotions et courbe d'évolution des prix
-- Accueil avec meilleures ventes selon le type de client et catégories de livres
+- Accueil avec meilleures ventes et catégories de livres
 - Panier et validation de vente — tout ou rien, disponibilités revérifiées ; options cadeau, emballage et livraison
 - Mouvements de stock, corrections d'inventaire et stock défectueux
 - Disponibilité client : stock vendable, arrivages prévus, mises de côté et leurs échéances

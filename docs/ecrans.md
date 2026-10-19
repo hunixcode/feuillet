@@ -20,7 +20,7 @@ Le responsable se connecte avec le même formulaire ; il est alors dirigé vers 
 C'est la première page de l'application.
 
 - **But :** aider le client à découvrir les articles et à trouver ce qu'il cherche.
-- **Contenu :** meilleures ventes adaptées au type du client connecté (globales si non connecté, RG14) ; catégories de livres pour orienter le client ; liste des articles avec désignation, catégorie, prix, promotion éventuelle et disponibilité ; recherche et filtres par type et par catégorie.
+- **Contenu :** meilleures ventes de la librairie (RG14) ; catégories de livres pour orienter le client ; liste des articles avec désignation, catégorie, prix, promotion éventuelle et disponibilité ; recherche et filtres par type et par catégorie.
 - **Actions :** parcourir une catégorie, rechercher ou filtrer, ouvrir une fiche produit.
 - **Affichage :** prix en XPF, prix barré et prix remisé en cas de promotion, « disponible » ou « épuisé », message si aucun article ne correspond. Les articles archivés ne sont pas affichés.
 

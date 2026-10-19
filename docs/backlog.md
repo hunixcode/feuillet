@@ -64,3 +64,10 @@ Reste à faire :
 - Brancher les pages Connexion et Inscription du front sur ces routes (A1), avec un contexte utilisateur
 - Faire valider par l'équipe la règle de mot de passe (8 caractères minimum, décision technique) et la durée de session (8 h)
 - Compléter le seed (catégories, produits, ventes de démonstration) pour EQ03
+
+19/10/2026 - Retrait du type de client
+
+- Le type de client est retiré du code (modèle, inscription, schéma, types front) et de la documentation
+- EX09 : inscription sans type de client ; EX10 et RG14 : meilleures ventes communes à tous les visiteurs sur 30 jours
+- Décision d'équipe ajoutée dans `rapport.md` §3 : écart assumé à la réponse de l'enseignant (meilleures ventes selon le type du client), consignée telle quelle dans `questions-prof.md`
+- L'entrée du 15/10 qui mentionne l'inscription « avec type de client » n'est plus à jour

@@ -68,7 +68,6 @@ Lancera les tests, le lint et le build TypeScript du front et du back à chaque 
 | **Vente** | Transaction validée : lignes à prix figé, options, total, canal (`en_ligne` ou `comptoir`), client facultatif au comptoir |
 | **Commande (client)** | Vente passée en ligne depuis le panier ; retrait en magasin ou livraison |
 | **Option cadeau** | Vente marquée comme cadeau pour une occasion (Noël, anniversaire, fête) ; allonge le délai de retour, emballage cadeau possible |
-| **Type de client** | Profil choisi à l'inscription, sert à personnaliser les meilleures ventes |
 | **Demande** | Requête d'un client sur un livre indisponible : produit épuisé du catalogue ou livre absent du catalogue |
 | **Fournisseur** | Entreprise auprès de laquelle la librairie commande ; il y en a plusieurs |
 | **Réapprovisionnement** | Commande fournisseur et ses réceptions (éventuellement partielles) |
@@ -94,8 +93,8 @@ Aucune statistique par employé (consigne de l'enseignant). Les traitements auto
 | **EX06** | Gérer le réapprovisionnement | Haute | Plusieurs fournisseurs. Alerte quand le stock passe sous un pourcentage de la quantité achetée à l'origine. Commandes fournisseur avec date d'arrivée prévue, réceptions (y compris partielles) |
 | **EX07** | Traiter les retours | Haute | Retrouver la vente, vérifier le délai (14 jours, 1 mois pour un cadeau) et la quantité retournable. Issue : remboursement, échange (plastique intact) ou remplacement d'un défectueux par un neuf |
 | **EX08** | Produire des rapports | Moyenne | Ventes, retours, net, stock restant, pourcentage vendu de la quantité achetée, statistiques globales. Semaine ou période libre, filtre par catégorie, export CSV |
-| **EX09** | Authentifier les utilisateurs | Haute | Inscription (avec type de client) et connexion client ; connexion du responsable (compte créé par le seed). Chaque espace n'est accessible qu'au bon rôle |
-| **EX10** | Mettre en avant les meilleures ventes | Moyenne | Sur la première page : meilleures ventes adaptées au type du client connecté, accès par catégorie |
+| **EX09** | Authentifier les utilisateurs | Haute | Inscription et connexion client ; connexion du responsable (compte créé par le seed). Chaque espace n'est accessible qu'au bon rôle |
+| **EX10** | Mettre en avant les meilleures ventes | Moyenne | Sur la première page : meilleures ventes de la librairie (RG14), accès par catégorie |
 | **EX11** | Suivre l'évolution des prix | Basse | Chaque changement de prix est historisé et affiché en courbe dans l'espace responsable |
 
 Hors périmètre : emprunt de livres (consigne de l'enseignant), paiement réel, suivi de livraison.
@@ -117,7 +116,7 @@ Hors périmètre : emprunt de livres (consigne de l'enseignant), paiement réel,
 | **RG11** | Prix appliqué = arrondi(prix TTC × (100 − remise) / 100), remise de la promotion active à la date de vente (au plus une par produit et par date). TVA incluse : montant de TVA = arrondi(prix appliqué × taux / (100 + taux)). Arrondi à l'unité la plus proche |
 | **RG12** | Issue d'un retour : **remboursement** (prix figé × quantité) ; **échange** si le plastique de protection est intact (l'article revient en stock, un autre est vendu, la différence est réglée ou remboursée) ; **remplacement** si l'article est défectueux (il passe en stock défectueux, un exemplaire neuf identique sort du stock ; sans exemplaire disponible → remboursement). Un article revendable retourné revient en stock physique, éventuellement remis sous cellophane |
 | **RG13** | Options de vente : emballage cadeau et livraison ont chacun des frais fixes (paramètres). La livraison exige une adresse. Les frais s'ajoutent au total et ne sont pas remboursés lors d'un retour |
-| **RG14** | Meilleures ventes : les 10 produits les plus vendus (quantités nettes des retours) sur les 30 derniers jours auprès des clients du même type ; complétées par les meilleures ventes globales s'il y en a moins de 10. Visiteur non connecté : meilleures ventes globales |
+| **RG14** | Meilleures ventes : les 10 produits les plus vendus (quantités nettes des retours) sur les 30 derniers jours, tous clients confondus ; la même liste pour tous, connecté ou non |
 | **RG15** | La création d'un produit puis chaque changement de prix catalogue ajoutent une entrée datée à l'historique des prix (au moins une entrée par produit) ; cet historique n'est jamais modifié |
 
 ### Statuts
@@ -177,6 +176,7 @@ Source **Prof** : réponse de l'enseignant (notes dans `questions-prof.md`). Sou
 | 22 | Ventes, retours, net, stock restant, pourcentage vendu de la quantité achetée, statistiques globales, aucune par employé | Prof |
 | — | Frais d'emballage cadeau et de livraison : montants fixes paramétrables | Équipe |
 | — | Pas d'emprunt de livres | Prof |
+| — | Pas de type de client : les meilleures ventes sont les mêmes pour tous (RG14). Écart assumé à la demande de l'enseignant (meilleures ventes selon le type du client) | Équipe |
 
 ---
 
