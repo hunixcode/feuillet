@@ -175,7 +175,6 @@ Source **Prof** : réponse de l'enseignant (notes dans `questions-prof.md`). Sou
 | 20 | Livraison supérieure au restant : refusée ; articles abîmés à la réception : non comptés comme reçus | Équipe |
 | 21 | Semaine du lundi 00:00 au dimanche 23:59 (heure de Tahiti) ; période libre possible | Équipe |
 | 22 | Ventes, retours, net, stock restant, pourcentage vendu de la quantité achetée, statistiques globales, aucune par employé | Prof |
-| — | Types de client : `jeunesse`, `etudiant`, `adulte`, `professionnel` | Équipe |
 | — | Frais d'emballage cadeau et de livraison : montants fixes paramétrables | Équipe |
 | — | Pas d'emprunt de livres | Prof |
 

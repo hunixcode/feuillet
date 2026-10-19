@@ -47,3 +47,20 @@ Reste à faire :
 - Créer le workflow GitHub Actions (tests, lint, build front et back), plus tard
 - Écrire le contrat d'API à partir du modèle de référence avant de brancher les pages
 - Choisir une bibliothèque de graphiques pour la courbe des prix
+
+15/10/2026 - Back : authentification (EX09)
+
+Fait :
+- `POST /api/auth/inscription` (compte client avec type de client), `POST /api/auth/connexion` (client et responsable), `GET /api/auth/moi` (session)
+- `AuthService` : validation des champs avec messages par champ, e-mail normalisé et unique, mot de passe haché (bcrypt, 8 caractères minimum), token JWT HS256 de 8 h, même erreur pour e-mail inconnu et mauvais mot de passe
+- Middlewares `authentifier` et `exigerRole` pour réserver chaque espace au bon rôle
+- Format d'erreur commun `{ code, message, details? }` aligné sur `ApiError` du front ; contrat dans `docs/api.md`
+- Horloge injectable (premier usage : expiration des tokens) ; repository utilisateur Mongoose (+ version en mémoire réservée aux tests)
+- `npm run seed` crée ou réinitialise le compte responsable (variables `RESPONSABLE_EMAIL` et `RESPONSABLE_MOT_DE_PASSE`)
+- `GET /api/health` vérifie aussi MongoDB (200 si la base répond, 503 sinon, délai de 2 s)
+- Vitest + supertest + mongodb-memory-server installés : 74 tests (service, API, middleware, persistance, état de l'API) ; API lancée et vérifiée de bout en bout
+
+Reste à faire :
+- Brancher les pages Connexion et Inscription du front sur ces routes (A1), avec un contexte utilisateur
+- Faire valider par l'équipe la règle de mot de passe (8 caractères minimum, décision technique) et la durée de session (8 h)
+- Compléter le seed (catégories, produits, ventes de démonstration) pour EQ03
