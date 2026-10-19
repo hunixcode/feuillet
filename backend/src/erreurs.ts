@@ -16,13 +16,32 @@ export const routeIntrouvable: RequestHandler = (req, _res, next) => {
   next(new ErreurApi(404, "INTROUVABLE", `Route introuvable : ${req.method} ${req.path}`));
 };
 
-function estErreurDeLectureJson(erreur: unknown): boolean {
-  return (
-    typeof erreur === "object" &&
-    erreur !== null &&
-    (erreur as { type?: unknown }).type === "entity.parse.failed"
-  );
+function lireTypeErreur(erreur: unknown): unknown {
+  return typeof erreur === "object" && erreur !== null ? (erreur as { type?: unknown }).type : undefined;
 }
+
+const ERREURS_CORPS: Record<string, { statut: number; code: string; message: string }> = {
+  "entity.parse.failed": {
+    statut: 400,
+    code: "JSON_INVALIDE",
+    message: "Le corps de la requête n'est pas un JSON valide.",
+  },
+  "entity.too.large": {
+    statut: 413,
+    code: "CORPS_TROP_VOLUMINEUX",
+    message: "Le corps de la requête est trop volumineux.",
+  },
+  "charset.unsupported": {
+    statut: 415,
+    code: "ENCODAGE_NON_SUPPORTE",
+    message: "L'encodage du corps de la requête n'est pas supporté.",
+  },
+  "encoding.unsupported": {
+    statut: 415,
+    code: "ENCODAGE_NON_SUPPORTE",
+    message: "L'encodage du corps de la requête n'est pas supporté.",
+  },
+};
 
 export const gererErreurs: ErrorRequestHandler = (erreur, _req, res, _next) => {
   if (erreur instanceof ErreurApi) {
@@ -34,11 +53,9 @@ export const gererErreurs: ErrorRequestHandler = (erreur, _req, res, _next) => {
     return;
   }
 
-  if (estErreurDeLectureJson(erreur)) {
-    res.status(400).json({
-      code: "JSON_INVALIDE",
-      message: "Le corps de la requête n'est pas un JSON valide.",
-    });
+  const erreurCorps = ERREURS_CORPS[String(lireTypeErreur(erreur))];
+  if (erreurCorps) {
+    res.status(erreurCorps.statut).json({ code: erreurCorps.code, message: erreurCorps.message });
     return;
   }
 

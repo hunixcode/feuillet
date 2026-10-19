@@ -41,7 +41,6 @@ Commandes du frontend (depuis `frontend/`) :
 
 Commandes du backend (depuis `backend/`, après `cp .env.example .env` et renseignement de `MONGODB_URI`, `JWT_SECRET` et du compte responsable) :
 - `npm run dev` : lance l'API sur le port 3000 (le proxy Vite pointe dessus)
-- `npm run dev:local` : lance l'API sur une base MongoDB en mémoire (compte responsable créé au démarrage, données perdues à l'arrêt) ; utile quand le réseau bloque le port 27017 d'Atlas (wifi d'université, par exemple)
 - `npm run seed` : crée ou réinitialise le compte responsable
 - `npm test` : exécute les tests Vitest (services, API avec supertest, persistance avec une base MongoDB en mémoire)
 - `npm run typecheck` / `npm run build` : vérifie TypeScript / compile dans `dist/`

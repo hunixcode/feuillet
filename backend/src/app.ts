@@ -12,6 +12,7 @@ export interface Dependances {
 export function createApp({ authService, verifierBase }: Dependances) {
   const app = express();
 
+  app.disable("x-powered-by");
   app.use(express.json());
 
   app.use("/api/health", routesSante(verifierBase));

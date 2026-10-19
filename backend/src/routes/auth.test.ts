@@ -71,6 +71,15 @@ describe("API d'authentification", () => {
       expect(reponse.body).toEqual({ code: "JSON_INVALIDE", message: expect.any(String) });
     });
 
+    it("répond 413 CORPS_TROP_VOLUMINEUX sur un corps trop gros", async () => {
+      const reponse = await request(app)
+        .post("/api/auth/inscription")
+        .send({ ...inscriptionValide, nom: "a".repeat(200_000) });
+
+      expect(reponse.status).toBe(413);
+      expect(reponse.body).toEqual({ code: "CORPS_TROP_VOLUMINEUX", message: expect.any(String) });
+    });
+
     it("répond 400 VALIDATION sans corps", async () => {
       const reponse = await request(app).post("/api/auth/inscription");
 

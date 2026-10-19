@@ -6,7 +6,6 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "dev:local": "tsx scripts/dev-local.ts",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
     "seed": "tsx src/seed.ts",

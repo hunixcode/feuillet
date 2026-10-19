@@ -55,10 +55,9 @@ Fait :
 - `AuthService` : validation des champs avec messages par champ, e-mail normalisé et unique, mot de passe haché (bcrypt, 8 caractères minimum), token JWT HS256 de 8 h, même erreur pour e-mail inconnu et mauvais mot de passe
 - Middlewares `authentifier` et `exigerRole` pour réserver chaque espace au bon rôle
 - Format d'erreur commun `{ code, message, details? }` aligné sur `ApiError` du front ; contrat dans `docs/api.md`
-- Horloge injectable (premier usage : expiration des tokens) ; repository utilisateur Mongoose + en mémoire
+- Horloge injectable (premier usage : expiration des tokens) ; repository utilisateur Mongoose (+ version en mémoire réservée aux tests)
 - `npm run seed` crée ou réinitialise le compte responsable (variables `RESPONSABLE_EMAIL` et `RESPONSABLE_MOT_DE_PASSE`)
 - `GET /api/health` vérifie aussi MongoDB (200 si la base répond, 503 sinon, délai de 2 s)
-- `npm run dev:local` : API sur une base MongoDB en mémoire, quand le réseau bloque le port 27017 d'Atlas
 - Vitest + supertest + mongodb-memory-server installés : 74 tests (service, API, middleware, persistance, état de l'API) ; API lancée et vérifiée de bout en bout
 
 Reste à faire :
