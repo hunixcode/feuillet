@@ -8,7 +8,6 @@ const inscriptionValide = {
   nom: "Teva Brothers",
   email: "teva@example.pf",
   motDePasse: "motdepasse123",
-  typeClient: "adulte",
 };
 
 describe("API d'authentification", () => {
@@ -33,7 +32,6 @@ describe("API d'authentification", () => {
           nom: "Teva Brothers",
           email: "teva@example.pf",
           role: "client",
-          typeClient: "adulte",
         },
         token: expect.any(String),
       });

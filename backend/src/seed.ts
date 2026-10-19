@@ -17,7 +17,6 @@ await UtilisateurModel.findOneAndUpdate(
     email,
     motDePasseHash: await hasherMotDePasse(motDePasse),
     role: "responsable",
-    $unset: { typeClient: 1 },
   },
   { upsert: true },
 );

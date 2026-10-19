@@ -19,7 +19,6 @@ describe("exigerRole", () => {
       nom: "Client",
       email: "client@example.pf",
       motDePasse: "motdepasse123",
-      typeClient: "jeunesse",
     }));
     await repository.creer({
       nom: "Responsable",

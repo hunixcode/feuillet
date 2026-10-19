@@ -1,7 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import {
   ROLES,
-  TYPES_CLIENT,
   type NouvelUtilisateur,
   type Utilisateur,
 } from "../modeles/utilisateur.js";
@@ -13,7 +12,6 @@ const utilisateurSchema = new Schema<NouvelUtilisateur>(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     motDePasseHash: { type: String, required: true },
     role: { type: String, enum: ROLES, required: true },
-    typeClient: { type: String, enum: TYPES_CLIENT },
   },
   { timestamps: true },
 );
@@ -29,7 +27,6 @@ function versUtilisateur(document: DocumentUtilisateur): Utilisateur {
     email: document.email,
     motDePasseHash: document.motDePasseHash,
     role: document.role,
-    ...(document.typeClient ? { typeClient: document.typeClient } : {}),
   };
 }
 

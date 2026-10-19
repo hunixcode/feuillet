@@ -9,7 +9,6 @@ const client = {
   email: "hina@example.pf",
   motDePasseHash: "hash",
   role: "client" as const,
-  typeClient: "jeunesse" as const,
 };
 
 describe("MongooseUtilisateurRepository", () => {
@@ -39,13 +38,6 @@ describe("MongooseUtilisateurRepository", () => {
     await expect(repository.trouverParId(cree.id)).resolves.toEqual(cree);
   });
 
-  it("n'ajoute pas de typeClient à un responsable", async () => {
-    const { typeClient: _, ...sansType } = client;
-    const cree = await repository.creer({ ...sansType, role: "responsable" });
-
-    expect(cree).not.toHaveProperty("typeClient");
-  });
-
   it("garantit l'unicité de l'e-mail par un index", async () => {
     await repository.creer(client);
 
@@ -63,10 +55,7 @@ describe("MongooseUtilisateurRepository", () => {
     await expect(repository.trouverParId("pas-un-id")).resolves.toBeNull();
   });
 
-  it("refuse un rôle ou un type de client hors énumération", async () => {
+  it("refuse un rôle hors énumération", async () => {
     await expect(repository.creer({ ...client, role: "employe" as never })).rejects.toThrow();
-    await expect(
-      repository.creer({ ...client, typeClient: "retraite" as never }),
-    ).rejects.toThrow();
   });
 });

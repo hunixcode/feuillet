@@ -3,10 +3,8 @@ import jwt from "jsonwebtoken";
 import { ErreurApi } from "../erreurs.js";
 import { horlogeSysteme, type Horloge } from "../horloge.js";
 import {
-  TYPES_CLIENT,
   versUtilisateurPublic,
   type AuthResultat,
-  type TypeClient,
   type UtilisateurPublic,
 } from "../modeles/utilisateur.js";
 import {
@@ -37,7 +35,6 @@ interface DonneesInscription {
   nom: string;
   email: string;
   motDePasse: string;
-  typeClient: TypeClient;
 }
 
 interface DonneesConnexion {
@@ -86,16 +83,11 @@ function validerInscription(corps: unknown): DonneesInscription {
     champs.motDePasse = "Le mot de passe est trop long.";
   }
 
-  const typeClient = donnees.typeClient;
-  if (!TYPES_CLIENT.includes(typeClient as TypeClient)) {
-    champs.typeClient = `Le type de client doit être l'un de : ${TYPES_CLIENT.join(", ")}.`;
-  }
-
   if (Object.keys(champs).length > 0) {
     throw erreurValidation(champs);
   }
 
-  return { nom, email, motDePasse, typeClient: typeClient as TypeClient };
+  return { nom, email, motDePasse };
 }
 
 function validerConnexion(corps: unknown): DonneesConnexion {
@@ -148,7 +140,7 @@ export class AuthService {
   }
 
   async inscrire(corps: unknown): Promise<AuthResultat> {
-    const { nom, email, motDePasse, typeClient } = validerInscription(corps);
+    const { nom, email, motDePasse } = validerInscription(corps);
     const motDePasseHash = await hasherMotDePasse(motDePasse, this.coutHash);
 
     try {
@@ -157,7 +149,6 @@ export class AuthService {
         email,
         motDePasseHash,
         role: "client",
-        typeClient,
       });
       const publique = versUtilisateurPublic(utilisateur);
       return { utilisateur: publique, token: this.signerToken(publique) };

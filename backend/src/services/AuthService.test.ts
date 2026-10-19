@@ -12,7 +12,6 @@ const inscriptionValide = {
   nom: "Marie Tetuanui",
   email: "marie@example.pf",
   motDePasse: "motdepasse123",
-  typeClient: "etudiant",
 };
 
 function horlogeA(date: string) {
@@ -60,7 +59,6 @@ describe("AuthService", () => {
         nom: "Marie Tetuanui",
         email: "marie@example.pf",
         role: "client",
-        typeClient: "etudiant",
       });
       expect(resultat.utilisateur).not.toHaveProperty("motDePasseHash");
       expect(typeof resultat.token).toBe("string");
@@ -91,14 +89,6 @@ describe("AuthService", () => {
       expect(utilisateur.role).toBe("client");
     });
 
-    it.each(["jeunesse", "etudiant", "adulte", "professionnel"])(
-      "accepte le type de client %s",
-      async (typeClient) => {
-        const { utilisateur } = await auth.inscrire({ ...inscriptionValide, typeClient });
-        expect(utilisateur.typeClient).toBe(typeClient);
-      },
-    );
-
     it("refuse une adresse e-mail déjà utilisée, sans tenir compte de la casse", async () => {
       await auth.inscrire(inscriptionValide);
 
@@ -120,7 +110,6 @@ describe("AuthService", () => {
         "email",
         "motDePasse",
         "nom",
-        "typeClient",
       ]);
     });
 
@@ -143,8 +132,6 @@ describe("AuthService", () => {
       ["mot de passe trop court", { motDePasse: "1234567" }, "motDePasse"],
       ["mot de passe trop long", { motDePasse: "é".repeat(37) }, "motDePasse"],
       ["mot de passe non textuel", { motDePasse: 12345678 }, "motDePasse"],
-      ["type de client inconnu", { typeClient: "retraite" }, "typeClient"],
-      ["type de client absent", { typeClient: undefined }, "typeClient"],
     ])("refuse un %s", async (_libelle, modification, champ) => {
       const erreur = await attraper(auth.inscrire({ ...inscriptionValide, ...modification }));
 
@@ -206,7 +193,6 @@ describe("AuthService", () => {
       });
 
       expect(utilisateur.role).toBe("responsable");
-      expect(utilisateur).not.toHaveProperty("typeClient");
     });
 
     it("refuse un mauvais mot de passe", async () => {

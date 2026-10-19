@@ -49,13 +49,12 @@ Crée un compte **client** (le rôle envoyé est ignoré ; le compte responsable
 | `nom` | Obligatoire, 100 caractères au plus (espaces de bord retirés) |
 | `email` | Obligatoire, format e-mail, unique, enregistré en minuscules |
 | `motDePasse` | 8 caractères au moins, 72 octets au plus ; stocké haché (bcrypt) |
-| `typeClient` | `jeunesse`, `etudiant`, `adulte` ou `professionnel` |
 
 Réponse `201` : `AuthResultat`
 
 ```json
 {
-  "utilisateur": { "id": "…", "nom": "Marie", "email": "marie@example.pf", "role": "client", "typeClient": "etudiant" },
+  "utilisateur": { "id": "…", "nom": "Marie", "email": "marie@example.pf", "role": "client" },
   "token": "eyJhbGciOiJIUzI1NiIs…"
 }
 ```
@@ -66,7 +65,7 @@ Erreurs : `400 VALIDATION`, `409 EMAIL_DEJA_UTILISE`.
 
 Corps : `{ "email": "…", "motDePasse": "…" }`. Même route pour le client et le responsable ; le front dirige vers l'espace correspondant à `utilisateur.role`.
 
-Réponse `200` : `AuthResultat` (sans `typeClient` pour le responsable). Erreurs : `400 VALIDATION`, `401 IDENTIFIANTS_INVALIDES`.
+Réponse `200` : `AuthResultat`. Erreurs : `400 VALIDATION`, `401 IDENTIFIANTS_INVALIDES`.
 
 ### `GET /api/auth/moi`
 
