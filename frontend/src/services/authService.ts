@@ -1,4 +1,4 @@
-import type { AuthResultat, TypeClient, Utilisateur } from '../types/utilisateur'
+import type { AuthResultat, Utilisateur } from '../types/utilisateur'
 import { get, post } from './api'
 
 export interface DonneesConnexion {
@@ -10,7 +10,6 @@ export interface DonneesInscription {
   nom: string
   email: string
   motDePasse: string
-  typeClient: TypeClient
 }
 
 const CLE_TOKEN = 'token'

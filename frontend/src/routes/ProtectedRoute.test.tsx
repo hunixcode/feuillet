@@ -10,7 +10,6 @@ const client: Utilisateur = {
   nom: 'Tiare',
   email: 'tiare@exemple.pf',
   role: 'client',
-  typeClient: 'etudiant',
 }
 
 const responsable: Utilisateur = {

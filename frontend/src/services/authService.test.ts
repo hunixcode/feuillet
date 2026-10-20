@@ -13,7 +13,6 @@ const client: Utilisateur = {
   nom: 'Tiare',
   email: 'tiare@exemple.pf',
   role: 'client',
-  typeClient: 'etudiant',
 }
 
 const token = ['jeton', 'test'].join('-')
@@ -60,7 +59,6 @@ describe('service d authentification', () => {
     })
 
     expect(connecte.role).toBe('responsable')
-    expect(connecte.typeClient).toBeUndefined()
   })
 
   it('refuse des identifiants invalides sans garder de token', async () => {
@@ -80,7 +78,7 @@ describe('service d authentification', () => {
     expect(lireToken()).toBeNull()
   })
 
-  it('inscrit le client avec son type et le connecte', async () => {
+  it('inscrit le client et le connecte', async () => {
     const fetchMock = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(reponse({ utilisateur: client, token }, 201))
@@ -88,7 +86,6 @@ describe('service d authentification', () => {
       nom: 'Tiare',
       email: 'tiare@exemple.pf',
       motDePasse: 'motdepasse1',
-      typeClient: 'etudiant' as const,
     }
 
     await expect(inscription(donnees)).resolves.toEqual(client)
@@ -117,7 +114,6 @@ describe('service d authentification', () => {
         nom: 'Tiare',
         email: 'tiare@exemple.pf',
         motDePasse: 'motdepasse1',
-        typeClient: 'etudiant',
       }),
     ).rejects.toMatchObject({ code: 'EMAIL_DEJA_UTILISE' })
     expect(lireToken()).toBeNull()

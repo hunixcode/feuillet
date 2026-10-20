@@ -9,7 +9,6 @@ const client: Utilisateur = {
   nom: 'Tiare',
   email: 'tiare@exemple.pf',
   role: 'client',
-  typeClient: 'etudiant',
 }
 
 const token = ['jeton', 'test'].join('-')
@@ -116,7 +115,6 @@ describe('contexte d authentification', () => {
         nom: 'Tiare',
         email: 'tiare@exemple.pf',
         motDePasse: 'motdepasse1',
-        typeClient: 'etudiant',
       })
     })
 
