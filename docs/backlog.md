@@ -84,3 +84,9 @@ Fait :
 
 Reste à faire :
 - Créer la page /admin (un responsable connecté tombe pour l'instant sur la page introuvable)
+
+20/10/2026 - Noah (front A) : vérification automatique du frontend (issue #20)
+
+Fait :
+- .github/workflows/frontend.yml sur le modèle de backend.yml : à chaque push sur main et à chaque pull request qui touche frontend/, GitHub lance npm ci, npm run lint, npm test et npm run build
+- Vérifié avant l'envoi dans une copie propre du frontend : installation avec npm ci, lint, 133 tests (aussi en heure UTC comme sur GitHub) et build passent
