@@ -12,21 +12,21 @@ export interface DonneesInscription {
   motDePasse: string
 }
 
-const CLE_TOKEN = 'token'
+const CLE_SESSION = 'token'
 
 export function lireToken(): string | null {
-  return localStorage.getItem(CLE_TOKEN)
+  return localStorage.getItem(CLE_SESSION)
 }
 
 export async function connexion(donnees: DonneesConnexion): Promise<Utilisateur> {
   const resultat = await post<AuthResultat>('/auth/connexion', donnees)
-  localStorage.setItem(CLE_TOKEN, resultat.token)
+  localStorage.setItem(CLE_SESSION, resultat.token)
   return resultat.utilisateur
 }
 
 export async function inscription(donnees: DonneesInscription): Promise<Utilisateur> {
   const resultat = await post<AuthResultat>('/auth/inscription', donnees)
-  localStorage.setItem(CLE_TOKEN, resultat.token)
+  localStorage.setItem(CLE_SESSION, resultat.token)
   return resultat.utilisateur
 }
 
@@ -36,5 +36,5 @@ export async function utilisateurConnecte(): Promise<Utilisateur> {
 }
 
 export function deconnexion(): void {
-  localStorage.removeItem(CLE_TOKEN)
+  localStorage.removeItem(CLE_SESSION)
 }

@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { AuthProvider } from '../contexts/AuthContext.tsx'
 import { AuthContext, type AuthContextValue } from '../contexts/useAuth'
 import type { Utilisateur } from '../types/utilisateur'
 import ProtectedRoute from './ProtectedRoute.tsx'
@@ -19,16 +20,8 @@ const responsable: Utilisateur = {
   role: 'responsable',
 }
 
-function afficher(url: string, session: Partial<AuthContextValue>) {
-  const valeur: AuthContextValue = {
-    utilisateur: null,
-    chargement: false,
-    connexion: () => Promise.reject(new Error('non utilisé')),
-    inscription: () => Promise.reject(new Error('non utilisé')),
-    deconnexion: () => {},
-    ...session,
-  }
-  const router = createMemoryRouter(
+function creerRouter(url: string) {
+  return createMemoryRouter(
     [
       { path: '/connexion', element: <h1>Connexion</h1> },
       { path: '/catalogue', element: <h1>Catalogue</h1> },
@@ -43,6 +36,18 @@ function afficher(url: string, session: Partial<AuthContextValue>) {
     ],
     { initialEntries: [url] },
   )
+}
+
+function afficher(url: string, session: Partial<AuthContextValue>) {
+  const valeur: AuthContextValue = {
+    utilisateur: null,
+    chargement: false,
+    connexion: () => Promise.reject(new Error('non utilisé')),
+    inscription: () => Promise.reject(new Error('non utilisé')),
+    deconnexion: () => {},
+    ...session,
+  }
+  const router = creerRouter(url)
   render(
     <AuthContext value={valeur}>
       <RouterProvider router={router} />
@@ -52,6 +57,11 @@ function afficher(url: string, session: Partial<AuthContextValue>) {
 }
 
 describe('route protégée', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    vi.restoreAllMocks()
+  })
+
   it('attend la vérification de la session', () => {
     afficher('/demandes', { chargement: true })
 
@@ -81,5 +91,27 @@ describe('route protégée', () => {
     afficher('/responsable', { utilisateur: client })
 
     expect(await screen.findByRole('heading', { name: 'Catalogue' })).toBeInTheDocument()
+  })
+
+  it('envoie un visiteur de l espace responsable vers la connexion', async () => {
+    const router = afficher('/responsable', {})
+
+    expect(await screen.findByRole('heading', { name: 'Connexion' })).toBeInTheDocument()
+    expect(router.state.location.state).toEqual({ depuis: '/responsable' })
+  })
+
+  it('affiche l espace responsable quand le token de session est déjà enregistré', async () => {
+    localStorage.setItem('token', crypto.randomUUID())
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ utilisateur: responsable })),
+    )
+
+    render(
+      <AuthProvider>
+        <RouterProvider router={creerRouter('/responsable')} />
+      </AuthProvider>,
+    )
+
+    expect(await screen.findByRole('heading', { name: 'Tableau de bord' })).toBeInTheDocument()
   })
 })

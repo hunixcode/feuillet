@@ -15,7 +15,7 @@ const client: Utilisateur = {
   role: 'client',
 }
 
-const token = ['jeton', 'test'].join('-')
+const token = crypto.randomUUID()
 
 function reponse(corps: unknown, status = 200) {
   return new Response(JSON.stringify(corps), { status })

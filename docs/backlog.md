@@ -83,7 +83,6 @@ Reste à faire :
 - Afficher le nom du client et un bouton Déconnexion dans l'en-tête
 
 À voir avec l'équipe :
-- L'inscription demande un type de client (jeunesse, étudiant, adulte, professionnel) : le champ manque dans la maquette
 - La route /responsable n'existe pas encore : le responsable connecté tombe sur la page introuvable en attendant
 
 17/10/2026 - Noah (front A) : style de la maquette V2
@@ -104,3 +103,11 @@ Reste à faire :
 
 À voir avec l'équipe :
 - Les anciennes variables (--fond, --texte, --accent, --bordure, --entete-...) n'existent plus : utiliser les nouvelles dans les pages
+
+19/10/2026 - Noah (front A) : corrections après relecture
+
+Fait :
+- typeClient retiré du front, comme dans le backend : l'inscription envoie nom, email et motDePasse, l'espace se choisit avec le rôle
+- 2 tests ajoutés sur l'espace responsable : un visiteur est renvoyé vers la connexion, un responsable qui a déjà son token de session voit la page
+- Plus de token écrit en dur : la clé du localStorage s'appelle CLE_SESSION et les tests créent leur token au moment du test
+- 118 tests, le build et le lint passent
