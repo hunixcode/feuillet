@@ -1,0 +1,107 @@
+.acces {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 100svh;
+}
+
+.acces-visuel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 48px;
+  padding: 40px var(--marge);
+  background: radial-gradient(ellipse 80% 60% at 30% 80%, #1c202b 0%, var(--noir) 70%);
+  color: var(--gris-fond);
+}
+
+.acces-visuel :focus-visible {
+  outline-color: var(--laiton);
+}
+
+.citation {
+  max-width: 17ch;
+  font-size: clamp(2.25rem, 4vw, 3.5rem);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+}
+
+.citation-auteur {
+  margin-top: 24px;
+  color: var(--laiton);
+}
+
+.acces .aide {
+  color: var(--gris);
+  font-size: 0.875rem;
+}
+
+.acces-visuel .aide {
+  color: var(--gris-clair);
+}
+
+.acces-formulaire {
+  display: grid;
+  align-content: center;
+  padding: 48px var(--marge);
+  background: var(--blanc);
+}
+
+.acces .formulaire {
+  display: grid;
+  gap: 20px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.acces-formulaire h1 {
+  font-size: clamp(2.5rem, 4vw, 3.25rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.acces-formulaire .common-button {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.acces .formulaire > .aide {
+  margin-top: -8px;
+  text-align: center;
+}
+
+.separateur {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--gris);
+  font-size: 0.8125rem;
+}
+
+.separateur::before,
+.separateur::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--ligne-douce);
+}
+
+.acces-bas {
+  color: var(--gris);
+  font-size: 0.9375rem;
+}
+
+.acces-bas a {
+  color: var(--laiton-fonce);
+  font-weight: 500;
+}
+
+@media (max-width: 880px) {
+  .acces {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .acces-visuel {
+    min-height: 44svh;
+  }
+}
