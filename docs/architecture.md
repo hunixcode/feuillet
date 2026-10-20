@@ -41,6 +41,22 @@ Le diagramme de séquence suit les noms de services de `rapport.md` (`ReapproSer
 └── docs/          Rapport, écrans et diagrammes
 ```
 
-Note de cadrage : le frontend est la base de travail actuelle. Le backend ne contient pour l'instant que le squelette Express (`GET /api/health`) et la connexion MongoDB. Les endpoints et le contrat API seront ajoutés ensuite, après validation des écrans et des flux utilisateur. La logique métier vivra dans `backend/` et restera testable **sans interface**.
+Le backend expose pour l'instant `GET /api/health` et l'authentification (EX09) ; le contrat est dans [`api.md`](./api.md). La logique métier vit dans `backend/` et reste testable **sans interface** :
+
+```
+backend/src/
+├── app.ts            createApp(dependances) : routes + gestion d'erreurs
+├── index.ts          lecture de l'environnement, connexion MongoDB, démarrage
+├── seed.ts           compte responsable
+├── erreurs.ts        ErreurApi et format d'erreur commun { code, message, details? }
+├── horloge.ts        horloge injectable (EQ02)
+├── modeles/          types du domaine et énumérations
+├── repositories/     interface + implémentation Mongoose + implémentation en mémoire (tests)
+├── services/         règles métier (AuthService…)
+├── middlewares/      authentifier, exigerRole
+└── routes/           routeurs Express
+```
+
+Les services reçoivent leurs dépendances (repository, horloge, secret) par constructeur : les tests unitaires utilisent le repository en mémoire, les tests d'API passent par supertest et les tests de persistance par une base MongoDB en mémoire.
 
 Les employés au comptoir n'ont pas de compte ni d'espace applicatif propre ; leurs opérations passent par l'espace responsable.

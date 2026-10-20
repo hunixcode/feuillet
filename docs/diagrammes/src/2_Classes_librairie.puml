@@ -79,7 +79,6 @@ class Utilisateur {
   -email {unique}
   -motDePasseHash
   -role : Role
-  -typeClient [0..1]
 }
 class Demande {
   -titre
@@ -148,7 +147,7 @@ Produit "0..1" -- "*" Demande
 Produit "1" -down- "*" Notification
 
 legend bottom left
-  Énumérations : Role = client | responsable · TypeClient = jeunesse | etudiant | adulte | professionnel
+  Énumérations : Role = client | responsable
   Operateur = responsable | client | systeme · TypeMouvement = entree | vente | retour | remplacement | ajustement
   CanalVente = en_ligne | comptoir · StatutVente = a_preparer | remise · OccasionCadeau = noel | anniversaire | fete
   IssueRetour = remboursement | echange | remplacement · StatutCommande = en_cours | partiellement_recue | recue

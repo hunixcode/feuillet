@@ -9,7 +9,7 @@ Les règles citées (RGxx) et les décisions de cadrage sont définies dans [`ra
 ### 1. Connexion et inscription
 
 - **But :** permettre au client d'ouvrir son compte ou d'en créer un.
-- **Contenu :** adresse e-mail et mot de passe ; formulaire d'inscription avec nom, e-mail, mot de passe et type de client (jeunesse, étudiant, adulte, professionnel).
+- **Contenu :** adresse e-mail et mot de passe ; formulaire d'inscription avec nom, e-mail et mot de passe.
 - **Actions :** se connecter ou créer un compte.
 - **Affichage :** erreurs de saisie et confirmation lorsque le compte est créé.
 
