@@ -1,7 +1,7 @@
 <div align="center"><h1>Gestionnaire de stock de librairie</h1>
 
 <p>Application web de gestion de stock de librairie (catalogue, ventes, retours,
-réapprovisionnement), Projet de Génie Logiciel, à rendre le <b>date à confirmer</b>.</p>
+réapprovisionnement), Projet de Génie Logiciel, à rendre <b>fin novembre</b>.</p>
 </div>
 
 ## Équipe
@@ -25,25 +25,32 @@ réapprovisionnement), Projet de Génie Logiciel, à rendre le <b>date à confir
 
 Le détail (exigences EX01–EX11, règles RG01–RG15, décisions de cadrage issues des réponses de l'enseignant) est dans [`docs/rapport.md`](docs/rapport.md).
 
-## Build
+## Stack
 - Front : React + Vite + TypeScript
-- Back : Node.js + Express + TypeScript (`GET /api/health` et authentification : inscription, connexion, session ; contrat dans [`docs/api.md`](docs/api.md))
-- Base de données : MongoDB (Mongoose)
+- Back : Node.js + Express + TypeScript (`GET /api/health` et authentification : inscription, connexion, session))
+- Base de données : MongoDB
 - Tests : Vitest
-- CI : GitHub Actions (workflow à créer)
+- CI : GitHub Actions
 
-Note de cadrage : le frontend est la priorité actuelle du projet. Les écrans, flux utilisateur et validations de l'interface sont conçus et validés avant l'ajout des endpoints backend et des contrats API.
+## Lancer le projet
 
-Commandes du frontend (depuis `frontend/`) :
-- `npm test` : exécute les tests Vitest (routes, socle HTTP, composants et formatage)
-- `npm run build` : vérifie TypeScript et construit le frontend
-- `npm run lint` : exécute Oxlint
+Pour lancer le backend
 
-Commandes du backend (depuis `backend/`, après `cp .env.example .env` et renseignement de `MONGODB_URI`, `JWT_SECRET` et du compte responsable) :
-- `npm run dev` : lance l'API sur le port 3000 (le proxy Vite pointe dessus)
-- `npm run seed` : crée ou réinitialise le compte responsable
-- `npm test` : exécute les tests Vitest (services, API avec supertest, persistance avec une base MongoDB en mémoire)
-- `npm run typecheck` / `npm run build` : vérifie TypeScript / compile dans `dist/`
+```sh
+cd backend
+npm i
+
+npm run dev
+```
+
+Pour lancer le frontend
+
+```sh
+cd frontend
+npm i
+
+npm run dev
+```
 
 ## Documentation
 - [`docs/rapport.md`](docs/rapport.md) : choix techniques, spécification, décisions de cadrage, traçabilité — **fait foi en cas de désaccord**
