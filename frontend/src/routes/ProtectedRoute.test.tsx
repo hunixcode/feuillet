@@ -31,7 +31,7 @@ function creerRouter(url: string) {
       },
       {
         element: <ProtectedRoute role="responsable" />,
-        children: [{ path: '/responsable', element: <h1>Tableau de bord</h1> }],
+        children: [{ path: '/admin', element: <h1>Tableau de bord</h1> }],
       },
     ],
     { initialEntries: [url] },
@@ -87,20 +87,20 @@ describe('route protégée', () => {
     expect(await screen.findByRole('heading', { name: 'Tableau de bord' })).toBeInTheDocument()
   })
 
-  it('renvoie le client vers le catalogue depuis l espace responsable', async () => {
-    afficher('/responsable', { utilisateur: client })
+  it('renvoie le client vers le catalogue depuis l espace admin', async () => {
+    afficher('/admin', { utilisateur: client })
 
     expect(await screen.findByRole('heading', { name: 'Catalogue' })).toBeInTheDocument()
   })
 
-  it('envoie un visiteur de l espace responsable vers la connexion', async () => {
-    const router = afficher('/responsable', {})
+  it('envoie un visiteur de l espace admin vers la connexion', async () => {
+    const router = afficher('/admin', {})
 
     expect(await screen.findByRole('heading', { name: 'Connexion' })).toBeInTheDocument()
-    expect(router.state.location.state).toEqual({ depuis: '/responsable' })
+    expect(router.state.location.state).toEqual({ depuis: '/admin' })
   })
 
-  it('affiche l espace responsable quand le token de session est déjà enregistré', async () => {
+  it('affiche l espace admin quand le token de session est déjà enregistré', async () => {
     localStorage.setItem('token', crypto.randomUUID())
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ utilisateur: responsable })),
@@ -108,7 +108,7 @@ describe('route protégée', () => {
 
     render(
       <AuthProvider>
-        <RouterProvider router={creerRouter('/responsable')} />
+        <RouterProvider router={creerRouter('/admin')} />
       </AuthProvider>,
     )
 
