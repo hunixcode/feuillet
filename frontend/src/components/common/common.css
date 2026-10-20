@@ -2,35 +2,51 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  min-height: 2.5rem;
-  padding: 0.5rem 1rem;
+  gap: 8px;
+  padding: 12px 22px;
   border: 1px solid transparent;
-  border-radius: 0.375rem;
-  font: inherit;
+  border-radius: var(--rayon-pilule);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
 }
 
 .common-button--primary {
-  color: #fff;
-  background: var(--accent, #8b5a3c);
+  background: var(--encre);
+  color: var(--blanc);
+}
+
+.common-button--primary:hover:not(:disabled) {
+  background: var(--noir);
 }
 
 .common-button--secondary {
-  color: var(--texte, #3b2a21);
+  border-color: var(--ligne);
   background: transparent;
-  border-color: var(--bordure, #e3d5c6);
+  color: var(--encre);
+}
+
+.common-button--secondary:hover:not(:disabled) {
+  border-color: var(--encre);
 }
 
 .common-button:disabled {
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.35;
+}
+
+.common-button[aria-busy='true'] {
+  cursor: progress;
+  opacity: 0.7;
 }
 
 .common-button__spinner,
 .common-loader__spinner {
-  width: 1rem;
-  height: 1rem;
+  width: 16px;
+  height: 16px;
   border: 2px solid currentColor;
   border-right-color: transparent;
   border-radius: 50%;
@@ -39,37 +55,59 @@
 
 .common-input {
   display: grid;
-  gap: 0.375rem;
+  gap: 8px;
 }
 
 .common-input__label {
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
 .common-input__field {
-  min-height: 2.5rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--bordure, #e3d5c6);
-  border-radius: 0.375rem;
-  color: inherit;
-  background: #fff;
-  font: inherit;
+  width: 100%;
+  padding: 13px 16px;
+  border: 1px solid var(--ligne);
+  border-radius: var(--rayon-champ);
+  background: var(--blanc);
+}
+
+.common-input__field::placeholder {
+  color: var(--gris-clair);
+}
+
+.common-input__field:focus {
+  outline: none;
+  border-color: var(--laiton-fonce);
+  box-shadow: 0 0 0 4px rgba(201, 168, 106, 0.25);
 }
 
 .common-input__field[aria-invalid='true'] {
-  border-color: #b42318;
+  border-color: var(--manque);
 }
 
-.common-input__error,
+.common-input__error {
+  color: var(--manque);
+  font-size: 0.875rem;
+}
+
 .common-error {
-  margin: 0;
-  color: #b42318;
+  padding: 16px 20px;
+  border-radius: var(--rayon-champ);
+  background: var(--manque-pale);
+  color: var(--manque);
+  font-size: 0.9375rem;
 }
 
 .common-loader {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 10px;
+  color: var(--gris);
+  font-size: 0.9375rem;
+}
+
+.common-loader__spinner {
+  color: var(--laiton-fonce);
 }
 
 @keyframes common-spin {
