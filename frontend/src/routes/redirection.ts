@@ -1,7 +1,7 @@
 import type { Role } from '../types/utilisateur'
 
 export function accueilDuRole(role: Role): string {
-  return role === 'responsable' ? '/responsable' : '/catalogue'
+  return role === 'responsable' ? '/admin' : '/catalogue'
 }
 
 export function cheminApresConnexion(role: Role, depuis?: string): string {
@@ -9,8 +9,8 @@ export function cheminApresConnexion(role: Role, depuis?: string): string {
     return accueilDuRole(role)
   }
 
-  const versEspaceResponsable = depuis.startsWith('/responsable')
-  if (versEspaceResponsable !== (role === 'responsable')) {
+  const versEspaceAdmin = depuis.startsWith('/admin')
+  if (versEspaceAdmin !== (role === 'responsable')) {
     return accueilDuRole(role)
   }
 
