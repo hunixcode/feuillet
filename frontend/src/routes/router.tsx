@@ -11,6 +11,7 @@ import ProtectedRoute from './ProtectedRoute.tsx'
 
 export const routes: RouteObject[] = [
   { path: '/connexion', element: <ConnexionPage /> },
+  { path: '/inscription', element: <InscriptionPage /> },
   {
     path: '/',
     element: <ClientLayout />,
@@ -23,7 +24,6 @@ export const routes: RouteObject[] = [
         element: <ProtectedRoute role="client" />,
         children: [{ path: 'demandes', element: <DemandesPage /> }],
       },
-      { path: 'inscription', element: <InscriptionPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
