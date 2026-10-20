@@ -71,3 +71,16 @@ Reste à faire :
 - EX09 : inscription sans type de client ; EX10 et RG14 : meilleures ventes communes à tous les visiteurs sur 30 jours
 - Décision d'équipe ajoutée dans `rapport.md` §3 : écart assumé à la réponse de l'enseignant (meilleures ventes selon le type du client), consignée telle quelle dans `questions-prof.md`
 - L'entrée du 15/10 qui mentionne l'inscription « avec type de client » n'est plus à jour
+
+19/10/2026 - Noah (front A) : pages de connexion et d'inscription
+
+Fait :
+- Page de connexion reliée à POST /api/auth/connexion : client vers /catalogue, responsable vers /admin, retour à la page demandée si on venait d'une page protégée
+- Page d'inscription reliée à POST /api/auth/inscription (nom, e-mail, mot de passe) : le client est connecté tout de suite et voit « Votre compte est créé » avec un bouton Continuer
+- Les erreurs du backend s'affichent sous chaque champ (VALIDATION, EMAIL_DEJA_UTILISE), « E-mail ou mot de passe incorrect » dans un bandeau, message clair si le serveur est injoignable
+- Mise en page de la maquette V2 commune aux deux pages (components/client/AccesCadre), sans en-tête ni pied de page
+- L'espace responsable s'appelle /admin dans le front, comme demandé par le chef de projet
+- 133 tests, le build et le lint passent
+
+Reste à faire :
+- Créer la page /admin (un responsable connecté tombe pour l'instant sur la page introuvable)

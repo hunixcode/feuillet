@@ -86,6 +86,20 @@
   background: var(--ligne-douce);
 }
 
+.acces-succes {
+  display: grid;
+  gap: 4px;
+  padding: 16px 20px;
+  border-radius: var(--rayon-champ);
+  background: var(--ok-pale);
+  color: var(--ok);
+  font-size: 0.9375rem;
+}
+
+.acces-succes p:last-child {
+  color: var(--encre);
+}
+
 .acces-bas {
   color: var(--gris);
   font-size: 0.9375rem;
