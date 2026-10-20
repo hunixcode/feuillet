@@ -65,49 +65,9 @@ Reste à faire :
 - Faire valider par l'équipe la règle de mot de passe (8 caractères minimum, décision technique) et la durée de session (8 h)
 - Compléter le seed (catégories, produits, ventes de démonstration) pour EQ03
 
-17/10/2026 - Noah (front A) : connexion à l'API d'authentification (issue #12)
+19/10/2026 - Retrait du type de client
 
-Fait :
-- services/authService.ts : connexion, inscription, utilisateur connecté (/auth/moi) et déconnexion, d'après docs/api.md de la branche feat/auth-backend
-- Le token est gardé dans localStorage sous la clé token, celle que lit déjà services/api.ts
-- Contexte utilisateur (AuthProvider et useAuth) : retrouve la session au chargement si un token existe, supprime le token si le serveur le refuse (NON_AUTHENTIFIE), le garde si le serveur est injoignable
-- ProtectedRoute : renvoie vers /connexion si personne n'est connecté (en gardant la page demandée), et vers l'accueil de son espace si le rôle n'est pas le bon
-- /demandes est réservée au client connecté
-- routes/redirection.ts : où aller après la connexion selon le rôle (client vers /catalogue, responsable vers /responsable)
-- utils/erreurs.ts : message d'erreur à afficher et erreurs par champ (details.champs) pour les formulaires
-- 34 nouveaux tests avec un fetch simulé : 112 tests, le build et le lint passent
-
-Reste à faire :
-- Brancher le formulaire de Hivanui (issue #11) sur useAuth une fois sa PR fusionnée
-- Tester avec le vrai backend quand feat/auth-backend sera fusionnée (npm run dev:local puis npm run seed)
-- Afficher le nom du client et un bouton Déconnexion dans l'en-tête
-
-À voir avec l'équipe :
-- La route /responsable n'existe pas encore : le responsable connecté tombe sur la page introuvable en attendant
-
-17/10/2026 - Noah (front A) : style de la maquette V2
-
-Fait :
-- index.css : les variables de la maquette V2 remplacent le thème café (--encre, --gris, --ligne, --laiton, --laiton-fonce, --manque, --marge...), avec les mêmes noms que dans la maquette
-- Polices Geist et Archivo chargées dans index.html, titre de l'onglet « Feuillet »
-- ClientLayout : en-tête noir avec le logo Feuillet, menu avec le lien actif souligné en laiton, pied de page de la maquette
-- Composants communs : boutons en pilule (noir ou contour), champs arrondis avec le focus laiton, erreur dans un bandeau rouge pâle, chargement en laiton
-- Page introuvable reprise de la maquette (grand 404 en Archivo)
-- Les noms de classes ne changent pas (common-..., client-...), les 112 tests, le build et le lint passent
-- Vérifié à l'écran en largeur ordinateur et téléphone (390 px)
-- README du frontend : partie Style mise à jour
-- En-tête connecté : le nom du client et un bouton Déconnexion remplacent le lien Connexion, rien ne s'affiche pendant la vérification de la session, la déconnexion ramène au catalogue (4 tests, 116 au total)
-
-Reste à faire :
-- Ajouter Notifications au menu quand la page existera
-
-À voir avec l'équipe :
-- Les anciennes variables (--fond, --texte, --accent, --bordure, --entete-...) n'existent plus : utiliser les nouvelles dans les pages
-
-19/10/2026 - Noah (front A) : corrections après relecture
-
-Fait :
-- typeClient retiré du front, comme dans le backend : l'inscription envoie nom, email et motDePasse, l'espace se choisit avec le rôle
-- 2 tests ajoutés sur l'espace responsable : un visiteur est renvoyé vers la connexion, un responsable qui a déjà son token de session voit la page
-- Plus de token écrit en dur : la clé du localStorage s'appelle CLE_SESSION et les tests créent leur token au moment du test
-- 118 tests, le build et le lint passent
+- Le type de client est retiré du code (modèle, inscription, schéma, types front) et de la documentation
+- EX09 : inscription sans type de client ; EX10 et RG14 : meilleures ventes communes à tous les visiteurs sur 30 jours
+- Décision d'équipe ajoutée dans `rapport.md` §3 : écart assumé à la réponse de l'enseignant (meilleures ventes selon le type du client), consignée telle quelle dans `questions-prof.md`
+- L'entrée du 15/10 qui mentionne l'inscription « avec type de client » n'est plus à jour
