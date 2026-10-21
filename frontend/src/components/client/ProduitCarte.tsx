@@ -5,9 +5,10 @@ import './ProduitCarte.css'
 
 interface ProduitCarteProps {
   produit: Produit
+  categorie?: string
 }
 
-export default function ProduitCarte({ produit }: ProduitCarteProps) {
+export default function ProduitCarte({ produit, categorie }: ProduitCarteProps) {
   const sousTitre = produit.auteur ?? produit.marque
 
   return (
@@ -18,6 +19,7 @@ export default function ProduitCarte({ produit }: ProduitCarteProps) {
         {sousTitre && <span className="couv-auteur">{sousTitre}</span>}
       </div>
       <div className="livre-infos">
+        {categorie && <span className="livre-categorie">{categorie}</span>}
         <span className="livre-titre">{produit.designation}</span>
         {sousTitre && <span className="livre-auteur">{sousTitre}</span>}
         <span className="livre-prix">

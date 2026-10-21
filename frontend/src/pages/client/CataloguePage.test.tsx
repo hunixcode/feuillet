@@ -97,6 +97,17 @@ describe('page du catalogue', () => {
     expect(screen.getByText('−15 %')).toBeInTheDocument()
   })
 
+  it('affiche la catégorie de chaque article', async () => {
+    simulerApi([ileAuTresor, carnet])
+    afficher()
+
+    const ile = await screen.findByRole('link', { name: /L'Île au trésor/ })
+    const carte = screen.getByRole('link', { name: /Carnet ligné/ })
+
+    expect(within(ile).getByText('Roman')).toBeInTheDocument()
+    expect(within(carte).getByText('Papeterie')).toBeInTheDocument()
+  })
+
   it('ouvre la fiche d un article', async () => {
     simulerApi([ileAuTresor])
     afficher()

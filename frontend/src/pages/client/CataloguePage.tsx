@@ -155,7 +155,10 @@ function CataloguePage() {
       <ul className="rayonnage">
         {produits.map((produit) => (
           <li key={produit.id}>
-            <ProduitCarte produit={produit} />
+            <ProduitCarte
+              produit={produit}
+              categorie={categories.find((rayon) => rayon.id === produit.categorie)?.libelle}
+            />
           </li>
         ))}
       </ul>
