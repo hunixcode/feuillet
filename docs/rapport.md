@@ -56,7 +56,7 @@ Lancera les tests, le lint et le build TypeScript du front et du back à chaque 
 |---|---|
 | **Produit** | Article du catalogue : référence unique, type, catégorie, désignation, prix TTC, taux de TVA |
 | **Type de produit** | Liste fixe : livre, magazine (un numéro = un produit), papeterie |
-| **Catégorie** | Rayon qui guide le client (roman, policier, BD-manga, jeunesse, scolaire…). Liste fixe créée par le seed |
+| **Catégorie** | Rayon qui guide le client (roman, policier, BD et manga, jeunesse, documentaire, scolaire, presse, fournitures). Liste fixe définie dans le code |
 | **Promotion** | Remise en pourcentage sur un produit, valable entre deux dates |
 | **Historique des prix** | Suite datée des prix catalogue d'un produit, affichée en courbe |
 | **Stock physique** | Quantité en bon état en magasin |
@@ -133,7 +133,7 @@ Hors périmètre : emprunt de livres (consigne de l'enseignant), paiement réel,
 |---|---|
 | **EQ01** | La logique métier est testable **sans l'interface** |
 | **EQ02** | Les tests sont déterministes : horloge injectable, données isolées |
-| **EQ03** | Les données de démonstration (dont le compte responsable, les catégories et des ventes pour les meilleures ventes) se réinitialisent en une commande |
+| **EQ03** | Les données de démonstration (dont le compte responsable, des produits et des ventes pour les meilleures ventes) se réinitialisent en une commande |
 | **EQ04** | Les erreurs sont compréhensibles et ne corrompent jamais les données |
 
 ### Définition de "terminé"
@@ -154,7 +154,7 @@ Source **Prof** : réponse de l'enseignant (notes dans `questions-prof.md`). Sou
 |---|---|---|
 | 1 | Spécification au niveau exigence + critères d'acceptation + règles métier | Équipe |
 | 2 | Livre : ISBN, auteur. Magazine : ISSN, numéro, date de parution. Papeterie : marque | Équipe |
-| 3 | Catégories de livres pour guider le client ; liste fixe créée par le seed. Types de produit fixes | Prof (catégories), Équipe (liste fixe) |
+| 3 | Catégories de livres pour guider le client ; liste fixe définie dans le code. Types de produit fixes | Prof (catégories), Équipe (liste fixe) |
 | 4 | `reference` : code interne unique ; ISBN / ISSN sont des attributs à part | Équipe |
 | 5 | Chaque numéro de magazine est un produit distinct | Équipe |
 | 6 | Historique des prix conservé et affiché en courbe ; prix payé figé dans la vente | Prof |

@@ -72,6 +72,12 @@ Réponse `200` : `AuthResultat`. Erreurs : `400 VALIDATION`, `401 IDENTIFIANTS_I
 
 Route protégée : renvoie `{ "utilisateur": Utilisateur }` pour restaurer la session au chargement de l'application. Erreur : `401 NON_AUTHENTIFIE` (token absent, expiré, ou compte supprimé).
 
+## Catégories
+
+### `GET /api/categories`
+
+Liste fixe, publique : `[{ "id": "roman", "libelle": "Roman" }, …]`.
+
 ## Produits (EX01, écrans 2, 3 et 7)
 
 Lecture publique ; création, modification et suppression réservées au **responsable** (`401 NON_AUTHENTIFIE` sans token, `403 ACCES_REFUSE` pour un client).
@@ -96,7 +102,8 @@ Lecture publique ; création, modification et suppression réservées au **respo
 | Champ | Règle |
 |---|---|
 | `reference` | Obligatoire, unique, 200 caractères au plus |
-| `designation`, `categorie` | Obligatoires, 200 caractères au plus |
+| `designation` | Obligatoire, 200 caractères au plus |
+| `categorie` | Identifiant d'une catégorie de `GET /api/categories` |
 | `type` | `livre`, `magazine` ou `papeterie` |
 | `prix` | Prix TTC en XPF, entier ≥ 0 (RG01) |
 | `tauxTva` | Entier de 0 à 100 (%) |
@@ -109,9 +116,9 @@ Les champs d'un autre type sont ignorés.
 
 ### `GET /api/produits`
 
-Liste triée par désignation. Paramètres facultatifs : `type`, `categorie` (égalité exacte), `archive=true` pour lister **seulement** les produits archivés (par défaut : seulement les non archivés).
+Liste triée par désignation. Paramètres facultatifs : `type`, `categorie` (identifiant), `archive=true` pour lister **seulement** les produits archivés (par défaut : seulement les non archivés).
 
-Réponse `200` : `Produit[]`. Erreur : `400 VALIDATION` si `type` est inconnu.
+Réponse `200` : `Produit[]`. Erreur : `400 VALIDATION` si `type` ou `categorie` est inconnu.
 
 ### `GET /api/produits/:id`
 

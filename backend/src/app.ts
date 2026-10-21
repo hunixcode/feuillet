@@ -1,5 +1,6 @@
 import express from "express";
 import { gererErreurs, routeIntrouvable } from "./erreurs.js";
+import { CATEGORIES } from "./modeles/produit.js";
 import { routesAuth } from "./routes/auth.js";
 import { routesProduits } from "./routes/produits.js";
 import { routesSante, type VerifierBase } from "./routes/sante.js";
@@ -21,6 +22,9 @@ export function createApp({ authService, produitService, verifierBase }: Dependa
   app.use("/api/health", routesSante(verifierBase));
   app.use("/api/auth", routesAuth(authService));
   app.use("/api/produits", routesProduits(produitService, authService));
+  app.get("/api/categories", (_req, res) => {
+    res.json(CATEGORIES);
+  });
 
   app.use(routeIntrouvable);
   app.use(gererErreurs);

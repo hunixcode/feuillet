@@ -1,6 +1,7 @@
 import { ErreurApi } from "../erreurs.js";
 import { horlogeSysteme, type Horloge } from "../horloge.js";
 import {
+  CATEGORIES,
   TYPES_PRODUIT,
   type EntreePrix,
   type FicheProduit,
@@ -16,6 +17,7 @@ const LONGUEUR_MAX_TEXTE = 200;
 const FORMAT_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const MESSAGE_TROP_LONG = `Ce champ ne doit pas dépasser ${LONGUEUR_MAX_TEXTE} caractères.`;
 const MESSAGE_TYPE = `Le type doit être : ${TYPES_PRODUIT.join(", ")}.`;
+const MESSAGE_CATEGORIE = "Choisissez une catégorie de la liste.";
 
 // Champs propres à chaque type (diagramme de classes : Livre, NumeroMagazine, ArticlePapeterie).
 const CHAMPS_TEXTE_PAR_TYPE: Record<TypeProduit, readonly ("isbn" | "auteur" | "issn" | "marque")[]> = {
@@ -26,6 +28,10 @@ const CHAMPS_TEXTE_PAR_TYPE: Record<TypeProduit, readonly ("isbn" | "auteur" | "
 
 function estTypeProduit(valeur: unknown): valeur is TypeProduit {
   return TYPES_PRODUIT.includes(valeur as TypeProduit);
+}
+
+function estCategorie(valeur: string): boolean {
+  return CATEGORIES.some((c) => c.id === valeur);
 }
 
 function estEntierPositif(valeur: unknown): valeur is number {
@@ -56,7 +62,10 @@ function validerFiche(corps: unknown): FicheProduit {
   };
   const reference = lireTexteObligatoire("reference");
   const designation = lireTexteObligatoire("designation");
-  const categorie = lireTexteObligatoire("categorie");
+  const categorie = lireTexte(donnees.categorie);
+  if (!estCategorie(categorie)) {
+    champs.categorie = MESSAGE_CATEGORIE;
+  }
 
   const type = donnees.type;
   if (!estTypeProduit(type)) {
@@ -127,6 +136,9 @@ function lireFiltres(requete: unknown): FiltresProduits {
   }
   const categorie = lireTexte(parametres.categorie);
   if (categorie) {
+    if (!estCategorie(categorie)) {
+      throw erreurValidation({ categorie: MESSAGE_CATEGORIE });
+    }
     filtres.categorie = categorie;
   }
   return filtres;

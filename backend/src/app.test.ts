@@ -50,6 +50,13 @@ describe("application", () => {
     });
   });
 
+  it("liste les catégories fixes sans authentification", async () => {
+    const reponse = await request(creerApp()).get("/api/categories");
+
+    expect(reponse.status).toBe(200);
+    expect(reponse.body).toContainEqual({ id: "roman", libelle: "Roman" });
+  });
+
   it("répond 404 au format d'erreur commun sur une route inconnue", async () => {
     const reponse = await request(creerApp()).get("/api/inexistante");
 

@@ -106,6 +106,13 @@ describe("API des produits", () => {
       });
     });
 
+    it("refuse une catégorie hors de la liste", async () => {
+      const reponse = await creer({ ...livre, categorie: "cuisine" });
+
+      expect(reponse.status).toBe(400);
+      expect(Object.keys(reponse.body.details.champs)).toEqual(["categorie"]);
+    });
+
     it("refuse un prix non entier et une date de parution invalide", async () => {
       const reponse = await creer({ ...magazine, prix: 900.5, dateParution: "2026-02-30" });
 
@@ -159,11 +166,14 @@ describe("API des produits", () => {
       expect(archives.body.map((p: { reference: string }) => p.reference)).toEqual(["LIV-002"]);
     });
 
-    it("répond 400 sur un type inconnu", async () => {
-      const reponse = await request(app).get("/api/produits?type=jouet");
+    it("répond 400 sur un type ou une catégorie inconnus", async () => {
+      const parType = await request(app).get("/api/produits?type=jouet");
+      const parCategorie = await request(app).get("/api/produits?categorie=inconnue");
 
-      expect(reponse.status).toBe(400);
-      expect(reponse.body.details.champs.type).toEqual(expect.any(String));
+      expect(parType.status).toBe(400);
+      expect(parType.body.details.champs.type).toEqual(expect.any(String));
+      expect(parCategorie.status).toBe(400);
+      expect(parCategorie.body.details.champs.categorie).toEqual(expect.any(String));
     });
   });
 
