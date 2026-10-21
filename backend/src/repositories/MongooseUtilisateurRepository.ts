@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { estErreurDoublon } from "../baseDeDonnees.js";
 import {
   ROLES,
   type NouvelUtilisateur,
@@ -28,10 +29,6 @@ function versUtilisateur(document: DocumentUtilisateur): Utilisateur {
     motDePasseHash: document.motDePasseHash,
     role: document.role,
   };
-}
-
-function estErreurDoublon(erreur: unknown): boolean {
-  return typeof erreur === "object" && erreur !== null && (erreur as { code?: unknown }).code === 11000;
 }
 
 export class MongooseUtilisateurRepository implements UtilisateurRepository {
