@@ -7,9 +7,9 @@ export class MemoireProduitRepository implements ProduitRepository {
 
   async creer(nouveau: NouveauProduit): Promise<Produit> {
     this.verifierReferenceLibre(nouveau.reference);
-    const produit = { ...nouveau, id: String(this.prochainId++) };
+    const produit = { ...structuredClone(nouveau), id: String(this.prochainId++) };
     this.produits.set(produit.id, produit);
-    return { ...produit };
+    return structuredClone(produit);
   }
 
   async lister({ type, categorie, archive }: FiltresProduits): Promise<Produit[]> {
@@ -21,22 +21,21 @@ export class MemoireProduitRepository implements ProduitRepository {
           (categorie === undefined || p.categorie === categorie),
       )
       .sort((a, b) => a.designation.localeCompare(b.designation))
-      .map((p) => ({ ...p }));
+      .map((p) => structuredClone(p));
   }
 
   async trouverParId(id: string): Promise<Produit | null> {
     const trouve = this.produits.get(id);
-    return trouve ? { ...trouve } : null;
+    return trouve ? structuredClone(trouve) : null;
   }
 
-  async remplacer(id: string, nouveau: NouveauProduit): Promise<Produit | null> {
-    if (!this.produits.has(id)) {
+  async remplacer(produit: Produit): Promise<Produit | null> {
+    if (!this.produits.has(produit.id)) {
       return null;
     }
-    this.verifierReferenceLibre(nouveau.reference, id);
-    const produit = { ...nouveau, id };
-    this.produits.set(id, produit);
-    return { ...produit };
+    this.verifierReferenceLibre(produit.reference, produit.id);
+    this.produits.set(produit.id, structuredClone(produit));
+    return structuredClone(produit);
   }
 
   async supprimer(id: string): Promise<boolean> {

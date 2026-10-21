@@ -15,6 +15,10 @@ export function routesProduits(produits: ProduitService, auth: AuthService): Rou
     res.json(await produits.obtenir(req.params.id));
   });
 
+  router.get("/:id/historique-prix", authentifier(auth), estResponsable, async (req: Request<{ id: string }>, res) => {
+    res.json(await produits.historiquePrix(req.params.id));
+  });
+
   router.post("/", authentifier(auth), estResponsable, async (req, res) => {
     res.status(201).json(await produits.creer(req.body));
   });

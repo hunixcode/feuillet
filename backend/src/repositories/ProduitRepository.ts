@@ -11,6 +11,6 @@ export interface ProduitRepository {
   creer(produit: NouveauProduit): Promise<Produit>;
   lister(filtres: FiltresProduits): Promise<Produit[]>;
   trouverParId(id: string): Promise<Produit | null>;
-  remplacer(id: string, produit: NouveauProduit): Promise<Produit | null>;
+  remplacer(produit: Produit): Promise<Produit | null>;
   supprimer(id: string): Promise<boolean>;
 }

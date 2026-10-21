@@ -23,6 +23,7 @@ const produitSchema = new Schema<NouveauProduit>(
     numero: Number,
     dateParution: String,
     marque: String,
+    historiquePrix: [{ _id: false, date: { type: Date, required: true }, prix: { type: Number, required: true } }],
   },
   { versionKey: false },
 );
@@ -67,19 +68,19 @@ export class MongooseProduitRepository implements ProduitRepository {
     return document ? versProduit(document) : null;
   }
 
-  async remplacer(id: string, nouveau: NouveauProduit): Promise<Produit | null> {
+  async remplacer({ id, ...produit }: Produit): Promise<Produit | null> {
     if (!mongoose.isValidObjectId(id)) {
       return null;
     }
     try {
-      const document = await ProduitModel.findOneAndReplace({ _id: id }, nouveau, {
+      const document = await ProduitModel.findOneAndReplace({ _id: id }, produit, {
         returnDocument: "after",
         runValidators: true,
       }).lean<DocumentProduit>();
       return document ? versProduit(document) : null;
     } catch (erreur) {
       if (estErreurDoublon(erreur)) {
-        throw new ReferenceDejaUtiliseeErreur(nouveau.reference);
+        throw new ReferenceDejaUtiliseeErreur(produit.reference);
       }
       throw erreur;
     }

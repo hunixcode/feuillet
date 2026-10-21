@@ -123,12 +123,18 @@ Corps : `Produit` sans `id`. Réponse `201` : `Produit`. Erreurs : `400 VALIDATI
 
 ### `PUT /api/produits/:id`
 
-Remplace le produit entier (un champ facultatif absent est retiré). Archiver ou réactiver = renvoyer le produit avec `archive` à `true` ou `false`.
+Remplace le produit entier (un champ facultatif absent est retiré). Archiver ou réactiver = renvoyer le produit avec `archive` à `true` ou `false`. Un changement de prix ajoute une entrée à l'historique des prix (RG15).
 
 Réponse `200` : `Produit`. Erreurs : `400 VALIDATION`, `404 INTROUVABLE`, `409 REFERENCE_DEJA_UTILISEE`.
+
+### `GET /api/produits/:id/historique-prix`
+
+Responsable seulement (EX11, courbe des prix). Entrées dans l'ordre chronologique : le prix à la création, puis chaque changement de prix. Jamais modifiées.
+
+Réponse `200` : `[{ "date": "2026-10-15T08:00:00.000Z", "prix": 1800 }, …]`. Erreur : `404 INTROUVABLE`.
 
 ### `DELETE /api/produits/:id`
 
 Réponse `204` sans corps. Erreur : `404 INTROUVABLE`.
 
-Pas encore implémenté : historique des prix (RG15), suppression limitée aux produits sans historique (RG05), promotions, prix appliqué et disponibilité (attendus par les types du front), recherche texte.
+Pas encore implémenté : suppression limitée aux produits sans historique (RG05), promotions, prix appliqué et disponibilité (attendus par les types du front), recherche texte.

@@ -1,9 +1,12 @@
 import { ErreurApi } from "../erreurs.js";
+import { horlogeSysteme, type Horloge } from "../horloge.js";
 import {
   TYPES_PRODUIT,
+  type EntreePrix,
+  type FicheProduit,
   type FiltresProduits,
-  type NouveauProduit,
   type Produit,
+  type ProduitCatalogue,
   type TypeProduit,
 } from "../modeles/produit.js";
 import { ReferenceDejaUtiliseeErreur, type ProduitRepository } from "../repositories/ProduitRepository.js";
@@ -39,7 +42,7 @@ function lireTexte(valeur: unknown): string {
   return typeof valeur === "string" ? valeur.trim() : "";
 }
 
-function validerProduit(corps: unknown): NouveauProduit {
+function validerFiche(corps: unknown): FicheProduit {
   const donnees = lireObjet(corps);
   const champs: ErreursChamps = {};
   const lireTexteObligatoire = (nom: string): string => {
@@ -69,7 +72,7 @@ function validerProduit(corps: unknown): NouveauProduit {
     champs.archive = "Archivé doit valoir true ou false.";
   }
 
-  const details: Partial<NouveauProduit> = {};
+  const details: Partial<FicheProduit> = {};
   if (estTypeProduit(type)) {
     for (const nom of CHAMPS_TEXTE_PAR_TYPE[type]) {
       const valeur = lireTexte(donnees[nom]);
@@ -142,38 +145,64 @@ function traduireErreurReference(erreur: unknown): never {
   throw erreur;
 }
 
-// shortcut: pas d'historique des prix (RG15, à ajouter avant la courbe EX11) ; suppression toujours
-// permise (RG05 : à restreindre aux produits sans historique dès que mouvements et ventes existent).
+function versCatalogue({ historiquePrix: _, ...produit }: Produit): ProduitCatalogue {
+  return produit;
+}
+
+// shortcut: suppression toujours permise (RG05 : à restreindre aux produits sans historique
+// dès que mouvements et ventes existent).
 export class ProduitService {
-  constructor(private readonly produits: ProduitRepository) {}
+  constructor(
+    private readonly produits: ProduitRepository,
+    private readonly horloge: Horloge = horlogeSysteme,
+  ) {}
 
-  lister(requete: unknown): Promise<Produit[]> {
-    return this.produits.lister(lireFiltres(requete));
+  async lister(requete: unknown): Promise<ProduitCatalogue[]> {
+    return (await this.produits.lister(lireFiltres(requete))).map(versCatalogue);
   }
 
-  async obtenir(id: string): Promise<Produit> {
-    const produit = await this.produits.trouverParId(id);
-    if (!produit) {
-      throw erreurIntrouvable();
-    }
-    return produit;
+  async obtenir(id: string): Promise<ProduitCatalogue> {
+    return versCatalogue(await this.trouver(id));
   }
 
-  async creer(corps: unknown): Promise<Produit> {
-    return this.produits.creer(validerProduit(corps)).catch(traduireErreurReference);
+  async historiquePrix(id: string): Promise<EntreePrix[]> {
+    return (await this.trouver(id)).historiquePrix;
   }
 
-  async modifier(id: string, corps: unknown): Promise<Produit> {
-    const modifie = await this.produits.remplacer(id, validerProduit(corps)).catch(traduireErreurReference);
+  async creer(corps: unknown): Promise<ProduitCatalogue> {
+    const fiche = validerFiche(corps);
+    const historiquePrix = [{ date: this.horloge.maintenant(), prix: fiche.prix }];
+    return versCatalogue(await this.produits.creer({ ...fiche, historiquePrix }).catch(traduireErreurReference));
+  }
+
+  // RG15 : un changement de prix ajoute une entrée datée ; l'historique existant n'est jamais modifié.
+  async modifier(id: string, corps: unknown): Promise<ProduitCatalogue> {
+    const fiche = validerFiche(corps);
+    const actuel = await this.trouver(id);
+    const historiquePrix =
+      fiche.prix === actuel.prix
+        ? actuel.historiquePrix
+        : [...actuel.historiquePrix, { date: this.horloge.maintenant(), prix: fiche.prix }];
+    const modifie = await this.produits
+      .remplacer({ ...fiche, id, historiquePrix })
+      .catch(traduireErreurReference);
     if (!modifie) {
       throw erreurIntrouvable();
     }
-    return modifie;
+    return versCatalogue(modifie);
   }
 
   async supprimer(id: string): Promise<void> {
     if (!(await this.produits.supprimer(id))) {
       throw erreurIntrouvable();
     }
+  }
+
+  private async trouver(id: string): Promise<Produit> {
+    const produit = await this.produits.trouverParId(id);
+    if (!produit) {
+      throw erreurIntrouvable();
+    }
+    return produit;
   }
 }

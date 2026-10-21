@@ -33,13 +33,15 @@ describe("API des produits", () => {
   let app: ReturnType<typeof createApp>;
   let tokenResponsable: string;
   let tokenClient: string;
+  let horloge: { date: Date; maintenant: () => Date };
 
   beforeEach(async () => {
+    horloge = { date: new Date("2026-10-15T08:00:00Z"), maintenant: () => horloge.date };
     const utilisateurs = new MemoireUtilisateurRepository();
     const authService = new AuthService(utilisateurs, { secretJwt: "secret-de-test", coutHash: 4 });
     app = createApp({
       authService,
-      produitService: new ProduitService(new MemoireProduitRepository()),
+      produitService: new ProduitService(new MemoireProduitRepository(), horloge),
       verifierBase: async () => true,
     });
 
@@ -224,6 +226,48 @@ describe("API des produits", () => {
         .set("Authorization", `Bearer ${tokenClient}`)
         .send(livre)
         .expect(403);
+    });
+  });
+
+  describe("GET /api/produits/:id/historique-prix", () => {
+    function historique(id: string, token = tokenResponsable) {
+      return request(app).get(`/api/produits/${id}/historique-prix`).set("Authorization", `Bearer ${token}`);
+    }
+
+    it("date le prix initial puis chaque changement de prix, pas les autres modifications (RG15)", async () => {
+      const { body: cree } = await creer(livre);
+      const modifier = (produit: object) =>
+        request(app)
+          .put(`/api/produits/${cree.id}`)
+          .set("Authorization", `Bearer ${tokenResponsable}`)
+          .send(produit)
+          .expect(200);
+
+      horloge.date = new Date("2026-10-20T08:00:00Z");
+      await modifier({ ...livre, prix: 2000 });
+      horloge.date = new Date("2026-10-21T08:00:00Z");
+      await modifier({ ...livre, prix: 2000, designation: "Renommé" });
+
+      const reponse = await historique(cree.id);
+
+      expect(reponse.status).toBe(200);
+      expect(reponse.body).toEqual([
+        { date: "2026-10-15T08:00:00.000Z", prix: 1800 },
+        { date: "2026-10-20T08:00:00.000Z", prix: 2000 },
+      ]);
+    });
+
+    it("n'expose pas l'historique dans la fiche publique", async () => {
+      const { body: cree } = await creer(livre);
+
+      expect(cree).not.toHaveProperty("historiquePrix");
+    });
+
+    it("est réservé au responsable", async () => {
+      const { body: cree } = await creer(livre);
+
+      await historique(cree.id, tokenClient).expect(403);
+      await historique("inconnu").expect(404);
     });
   });
 

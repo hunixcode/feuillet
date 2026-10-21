@@ -14,6 +14,7 @@ const livre: NouveauProduit = {
   tauxTva: 5,
   archive: false,
   auteur: "Robert Louis Stevenson",
+  historiquePrix: [{ date: new Date("2026-10-01T08:00:00Z"), prix: 1800 }],
 };
 
 const cahier: NouveauProduit = {
@@ -25,6 +26,7 @@ const cahier: NouveauProduit = {
   tauxTva: 16,
   archive: false,
   marque: "Clairefontaine",
+  historiquePrix: [{ date: new Date("2026-10-01T08:00:00Z"), prix: 350 }],
 };
 
 describe("MongooseProduitRepository", () => {
@@ -75,11 +77,12 @@ describe("MongooseProduitRepository", () => {
 
   it("remplace un produit en entier : les champs absents disparaissent", async () => {
     const cree = await repository.creer(livre);
-    const { auteur: _, ...sansAuteur } = livre;
+    const { auteur: _, ...sansAuteur } = cree;
+    const historiquePrix = [...livre.historiquePrix, { date: new Date("2026-10-15T08:00:00Z"), prix: 2000 }];
 
-    const remplace = await repository.remplacer(cree.id, { ...sansAuteur, prix: 2000 });
+    const remplace = await repository.remplacer({ ...sansAuteur, prix: 2000, historiquePrix });
 
-    expect(remplace).toEqual({ ...sansAuteur, prix: 2000, id: cree.id });
+    expect(remplace).toEqual({ ...sansAuteur, prix: 2000, historiquePrix });
     await expect(repository.trouverParId(cree.id)).resolves.toEqual(remplace);
   });
 
@@ -87,7 +90,7 @@ describe("MongooseProduitRepository", () => {
     const cree = await repository.creer(livre);
     await repository.creer(cahier);
 
-    await expect(repository.remplacer(cree.id, { ...livre, reference: "PAP-001" })).rejects.toBeInstanceOf(
+    await expect(repository.remplacer({ ...cree, reference: "PAP-001" })).rejects.toBeInstanceOf(
       ReferenceDejaUtiliseeErreur,
     );
   });
@@ -104,8 +107,8 @@ describe("MongooseProduitRepository", () => {
     const inconnu = new mongoose.Types.ObjectId().toString();
 
     await expect(repository.trouverParId("pas-un-id")).resolves.toBeNull();
-    await expect(repository.remplacer(inconnu, livre)).resolves.toBeNull();
-    await expect(repository.remplacer("pas-un-id", livre)).resolves.toBeNull();
+    await expect(repository.remplacer({ ...livre, id: inconnu })).resolves.toBeNull();
+    await expect(repository.remplacer({ ...livre, id: "pas-un-id" })).resolves.toBeNull();
     await expect(repository.supprimer("pas-un-id")).resolves.toBe(false);
   });
 
