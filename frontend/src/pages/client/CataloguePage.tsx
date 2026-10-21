@@ -1,5 +1,227 @@
+import { useEffect, useState, type SubmitEvent } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import ProduitCarte from '../../components/client/ProduitCarte.tsx'
+import Button from '../../components/common/Button.tsx'
+import { listerCategories } from '../../services/categorieService'
+import { listerProduits } from '../../services/produitService'
+import type { Categorie } from '../../types/categorie'
+import type { Produit } from '../../types/produit'
+import { messageErreur } from '../../utils/erreurs'
+import './CataloguePage.css'
+
+interface Resultat {
+  cle: string
+  produits: Produit[]
+  erreur: string
+}
+
+const types = [
+  { valeur: '', libelle: 'Tous les types' },
+  { valeur: 'livre', libelle: 'Livres' },
+  { valeur: 'magazine', libelle: 'Magazines' },
+  { valeur: 'papeterie', libelle: 'Papeterie' },
+]
+
 function CataloguePage() {
-  return <h1>Catalogue</h1>
+  const navigate = useNavigate()
+  const [parametres] = useSearchParams()
+  const q = parametres.get('q') ?? ''
+  const type = parametres.get('type') ?? ''
+  const categorie = parametres.get('categorie') ?? ''
+
+  const [categories, setCategories] = useState<Categorie[]>([])
+  const [essai, setEssai] = useState(0)
+  const [resultat, setResultat] = useState<Resultat | null>(null)
+
+  const cle = `${q}|${type}|${categorie}|${essai}`
+  const chargement = resultat?.cle !== cle
+  const produits = resultat?.produits ?? []
+  const erreur = resultat?.erreur ?? ''
+
+  useEffect(() => {
+    let actif = true
+    listerCategories()
+      .then((liste) => {
+        if (actif) {
+          setCategories(liste)
+        }
+      })
+      .catch(() => {})
+    return () => {
+      actif = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let actif = true
+    listerProduits({ q, type, categorie })
+      .then((liste) => {
+        if (actif) {
+          setResultat({ cle, produits: liste, erreur: '' })
+        }
+      })
+      .catch((raison: unknown) => {
+        if (actif) {
+          setResultat({ cle, produits: [], erreur: messageErreur(raison) })
+        }
+      })
+    return () => {
+      actif = false
+    }
+  }, [q, type, categorie, cle])
+
+  function adresseAvec(nom: string, valeur: string) {
+    const suivants = new URLSearchParams(parametres)
+    if (valeur) {
+      suivants.set(nom, valeur)
+    } else {
+      suivants.delete(nom)
+    }
+    const texte = suivants.toString()
+    return texte ? `/catalogue?${texte}` : '/catalogue'
+  }
+
+  function rechercher(evenement: SubmitEvent<HTMLFormElement>) {
+    evenement.preventDefault()
+    const saisie = new FormData(evenement.currentTarget).get('q')
+    navigate(adresseAvec('q', typeof saisie === 'string' ? saisie.trim() : ''))
+  }
+
+  function intro() {
+    if (chargement) {
+      return 'Chargement…'
+    }
+    if (erreur) {
+      return ''
+    }
+    return produits.length > 1 ? `${produits.length} articles` : `${produits.length} article`
+  }
+
+  function contenu() {
+    if (chargement) {
+      return (
+        <>
+          <p className="visuellement-cache" role="status">
+            Chargement du catalogue
+          </p>
+          <ul className="rayonnage" aria-busy="true">
+            {Array.from({ length: 8 }, (_, index) => (
+              <li key={index}>
+                <div className="squelette squelette-couverture" />
+                <div className="squelette squelette-ligne" />
+                <div className="squelette squelette-ligne squelette-courte" />
+              </li>
+            ))}
+          </ul>
+        </>
+      )
+    }
+
+    if (erreur) {
+      return (
+        <section className="vide" role="alert">
+          <h2>Le catalogue n'a pas pu être chargé.</h2>
+          <p>{erreur}</p>
+          <div className="achat-ligne">
+            <Button onClick={() => setEssai(essai + 1)}>Réessayer</Button>
+          </div>
+        </section>
+      )
+    }
+
+    if (produits.length === 0) {
+      return (
+        <section className="vide" aria-live="polite">
+          <h2>
+            {q ? `Aucun article ne correspond à « ${q} ».` : 'Aucun article dans cette sélection.'}
+          </h2>
+          <p>
+            Vérifiez l'orthographe ou essayez avec le nom de l'auteur. Si ce livre n'est pas au
+            catalogue, nous pouvons le commander pour vous.
+          </p>
+          <div className="achat-ligne">
+            <Link className="common-button common-button--primary" to="/demandes">
+              Demander ce livre
+            </Link>
+            <Link className="common-button common-button--secondary" to="/catalogue">
+              Voir tout le catalogue
+            </Link>
+          </div>
+        </section>
+      )
+    }
+
+    return (
+      <ul className="rayonnage">
+        {produits.map((produit) => (
+          <li key={produit.id}>
+            <ProduitCarte produit={produit} />
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  return (
+    <div className="catalogue">
+      <div className="page-intro">
+        <h1>Catalogue</h1>
+        <p>{intro()}</p>
+      </div>
+
+      <form className="filtres" role="search" onSubmit={rechercher}>
+        <div className="recherche">
+          <label className="visuellement-cache" htmlFor="recherche-catalogue">
+            Rechercher dans le catalogue
+          </label>
+          <input
+            key={q}
+            id="recherche-catalogue"
+            name="q"
+            type="search"
+            placeholder="Titre, auteur ou ISBN"
+            defaultValue={q}
+          />
+          <button type="submit">Rechercher</button>
+        </div>
+        <nav aria-label="Rayons">
+          <ul className="rayons">
+            <li>
+              <Link to={adresseAvec('categorie', '')} aria-current={categorie ? undefined : 'page'}>
+                Tous
+              </Link>
+            </li>
+            {categories.map((rayon) => (
+              <li key={rayon.id}>
+                <Link
+                  to={adresseAvec('categorie', rayon.id)}
+                  aria-current={categorie === rayon.id ? 'page' : undefined}
+                >
+                  {rayon.libelle}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className="tri">
+          <label htmlFor="type-catalogue">Type</label>
+          <select
+            id="type-catalogue"
+            value={type}
+            onChange={(evenement) => navigate(adresseAvec('type', evenement.target.value))}
+          >
+            {types.map((option) => (
+              <option key={option.valeur} value={option.valeur}>
+                {option.libelle}
+              </option>
+            ))}
+          </select>
+        </div>
+      </form>
+
+      {contenu()}
+    </div>
+  )
 }
 
 export default CataloguePage

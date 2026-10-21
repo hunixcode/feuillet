@@ -121,3 +121,17 @@ Reste à faire :
 - Recherche insensible aux accents (« ile » ne trouve pas « Île »)
 - Front : brancher les écrans 2, 3 et 7 sur ces routes
 
+21/10/2026 - Noah (front A) : page catalogue (écran 2)
+
+Fait :
+- Page /catalogue reliée à GET /api/produits et GET /api/categories (services/produitService.ts et services/categorieService.ts)
+- Recherche, rayons (catégories du backend) et filtre par type ; les filtres sont dans l'adresse (/catalogue?categorie=roman&q=...)
+- Carte d'article de la maquette V2 (components/client/ProduitCarte) : couverture dessinée avec l'initiale, titre, auteur ou marque, prix en XPF, prix barré et remise en cas de promotion ; clic vers /produits/:id
+- Chargement, aucun résultat (avec « Demander ce livre ») et erreur avec « Réessayer », comme dans la maquette
+- types/produit.ts aligné sur docs/api.md (tauxTva, archive, champs par type, id de la promotion) et types/categorie.ts ajouté
+- 163 tests, le build et le lint passent
+
+Reste à faire :
+- Afficher « disponible » ou « épuisé » quand le backend enverra la disponibilité (dépend du stock)
+- Meilleures ventes (RG14) en haut de la page quand la route existera
+

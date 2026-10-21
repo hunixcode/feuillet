@@ -1,0 +1,210 @@
+.catalogue .page-intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px 32px;
+}
+
+.catalogue .page-intro h1 {
+  font-size: clamp(2.75rem, 6vw, 4.75rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.catalogue .page-intro p {
+  color: var(--gris);
+}
+
+.catalogue .filtres {
+  display: grid;
+  grid-template-columns: minmax(0, 380px) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px 40px;
+  margin: 40px 0 64px;
+}
+
+.catalogue .filtres > nav {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.catalogue .recherche {
+  display: flex;
+  align-items: center;
+  padding: 6px 6px 6px 24px;
+  border: 1px solid transparent;
+  border-radius: var(--rayon-pilule);
+  background: var(--gris-fond);
+}
+
+.catalogue .recherche:focus-within {
+  border-color: var(--laiton-fonce);
+}
+
+.catalogue .recherche input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 0;
+  border: 0;
+  background: transparent;
+}
+
+.catalogue .recherche input::placeholder {
+  color: var(--gris);
+}
+
+.catalogue .recherche input:focus {
+  outline: none;
+}
+
+.catalogue .recherche button {
+  padding: 11px 20px;
+  border: 0;
+  border-radius: var(--rayon-pilule);
+  background: var(--encre);
+  color: var(--blanc);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.catalogue .recherche button:hover {
+  background: var(--noir);
+}
+
+.catalogue .rayons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.catalogue .rayons a {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: var(--rayon-pilule);
+  background: var(--gris-fond);
+  color: var(--encre);
+  font-size: 0.9375rem;
+  text-decoration: none;
+}
+
+.catalogue .rayons a:hover {
+  background: var(--gris-fond-2);
+}
+
+.catalogue .rayons a[aria-current='page'] {
+  background: var(--encre);
+  color: var(--blanc);
+}
+
+.catalogue .tri {
+  grid-column: 3;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--gris);
+  font-size: 0.875rem;
+}
+
+.catalogue .tri select {
+  padding: 10px 16px;
+  border: 1px solid var(--ligne);
+  border-radius: var(--rayon-pilule);
+  background: var(--blanc);
+  color: var(--encre);
+}
+
+.catalogue .rayonnage {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 64px 32px;
+}
+
+.catalogue .vide {
+  max-width: 640px;
+  padding: 48px 0 24px;
+}
+
+.catalogue .vide h2 {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+}
+
+.catalogue .vide p {
+  margin-top: 20px;
+  color: var(--gris);
+  font-size: 1.125rem;
+}
+
+.catalogue .achat-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.catalogue .squelette {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--gris-fond-2);
+}
+
+.catalogue .squelette::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  transform: translateX(-100%);
+  animation: catalogue-reflet 1.4s ease-in-out infinite;
+}
+
+.catalogue .squelette-couverture {
+  aspect-ratio: 2 / 3;
+  border-radius: 2px 5px 5px 2px;
+}
+
+.catalogue .squelette-ligne {
+  height: 14px;
+  margin-top: 14px;
+}
+
+.catalogue .squelette-courte {
+  width: 55%;
+  margin-top: 8px;
+}
+
+@keyframes catalogue-reflet {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (max-width: 880px) {
+  .catalogue .filtres {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .catalogue .tri,
+  .catalogue .filtres > nav {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .catalogue .rayonnage {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 40px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalogue .squelette::after {
+    animation: none;
+  }
+}

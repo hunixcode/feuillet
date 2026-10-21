@@ -1,0 +1,124 @@
+.livre {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  text-decoration: none;
+}
+
+.livre-infos {
+  display: grid;
+  gap: 2px;
+}
+
+.livre-titre {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.022em;
+}
+
+.livre:hover .livre-titre {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.livre-auteur {
+  color: var(--gris);
+  font-size: 0.875rem;
+}
+
+.livre-prix {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-top: 8px;
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.livre-prix strong {
+  font-weight: 600;
+}
+
+.livre-prix s {
+  color: var(--gris);
+  font-size: 0.8125rem;
+}
+
+.promo {
+  color: var(--laiton-fonce);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.couverture {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  aspect-ratio: 2 / 3;
+  padding: 12% 11% 10% 15%;
+  overflow: hidden;
+  border-radius: 2px 5px 5px 2px;
+  background: var(--fond-couv);
+  color: var(--texte-couv);
+  container-type: inline-size;
+  box-shadow: 0 24px 40px -22px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.couverture::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6%;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.32), rgba(0, 0, 0, 0.04) 70%, rgba(255, 255, 255, 0.14));
+}
+
+.couverture-livre {
+  --fond-couv: #0d0d0f;
+  --texte-couv: var(--gris-fond);
+  --bloc: var(--laiton);
+}
+
+.couverture-magazine {
+  --fond-couv: #1f4e8c;
+  --texte-couv: var(--gris-fond);
+  --bloc: #e8b730;
+}
+
+.couverture-papeterie {
+  --fond-couv: #c49a6c;
+  --texte-couv: var(--encre);
+  --bloc: var(--encre);
+}
+
+.couv-lettre {
+  font-family: var(--etroit);
+  font-size: 96cqi;
+  font-weight: 900;
+  font-stretch: 62%;
+  line-height: 0.75;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+  color: var(--bloc);
+}
+
+.couv-titre {
+  margin-top: 8cqi;
+  font-family: var(--etroit);
+  font-size: 11cqi;
+  font-weight: 800;
+  font-stretch: 62%;
+  line-height: 0.9;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+.couv-auteur {
+  margin-top: auto;
+  font-size: 6cqi;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  opacity: 0.85;
+}

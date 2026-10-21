@@ -3,6 +3,7 @@ export type TypeProduit = 'livre' | 'magazine' | 'papeterie'
 export type Disponibilite = 'disponible' | 'epuise'
 
 export interface Promotion {
+  id: string
   remise: number
   debut: string
   fin: string
@@ -15,18 +16,19 @@ export interface Produit {
   type: TypeProduit
   categorie: string
   prix: number
+  tauxTva: number
+  archive: boolean
   prixApplique: number
   promotion?: Promotion
-  disponibilite: Disponibilite
-}
-
-export interface ProduitDetail extends Produit {
-  tauxTva: number
-  arriveePrevue?: string
   isbn?: string
   auteur?: string
   issn?: string
   numero?: number
   dateParution?: string
   marque?: string
+  disponibilite?: Disponibilite
+}
+
+export interface ProduitDetail extends Produit {
+  arriveePrevue?: string
 }
