@@ -1,9 +1,11 @@
 import request from "supertest";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../app.js";
+import { MemoireCategorieRepository } from "../repositories/MemoireCategorieRepository.js";
 import { MemoireProduitRepository } from "../repositories/MemoireProduitRepository.js";
 import { MemoireUtilisateurRepository } from "../repositories/MemoireUtilisateurRepository.js";
 import { AuthService, hasherMotDePasse } from "../services/AuthService.js";
+import { CategorieService } from "../services/CategorieService.js";
 import { ProduitService } from "../services/ProduitService.js";
 
 const inscriptionValide = {
@@ -21,7 +23,8 @@ describe("API d'authentification", () => {
     const authService = new AuthService(repository, { secretJwt: "secret-de-test", coutHash: 4 });
     app = createApp({
       authService,
-      produitService: new ProduitService(new MemoireProduitRepository()),
+      produitService: new ProduitService(new MemoireProduitRepository(), new MemoireCategorieRepository()),
+      categorieService: new CategorieService(new MemoireCategorieRepository(), new MemoireProduitRepository()),
       verifierBase: async () => true,
     });
   });

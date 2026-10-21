@@ -109,12 +109,12 @@ Reste à faire :
 
 Fait :
 - Historique des prix (RG15) : une entrée datée à la création puis à chaque changement de prix, jamais modifiée ; `GET /api/produits/:id/historique-prix` pour la courbe (responsable)
-- Catégories : liste fixe dans le code, `GET /api/categories` ; la catégorie d'un produit et le filtre sont vérifiés (rapport.md mis à jour : la liste n'est plus créée par le seed)
+- Catégories gérées par le responsable : `GET` public, `POST`, `PUT` (renommage, identifiant inchangé) et `DELETE` (refusé si un produit l'utilise) sur `/api/categories` ; la catégorie d'un produit doit exister ; le seed crée la liste de départ
 - Recherche `?q=` sans tenir compte de la casse (désignation, référence, auteur, ISBN, ISSN, marque)
 - Promotions (responsable) : programmer, lister, supprimer ; au plus une promotion par produit à une date (409 `PROMOTION_EN_CONFLIT`) ; `prixApplique` et `promotion` du jour dans chaque produit (RG11), jour compté à l'heure de Tahiti
 - Historique et promotions rangés dans le document produit (composition du diagramme de classes)
-- Seed : 12 produits de démonstration (références `DEMO-…`), réinitialisés à chaque lancement sans toucher aux autres produits
-- 107 tests backend
+- Seed : catégories de départ (ajoutées si absentes) et 12 produits de démonstration (références `DEMO-…`), réinitialisés à chaque lancement sans toucher aux autres produits
+- 120 tests backend
 
 Reste à faire :
 - Disponibilité et suppression limitée aux produits sans historique (RG05) : avec le stock

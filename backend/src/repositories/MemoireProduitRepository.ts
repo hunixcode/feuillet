@@ -44,6 +44,10 @@ export class MemoireProduitRepository implements ProduitRepository {
     return this.produits.delete(id);
   }
 
+  async utiliseCategorie(categorie: string): Promise<boolean> {
+    return [...this.produits.values()].some((p) => p.categorie === categorie);
+  }
+
   private verifierReferenceLibre(reference: string, idExclu?: string): void {
     for (const p of this.produits.values()) {
       if (p.reference === reference && p.id !== idExclu) {

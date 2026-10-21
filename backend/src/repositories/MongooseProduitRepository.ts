@@ -106,4 +106,8 @@ export class MongooseProduitRepository implements ProduitRepository {
     }
     return (await ProduitModel.deleteOne({ _id: id })).deletedCount === 1;
   }
+
+  async utiliseCategorie(categorie: string): Promise<boolean> {
+    return (await ProduitModel.exists({ categorie })) !== null;
+  }
 }

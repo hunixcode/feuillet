@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto";
 import { ErreurApi } from "../erreurs.js";
 import { dateDuJour, horlogeSysteme, type Horloge } from "../horloge.js";
 import {
-  CATEGORIES,
   TYPES_PRODUIT,
   type EntreePrix,
   type FicheProduit,
@@ -12,6 +11,7 @@ import {
   type Promotion,
   type TypeProduit,
 } from "../modeles/produit.js";
+import type { CategorieRepository } from "../repositories/CategorieRepository.js";
 import { ReferenceDejaUtiliseeErreur, type ProduitRepository } from "../repositories/ProduitRepository.js";
 import { erreurValidation, lireObjet, type ErreursChamps } from "../validation.js";
 
@@ -32,10 +32,6 @@ function estTypeProduit(valeur: unknown): valeur is TypeProduit {
   return TYPES_PRODUIT.includes(valeur as TypeProduit);
 }
 
-function estCategorie(valeur: string): boolean {
-  return CATEGORIES.some((c) => c.id === valeur);
-}
-
 function estEntierPositif(valeur: unknown): valeur is number {
   return Number.isInteger(valeur) && (valeur as number) >= 0;
 }
@@ -50,7 +46,7 @@ function lireTexte(valeur: unknown): string {
   return typeof valeur === "string" ? valeur.trim() : "";
 }
 
-function validerFiche(corps: unknown): FicheProduit {
+function validerFiche(corps: unknown, categoriesConnues: string[]): FicheProduit {
   const donnees = lireObjet(corps);
   const champs: ErreursChamps = {};
   const lireTexteObligatoire = (nom: string): string => {
@@ -65,7 +61,7 @@ function validerFiche(corps: unknown): FicheProduit {
   const reference = lireTexteObligatoire("reference");
   const designation = lireTexteObligatoire("designation");
   const categorie = lireTexte(donnees.categorie);
-  if (!estCategorie(categorie)) {
+  if (!categoriesConnues.includes(categorie)) {
     champs.categorie = MESSAGE_CATEGORIE;
   }
 
@@ -145,9 +141,6 @@ function lireFiltres(requete: unknown): FiltresProduits {
   }
   const categorie = lireTexte(parametres.categorie);
   if (categorie) {
-    if (!estCategorie(categorie)) {
-      throw erreurValidation({ categorie: MESSAGE_CATEGORIE });
-    }
     filtres.categorie = categorie;
   }
   return filtres;
@@ -213,6 +206,7 @@ function versCatalogue(
 export class ProduitService {
   constructor(
     private readonly produits: ProduitRepository,
+    private readonly categories: CategorieRepository,
     private readonly horloge: Horloge = horlogeSysteme,
   ) {}
 
@@ -230,7 +224,7 @@ export class ProduitService {
   }
 
   async creer(corps: unknown): Promise<ProduitCatalogue> {
-    const fiche = validerFiche(corps);
+    const fiche = validerFiche(corps, await this.identifiantsCategories());
     const historiquePrix = [{ date: this.horloge.maintenant(), prix: fiche.prix }];
     const cree = await this.produits
       .creer({ ...fiche, historiquePrix, promotions: [] })
@@ -240,7 +234,7 @@ export class ProduitService {
 
   // RG15 : un changement de prix ajoute une entrée datée ; l'historique existant n'est jamais modifié.
   async modifier(id: string, corps: unknown): Promise<ProduitCatalogue> {
-    const fiche = validerFiche(corps);
+    const fiche = validerFiche(corps, await this.identifiantsCategories());
     const actuel = await this.trouver(id);
     const historiquePrix =
       fiche.prix === actuel.prix
@@ -285,6 +279,10 @@ export class ProduitService {
       throw erreurIntrouvable("Promotion introuvable.");
     }
     await this.enregistrer({ ...produit, promotions });
+  }
+
+  private async identifiantsCategories(): Promise<string[]> {
+    return (await this.categories.lister()).map((c) => c.id);
   }
 
   private async trouver(id: string): Promise<Produit> {

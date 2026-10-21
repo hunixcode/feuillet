@@ -13,4 +13,5 @@ export interface ProduitRepository {
   trouverParId(id: string): Promise<Produit | null>;
   remplacer(produit: Produit): Promise<Produit | null>;
   supprimer(id: string): Promise<boolean>;
+  utiliseCategorie(categorie: string): Promise<boolean>;
 }

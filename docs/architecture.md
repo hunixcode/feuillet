@@ -47,7 +47,7 @@ Le backend expose pour l'instant `GET /api/health`, l'authentification (EX09) et
 backend/src/
 ├── app.ts            createApp(dependances) : routes + gestion d'erreurs
 ├── index.ts          lecture de l'environnement, connexion MongoDB, démarrage
-├── seed.ts           compte responsable et produits de démonstration (références DEMO-…, produitsDemo.ts)
+├── seed.ts           compte responsable, catégories de départ et produits de démonstration (DEMO-…, produitsDemo.ts)
 ├── erreurs.ts        ErreurApi et format d'erreur commun { code, message, details? }
 ├── horloge.ts        horloge injectable (EQ02)
 ├── modeles/          types du domaine et énumérations

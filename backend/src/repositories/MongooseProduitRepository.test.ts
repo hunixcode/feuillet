@@ -101,6 +101,13 @@ describe("MongooseProduitRepository", () => {
     );
   });
 
+  it("sait si une catégorie est utilisée, y compris par un produit archivé", async () => {
+    await repository.creer({ ...livre, archive: true });
+
+    await expect(repository.utiliseCategorie("roman")).resolves.toBe(true);
+    await expect(repository.utiliseCategorie("scolaire")).resolves.toBe(false);
+  });
+
   it("supprime un produit", async () => {
     const cree = await repository.creer(livre);
 

@@ -1,18 +1,6 @@
 export const TYPES_PRODUIT = ["livre", "magazine", "papeterie"] as const;
 export type TypeProduit = (typeof TYPES_PRODUIT)[number];
 
-// Rayons qui guident le client (rapport.md, vocabulaire) : liste fixe.
-export const CATEGORIES = [
-  { id: "roman", libelle: "Roman" },
-  { id: "policier", libelle: "Policier" },
-  { id: "bd-manga", libelle: "BD et manga" },
-  { id: "jeunesse", libelle: "Jeunesse" },
-  { id: "documentaire", libelle: "Documentaire" },
-  { id: "scolaire", libelle: "Scolaire" },
-  { id: "presse", libelle: "Presse" },
-  { id: "fournitures", libelle: "Fournitures" },
-] as const;
-
 export interface FicheProduit {
   reference: string;
   designation: string;

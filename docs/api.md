@@ -23,6 +23,8 @@ Toute erreur suit le format de `ApiError` (`frontend/src/types/api.ts`) :
 | 409 | `EMAIL_DEJA_UTILISE` | Inscription avec un e-mail existant (`details.champs.email`) |
 | 409 | `REFERENCE_DEJA_UTILISEE` | Produit avec une référence existante (`details.champs.reference`) |
 | 409 | `PROMOTION_EN_CONFLIT` | Promotion qui chevauche une autre promotion du même produit |
+| 409 | `CATEGORIE_DEJA_EXISTANTE` | Catégorie au nom déjà pris (`details.champs.libelle`) |
+| 409 | `CATEGORIE_UTILISEE` | Suppression d'une catégorie encore utilisée par un produit |
 | 500 | `ERREUR_SERVEUR` | Erreur inattendue |
 
 ## État de l'API
@@ -75,9 +77,14 @@ Route protégée : renvoie `{ "utilisateur": Utilisateur }` pour restaurer la se
 
 ## Catégories
 
-### `GET /api/categories`
+`Categorie` : `{ "id": "bd-et-manga", "libelle": "BD et manga" }`. L'`id` est tiré du libellé à la création (minuscules, sans accents, tirets) et ne change plus : renommer une catégorie ne touche ni ses produits ni les adresses `?categorie=`. Deux catégories ne portent pas le même nom, à la casse et aux accents près. Le seed crée la liste de départ.
 
-Liste fixe, publique : `[{ "id": "roman", "libelle": "Roman" }, …]`.
+| Route | Accès | Réponse | Erreurs |
+|---|---|---|---|
+| `GET /api/categories` | public | `200` : `Categorie[]` triées par libellé | |
+| `POST /api/categories` | responsable | `201` : `Categorie` ; corps `{ "libelle": "…" }` | `400 VALIDATION` (vide, sans lettre ni chiffre, plus de 100 caractères), `409 CATEGORIE_DEJA_EXISTANTE` |
+| `PUT /api/categories/:id` | responsable | `200` : `Categorie` renommée ; corps `{ "libelle": "…" }` | `400`, `404`, `409 CATEGORIE_DEJA_EXISTANTE` |
+| `DELETE /api/categories/:id` | responsable | `204` | `404`, `409 CATEGORIE_UTILISEE` si un produit, même archivé, l'utilise |
 
 ## Produits (EX01, écrans 2, 3 et 7)
 
@@ -108,7 +115,7 @@ Lecture publique ; création, modification et suppression réservées au **respo
 |---|---|
 | `reference` | Obligatoire, unique, 200 caractères au plus |
 | `designation` | Obligatoire, 200 caractères au plus |
-| `categorie` | Identifiant d'une catégorie de `GET /api/categories` |
+| `categorie` | Identifiant d'une catégorie existante (`GET /api/categories`) |
 | `type` | `livre`, `magazine` ou `papeterie` |
 | `prix` | Prix TTC en XPF, entier ≥ 0 (RG01) |
 | `tauxTva` | Entier de 0 à 100 (%) |
@@ -123,7 +130,7 @@ Les champs d'un autre type sont ignorés.
 
 Liste triée par désignation. Paramètres facultatifs : `q` (recherche sans tenir compte de la casse dans la désignation, la référence, l'auteur, l'ISBN, l'ISSN et la marque ; accents exacts), `type`, `categorie` (identifiant), `archive=true` pour lister **seulement** les produits archivés (par défaut : seulement les non archivés).
 
-Réponse `200` : `Produit[]`. Erreur : `400 VALIDATION` si `type` ou `categorie` est inconnu.
+Réponse `200` : `Produit[]`. Erreur : `400 VALIDATION` si `type` est inconnu (une catégorie sans produit donne une liste vide).
 
 ### `GET /api/produits/:id`
 

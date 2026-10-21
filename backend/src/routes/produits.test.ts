@@ -1,9 +1,11 @@
 import request from "supertest";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../app.js";
+import { MemoireCategorieRepository } from "../repositories/MemoireCategorieRepository.js";
 import { MemoireProduitRepository } from "../repositories/MemoireProduitRepository.js";
 import { MemoireUtilisateurRepository } from "../repositories/MemoireUtilisateurRepository.js";
 import { AuthService, hasherMotDePasse } from "../services/AuthService.js";
+import { CategorieService } from "../services/CategorieService.js";
 import { ProduitService } from "../services/ProduitService.js";
 
 const livre = {
@@ -38,10 +40,16 @@ describe("API des produits", () => {
   beforeEach(async () => {
     horloge = { date: new Date("2026-10-15T20:00:00Z"), maintenant: () => horloge.date };
     const utilisateurs = new MemoireUtilisateurRepository();
+    const produits = new MemoireProduitRepository();
+    const categories = new MemoireCategorieRepository();
+    for (const libelle of ["Roman", "Presse"]) {
+      await categories.creer({ id: libelle.toLowerCase(), libelle });
+    }
     const authService = new AuthService(utilisateurs, { secretJwt: "secret-de-test", coutHash: 4 });
     app = createApp({
       authService,
-      produitService: new ProduitService(new MemoireProduitRepository(), horloge),
+      produitService: new ProduitService(produits, categories, horloge),
+      categorieService: new CategorieService(categories, produits),
       verifierBase: async () => true,
     });
 
@@ -177,14 +185,13 @@ describe("API des produits", () => {
       expect(await chercher("(")).toEqual([]);
     });
 
-    it("répond 400 sur un type ou une catégorie inconnus", async () => {
+    it("répond 400 sur un type inconnu, une liste vide sur une catégorie sans produit", async () => {
       const parType = await request(app).get("/api/produits?type=jouet");
       const parCategorie = await request(app).get("/api/produits?categorie=inconnue");
 
       expect(parType.status).toBe(400);
       expect(parType.body.details.champs.type).toEqual(expect.any(String));
-      expect(parCategorie.status).toBe(400);
-      expect(parCategorie.body.details.champs.categorie).toEqual(expect.any(String));
+      expect(parCategorie.body).toEqual([]);
     });
   });
 

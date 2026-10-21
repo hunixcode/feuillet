@@ -1,19 +1,21 @@
 import express from "express";
 import { gererErreurs, routeIntrouvable } from "./erreurs.js";
-import { CATEGORIES } from "./modeles/produit.js";
 import { routesAuth } from "./routes/auth.js";
+import { routesCategories } from "./routes/categories.js";
 import { routesProduits } from "./routes/produits.js";
 import { routesSante, type VerifierBase } from "./routes/sante.js";
 import type { AuthService } from "./services/AuthService.js";
+import type { CategorieService } from "./services/CategorieService.js";
 import type { ProduitService } from "./services/ProduitService.js";
 
 export interface Dependances {
   authService: AuthService;
   produitService: ProduitService;
+  categorieService: CategorieService;
   verifierBase: VerifierBase;
 }
 
-export function createApp({ authService, produitService, verifierBase }: Dependances) {
+export function createApp({ authService, produitService, categorieService, verifierBase }: Dependances) {
   const app = express();
 
   app.disable("x-powered-by");
@@ -22,9 +24,7 @@ export function createApp({ authService, produitService, verifierBase }: Dependa
   app.use("/api/health", routesSante(verifierBase));
   app.use("/api/auth", routesAuth(authService));
   app.use("/api/produits", routesProduits(produitService, authService));
-  app.get("/api/categories", (_req, res) => {
-    res.json(CATEGORIES);
-  });
+  app.use("/api/categories", routesCategories(categorieService, authService));
 
   app.use(routeIntrouvable);
   app.use(gererErreurs);
