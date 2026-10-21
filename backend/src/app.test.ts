@@ -1,12 +1,15 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp } from "./app.js";
+import { MemoireProduitRepository } from "./repositories/MemoireProduitRepository.js";
 import { MemoireUtilisateurRepository } from "./repositories/MemoireUtilisateurRepository.js";
 import { AuthService } from "./services/AuthService.js";
+import { ProduitService } from "./services/ProduitService.js";
 
 function creerApp(baseConnectee = true) {
   return createApp({
     authService: new AuthService(new MemoireUtilisateurRepository(), { secretJwt: "secret" }),
+    produitService: new ProduitService(new MemoireProduitRepository()),
     verifierBase: async () => baseConnectee,
   });
 }
@@ -34,6 +37,7 @@ describe("application", () => {
     it("répond 500 au format commun si la vérification plante", async () => {
       const app = createApp({
         authService: new AuthService(new MemoireUtilisateurRepository(), { secretJwt: "secret" }),
+        produitService: new ProduitService(new MemoireProduitRepository()),
         verifierBase: async () => {
           throw new Error("panne");
         },

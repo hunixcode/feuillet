@@ -90,3 +90,18 @@ Reste à faire :
 Fait :
 - .github/workflows/frontend.yml sur le modèle de backend.yml : à chaque push sur main et à chaque pull request qui touche frontend/, GitHub lance npm ci, npm run lint, npm test et npm run build
 - Vérifié avant l'envoi dans une copie propre du frontend : installation avec npm ci, lint, 133 tests (aussi en heure UTC comme sur GitHub) et build passent
+
+20/10/2026 - Back : produits (EX01, CRUD simple)
+
+Fait :
+- Modèle `Produit` (référence unique, désignation, type livre / magazine / papeterie, catégorie, prix TTC entier, taux de TVA, archivé) avec les champs propres à chaque type du diagramme de classes
+- `GET /api/produits` (filtres type, catégorie, archivés), `GET /api/produits/:id` publics ; `POST`, `PUT`, `DELETE` réservés au responsable ; archivage et réactivation par `PUT` ; contrat dans `docs/api.md`
+- `ProduitService` (validation par champ, erreur `409 REFERENCE_DEJA_UTILISEE`), repositories Mongoose et en mémoire ; `lireObjet` et `erreurValidation` déplacés dans `validation.ts` pour être partagés avec `AuthService`
+- 93 tests backend (25 nouveaux : API produits et persistance Mongoose) ; API lancée et vérifiée de bout en bout sur une base temporaire
+
+Reste à faire :
+- Historique des prix (RG15) et règle « supprimer seulement sans historique, sinon archiver » (RG05)
+- Catégories (liste fixe du seed) : `categorie` est pour l'instant un texte libre
+- Recherche texte, promotions, prix appliqué et disponibilité attendus par le front
+- Produits de démonstration dans le seed (EQ03)
+

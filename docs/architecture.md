@@ -41,7 +41,7 @@ Le diagramme de séquence suit les noms de services de `rapport.md` (`ReapproSer
 └── docs/          Rapport, écrans et diagrammes
 ```
 
-Le backend expose pour l'instant `GET /api/health` et l'authentification (EX09) ; le contrat est dans [`api.md`](./api.md). La logique métier vit dans `backend/` et reste testable **sans interface** :
+Le backend expose pour l'instant `GET /api/health`, l'authentification (EX09) et le CRUD des produits (EX01) ; le contrat est dans [`api.md`](./api.md). La logique métier vit dans `backend/` et reste testable **sans interface** :
 
 ```
 backend/src/

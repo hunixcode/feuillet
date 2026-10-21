@@ -3,8 +3,10 @@ import mongoose from "mongoose";
 import { createApp } from "./app.js";
 import { verifierMongo } from "./baseDeDonnees.js";
 import { lireVariable } from "./config.js";
+import { MongooseProduitRepository } from "./repositories/MongooseProduitRepository.js";
 import { MongooseUtilisateurRepository } from "./repositories/MongooseUtilisateurRepository.js";
 import { AuthService } from "./services/AuthService.js";
+import { ProduitService } from "./services/ProduitService.js";
 
 const port = Number(process.env.PORT ?? 3000);
 const mongoUri = lireVariable("MONGODB_URI");
@@ -19,6 +21,8 @@ console.log("MongoDB connecté");
 
 const authService = new AuthService(new MongooseUtilisateurRepository(), { secretJwt });
 
-createApp({ authService, verifierBase: verifierMongo }).listen(port, () => {
+const produitService = new ProduitService(new MongooseProduitRepository());
+
+createApp({ authService, produitService, verifierBase: verifierMongo }).listen(port, () => {
   console.log(`API → http://localhost:${port}`);
 });
