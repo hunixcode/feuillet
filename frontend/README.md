@@ -26,7 +26,7 @@ Le proxy Vite redirige `/api/...` vers le backend sur le port 3000 (à changer d
 - main.tsx : point d'entrée, affiche App
 - App.tsx : branche le routeur
 - routes/router.tsx : la liste des routes (adresse -> page)
-- layouts/ : le cadre commun des pages (ClientLayout pour l'espace client, ResponsableLayout à créer pour l'espace responsable)
+- layouts/ : le cadre commun des pages (ClientLayout pour l'espace client, ResponsableLayout pour l'espace responsable /admin)
 - pages/client/ et pages/responsable/ : une page par écran
 - components/common/ : composants réutilisables `Button`, `Input`, `ErrorMessage` et `Loader`, avec leurs styles dans `common.css`
 - components/client/ : composants propres à l'espace client
@@ -46,7 +46,7 @@ Les prix sont des nombres entiers en XPF. `formatXPF` rejette les valeurs qui ne
 2. Ajouter sa route dans routes/router.tsx
 3. Ajouter un test si la page a de la logique
 
-Pour l'espace responsable : créer layouts/ResponsableLayout.tsx sur le modèle de ClientLayout, puis ajouter un bloc /responsable dans router.tsx avec ses pages en enfants.
+Pour l'espace responsable : ajouter la page dans le bloc /admin de router.tsx (enfant de ResponsableLayout, déjà protégé par le rôle responsable) et son lien dans le menu de ResponsableLayout.
 
 ## Style
 

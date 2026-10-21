@@ -182,7 +182,7 @@ Source **Prof** : réponse de l'enseignant (notes dans `questions-prof.md`). Sou
 
 ## 4. Périmètre des écrans et traçabilité
 
-Le détail de chaque écran est dans [`ecrans.md`](./ecrans.md). Les routes responsable sont proposées et pas encore créées.
+Le détail de chaque écran est dans [`ecrans.md`](./ecrans.md). Les routes responsable sont créées sous `/admin`, réservées au rôle responsable ; leurs pages restent à remplir.
 
 | # | Écran | Route | Exigences |
 |---|---|---|---|
@@ -191,14 +191,14 @@ Le détail de chaque écran est dans [`ecrans.md`](./ecrans.md). Les routes resp
 | 3 | Fiche produit | `/produits/:id` | EX03, EX04, EX05 |
 | 4 | Panier et commande | `/panier` | EX03 |
 | 5 | Mes demandes | `/demandes` | EX05 |
-| 6 | Tableau de bord | `/responsable` | EX06, EX08 |
-| 7 | Catalogue et prix | `/responsable/catalogue` | EX01, EX11 |
-| 8 | Stock et mouvements | `/responsable/stock` | EX02, EX04 |
-| 9 | Ventes et retours au comptoir | `/responsable/ventes` | EX03, EX07 |
-| 10 | Demandes et mises de côté | `/responsable/demandes` | EX05 |
-| 11 | Fournisseurs, commandes et réceptions | `/responsable/commandes` | EX06 |
-| 12 | Réapprovisionnement et rapports | `/responsable/rapports` | EX06, EX08 |
-| 13 | Paramètres | `/responsable/parametres` | RG06, RG09, RG13 |
+| 6 | Tableau de bord | `/admin` | EX06, EX08 |
+| 7 | Catalogue et prix | `/admin/catalogue` | EX01, EX11 |
+| 8 | Stock et mouvements | `/admin/stock` | EX02, EX04 |
+| 9 | Ventes et retours au comptoir | `/admin/ventes` | EX03, EX07 |
+| 10 | Demandes et mises de côté | `/admin/demandes` | EX05 |
+| 11 | Fournisseurs, commandes et réceptions | `/admin/commandes` | EX06 |
+| 12 | Réapprovisionnement et rapports | `/admin/rapports` | EX06, EX08 |
+| 13 | Paramètres | `/admin/parametres` | RG06, RG09, RG13 |
 
 | Exigence | Service prévu | Diagramme |
 |---|---|---|

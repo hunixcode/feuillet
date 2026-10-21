@@ -58,6 +58,18 @@ describe('en-tête de l espace client', () => {
     expect(menu.queryByRole('link', { name: 'Connexion' })).not.toBeInTheDocument()
   })
 
+  it('propose au responsable de revenir à son espace', () => {
+    const menu = afficher('/catalogue', { utilisateur: { ...client, role: 'responsable' } })
+
+    expect(menu.getByRole('link', { name: 'Espace responsable' })).toHaveAttribute('href', '/admin')
+  })
+
+  it('ne propose pas l espace responsable à un client', () => {
+    const menu = afficher('/catalogue', { utilisateur: client })
+
+    expect(menu.queryByRole('link', { name: 'Espace responsable' })).not.toBeInTheDocument()
+  })
+
   it('n affiche ni connexion ni déconnexion pendant la vérification de la session', () => {
     const menu = afficher('/catalogue', { chargement: true })
 
