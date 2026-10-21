@@ -90,3 +90,18 @@ Reste à faire :
 Fait :
 - .github/workflows/frontend.yml sur le modèle de backend.yml : à chaque push sur main et à chaque pull request qui touche frontend/, GitHub lance npm ci, npm run lint, npm test et npm run build
 - Vérifié avant l'envoi dans une copie propre du frontend : installation avec npm ci, lint, 133 tests (aussi en heure UTC comme sur GitHub) et build passent
+
+20/10/2026 - Hivanui (front B) : espace responsable /admin
+
+Fait :
+- ResponsableLayout : menu latéral avec les 8 écrans du responsable (écrans 6 à 13 de docs/ecrans.md), nom du responsable connecté et bouton Déconnexion qui ramène à /connexion ; menu en haut de page sur petit écran
+- Routes /admin, /admin/catalogue, /admin/stock, /admin/ventes, /admin/demandes, /admin/commandes, /admin/rapports, /admin/parametres, réservées au rôle responsable par ProtectedRoute ; une adresse inconnue sous /admin affiche la page introuvable dans le cadre responsable
+- Une page vide par écran dans pages/responsable/, à remplir quand les routes du backend existeront
+- Un responsable connecté arrive maintenant sur le tableau de bord au lieu de la page introuvable
+- Un responsable qui ouvre l'espace client voit un lien « Espace responsable » dans l'en-tête ; la page introuvable de /admin renvoie au tableau de bord
+- Table de traçabilité de rapport.md et fiche frontend/README.md passées de /responsable à /admin
+- 150 tests, le build et le lint passent ; couverture à 100 % du layout, des pages et des routes responsable
+
+Reste à faire :
+- Remplir les pages responsable au fur et à mesure des routes du backend (produits, stock, ventes...)
+- Répartir les pages client et responsable entre front A et front B
