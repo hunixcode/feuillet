@@ -30,6 +30,11 @@ function MenuCompte() {
 
   return (
     <>
+      {utilisateur.role === 'responsable' && (
+        <li>
+          <NavLink to="/admin">Espace responsable</NavLink>
+        </li>
+      )}
       <li>
         <span className="client-menu-nom">{utilisateur.nom}</span>
       </li>

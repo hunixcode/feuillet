@@ -1,7 +1,11 @@
 import { Link } from 'react-router-dom'
 import './NotFoundPage.css'
 
-function NotFoundPage() {
+interface NotFoundPageProps {
+  retour?: { to: string; label: string }
+}
+
+function NotFoundPage({ retour = { to: '/catalogue', label: 'Retour au catalogue' } }: NotFoundPageProps) {
   return (
     <section className="introuvable">
       <p className="introuvable-code" aria-hidden="true">
@@ -9,8 +13,8 @@ function NotFoundPage() {
       </p>
       <h1>Page introuvable</h1>
       <p>L'adresse est peut-être incorrecte, ou la page a été déplacée.</p>
-      <Link className="common-button common-button--primary" to="/catalogue">
-        Retour au catalogue
+      <Link className="common-button common-button--primary" to={retour.to}>
+        {retour.label}
       </Link>
     </section>
   )
