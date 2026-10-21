@@ -166,6 +166,17 @@ describe("API des produits", () => {
       expect(archives.body.map((p: { reference: string }) => p.reference)).toEqual(["LIV-002"]);
     });
 
+    it("recherche sans tenir compte de la casse dans la désignation, l'auteur, l'ISSN…", async () => {
+      const chercher = async (q: string) =>
+        (await request(app).get("/api/produits").query({ q })).body.map((p: { reference: string }) => p.reference);
+
+      expect(await chercher("TRÉSOR")).toEqual(["LIV-001"]);
+      expect(await chercher("stevenson")).toEqual(["LIV-001"]);
+      expect(await chercher("1234-5678")).toEqual(["MAG-001"]);
+      expect(await chercher("liv-")).toEqual(["LIV-001"]);
+      expect(await chercher("(")).toEqual([]);
+    });
+
     it("répond 400 sur un type ou une catégorie inconnus", async () => {
       const parType = await request(app).get("/api/produits?type=jouet");
       const parCategorie = await request(app).get("/api/produits?categorie=inconnue");

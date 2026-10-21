@@ -73,6 +73,9 @@ describe("MongooseProduitRepository", () => {
     await expect(repository.lister({ archive: false, type: "livre" })).resolves.toHaveLength(1);
     await expect(repository.lister({ archive: false, categorie: "scolaire" })).resolves.toHaveLength(1);
     await expect(repository.lister({ archive: true })).resolves.toHaveLength(1);
+    await expect(repository.lister({ archive: false, recherche: "STEVENSON" })).resolves.toHaveLength(1);
+    await expect(repository.lister({ archive: false, recherche: "cahier (" })).resolves.toHaveLength(0);
+    await expect(repository.lister({ archive: false, recherche: ".*" })).resolves.toHaveLength(0);
   });
 
   it("remplace un produit en entier : les champs absents disparaissent", async () => {

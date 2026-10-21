@@ -44,8 +44,12 @@ export type NouveauProduit = Omit<Produit, "id">;
 // Ce que voit le catalogue : la fiche, sans l'historique (réservé au responsable, EX11).
 export type ProduitCatalogue = FicheProduit & { id: string };
 
+// shortcut: recherche sensible aux accents (« ile » ne trouve pas « Île ») ; normaliser un champ dédié si besoin.
+export const CHAMPS_RECHERCHE = ["designation", "reference", "auteur", "isbn", "issn", "marque"] as const;
+
 export interface FiltresProduits {
   type?: TypeProduit;
   categorie?: string;
+  recherche?: string;
   archive: boolean;
 }

@@ -1,4 +1,4 @@
-import type { FiltresProduits, NouveauProduit, Produit } from "../modeles/produit.js";
+import { CHAMPS_RECHERCHE, type FiltresProduits, type NouveauProduit, type Produit } from "../modeles/produit.js";
 import { ReferenceDejaUtiliseeErreur, type ProduitRepository } from "./ProduitRepository.js";
 
 export class MemoireProduitRepository implements ProduitRepository {
@@ -12,13 +12,15 @@ export class MemoireProduitRepository implements ProduitRepository {
     return structuredClone(produit);
   }
 
-  async lister({ type, categorie, archive }: FiltresProduits): Promise<Produit[]> {
+  async lister({ type, categorie, recherche, archive }: FiltresProduits): Promise<Produit[]> {
+    const texte = recherche?.toLowerCase();
     return [...this.produits.values()]
       .filter(
         (p) =>
           p.archive === archive &&
           (type === undefined || p.type === type) &&
-          (categorie === undefined || p.categorie === categorie),
+          (categorie === undefined || p.categorie === categorie) &&
+          (texte === undefined || CHAMPS_RECHERCHE.some((c) => p[c]?.toLowerCase().includes(texte))),
       )
       .sort((a, b) => a.designation.localeCompare(b.designation))
       .map((p) => structuredClone(p));

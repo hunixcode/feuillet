@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import { estErreurDoublon } from "../baseDeDonnees.js";
 import {
+  CHAMPS_RECHERCHE,
   TYPES_PRODUIT,
   type FiltresProduits,
   type NouveauProduit,
@@ -49,11 +50,15 @@ export class MongooseProduitRepository implements ProduitRepository {
     }
   }
 
-  async lister({ type, categorie, archive }: FiltresProduits): Promise<Produit[]> {
+  async lister({ type, categorie, recherche, archive }: FiltresProduits): Promise<Produit[]> {
+    const motif = recherche?.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const documents = await ProduitModel.find({
       archive,
       ...(type === undefined ? {} : { type }),
       ...(categorie === undefined ? {} : { categorie }),
+      ...(motif === undefined
+        ? {}
+        : { $or: CHAMPS_RECHERCHE.map((champ) => ({ [champ]: { $regex: motif, $options: "i" } })) }),
     })
       .sort({ designation: 1 })
       .lean<DocumentProduit[]>();

@@ -134,6 +134,13 @@ function lireFiltres(requete: unknown): FiltresProduits {
     }
     filtres.type = parametres.type;
   }
+  const recherche = lireTexte(parametres.q);
+  if (recherche.length > LONGUEUR_MAX_TEXTE) {
+    throw erreurValidation({ q: MESSAGE_TROP_LONG });
+  }
+  if (recherche) {
+    filtres.recherche = recherche;
+  }
   const categorie = lireTexte(parametres.categorie);
   if (categorie) {
     if (!estCategorie(categorie)) {
