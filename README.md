@@ -27,7 +27,7 @@ Le détail (exigences EX01–EX11, règles RG01–RG15, décisions de cadrage is
 
 ## Stack
 - Front : React + Vite + TypeScript
-- Back : Node.js + Express + TypeScript (`GET /api/health` et authentification : inscription, connexion, session))
+- Back : Node.js + Express + TypeScript (`GET /api/health`, authentification : inscription, connexion, session ; CRUD des produits)
 - Base de données : MongoDB
 - Tests : Vitest
 - CI : GitHub Actions

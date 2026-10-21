@@ -91,17 +91,33 @@ Fait :
 - .github/workflows/frontend.yml sur le modèle de backend.yml : à chaque push sur main et à chaque pull request qui touche frontend/, GitHub lance npm ci, npm run lint, npm test et npm run build
 - Vérifié avant l'envoi dans une copie propre du frontend : installation avec npm ci, lint, 133 tests (aussi en heure UTC comme sur GitHub) et build passent
 
-20/10/2026 - Hivanui (front B) : espace responsable /admin
+20/10/2026 - Back : produits (EX01, CRUD simple)
 
 Fait :
-- ResponsableLayout : menu latéral avec les 8 écrans du responsable (écrans 6 à 13 de docs/ecrans.md), nom du responsable connecté et bouton Déconnexion qui ramène à /connexion ; menu en haut de page sur petit écran
-- Routes /admin, /admin/catalogue, /admin/stock, /admin/ventes, /admin/demandes, /admin/commandes, /admin/rapports, /admin/parametres, réservées au rôle responsable par ProtectedRoute ; une adresse inconnue sous /admin affiche la page introuvable dans le cadre responsable
-- Une page vide par écran dans pages/responsable/, à remplir quand les routes du backend existeront
-- Un responsable connecté arrive maintenant sur le tableau de bord au lieu de la page introuvable
-- Un responsable qui ouvre l'espace client voit un lien « Espace responsable » dans l'en-tête ; la page introuvable de /admin renvoie au tableau de bord
-- Table de traçabilité de rapport.md et fiche frontend/README.md passées de /responsable à /admin
-- 150 tests, le build et le lint passent ; couverture à 100 % du layout, des pages et des routes responsable
+- Modèle `Produit` (référence unique, désignation, type livre / magazine / papeterie, catégorie, prix TTC entier, taux de TVA, archivé) avec les champs propres à chaque type du diagramme de classes
+- `GET /api/produits` (filtres type, catégorie, archivés), `GET /api/produits/:id` publics ; `POST`, `PUT`, `DELETE` réservés au responsable ; archivage et réactivation par `PUT` ; contrat dans `docs/api.md`
+- `ProduitService` (validation par champ, erreur `409 REFERENCE_DEJA_UTILISEE`), repositories Mongoose et en mémoire ; `lireObjet` et `erreurValidation` déplacés dans `validation.ts` pour être partagés avec `AuthService`
+- 93 tests backend (25 nouveaux : API produits et persistance Mongoose) ; API lancée et vérifiée de bout en bout sur une base temporaire
 
 Reste à faire :
-- Remplir les pages responsable au fur et à mesure des routes du backend (produits, stock, ventes...)
-- Répartir les pages client et responsable entre front A et front B
+- Historique des prix (RG15) et règle « supprimer seulement sans historique, sinon archiver » (RG05)
+- Catégories (liste fixe du seed) : `categorie` est pour l'instant un texte libre
+- Recherche texte, promotions, prix appliqué et disponibilité attendus par le front
+- Produits de démonstration dans le seed (EQ03)
+
+21/10/2026 - Back : catalogue complet (EX01, EX11)
+
+Fait :
+- Historique des prix (RG15) : une entrée datée à la création puis à chaque changement de prix, jamais modifiée ; `GET /api/produits/:id/historique-prix` pour la courbe (responsable)
+- Catégories gérées par le responsable : `GET` public, `POST`, `PUT` (renommage, identifiant inchangé) et `DELETE` (refusé si un produit l'utilise) sur `/api/categories` ; la catégorie d'un produit doit exister ; le seed crée la liste de départ
+- Recherche `?q=` sans tenir compte de la casse (désignation, référence, auteur, ISBN, ISSN, marque)
+- Promotions (responsable) : programmer, lister, supprimer ; au plus une promotion par produit à une date (409 `PROMOTION_EN_CONFLIT`) ; `prixApplique` et `promotion` du jour dans chaque produit (RG11), jour compté à l'heure de Tahiti
+- Historique et promotions rangés dans le document produit (composition du diagramme de classes)
+- Seed : catégories de départ (ajoutées si absentes) et 12 produits de démonstration (références `DEMO-…`), réinitialisés à chaque lancement sans toucher aux autres produits
+- 120 tests backend
+
+Reste à faire :
+- Disponibilité et suppression limitée aux produits sans historique (RG05) : avec le stock
+- Recherche insensible aux accents (« ile » ne trouve pas « Île »)
+- Front : brancher les écrans 2, 3 et 7 sur ces routes
+

@@ -11,6 +11,7 @@ import {
   EmailDejaUtiliseErreur,
   type UtilisateurRepository,
 } from "../repositories/UtilisateurRepository.js";
+import { erreurValidation, lireObjet, type ErreursChamps } from "../validation.js";
 
 const LONGUEUR_MIN_MOT_DE_PASSE = 8;
 const OCTETS_MAX_MOT_DE_PASSE = 72;
@@ -42,20 +43,8 @@ interface DonneesConnexion {
   motDePasse: string;
 }
 
-type ErreursChamps = Record<string, string>;
-
-function lireObjet(corps: unknown): Record<string, unknown> {
-  return typeof corps === "object" && corps !== null && !Array.isArray(corps)
-    ? (corps as Record<string, unknown>)
-    : {};
-}
-
 function normaliserEmail(valeur: unknown): string {
   return typeof valeur === "string" ? valeur.trim().toLowerCase() : "";
-}
-
-function erreurValidation(champs: ErreursChamps): ErreurApi {
-  return new ErreurApi(400, "VALIDATION", "Certains champs sont invalides.", { champs });
 }
 
 function validerInscription(corps: unknown): DonneesInscription {
