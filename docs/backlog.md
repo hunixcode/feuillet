@@ -105,3 +105,19 @@ Reste à faire :
 - Recherche texte, promotions, prix appliqué et disponibilité attendus par le front
 - Produits de démonstration dans le seed (EQ03)
 
+21/10/2026 - Back : catalogue complet (EX01, EX11)
+
+Fait :
+- Historique des prix (RG15) : une entrée datée à la création puis à chaque changement de prix, jamais modifiée ; `GET /api/produits/:id/historique-prix` pour la courbe (responsable)
+- Catégories : liste fixe dans le code, `GET /api/categories` ; la catégorie d'un produit et le filtre sont vérifiés (rapport.md mis à jour : la liste n'est plus créée par le seed)
+- Recherche `?q=` sans tenir compte de la casse (désignation, référence, auteur, ISBN, ISSN, marque)
+- Promotions (responsable) : programmer, lister, supprimer ; au plus une promotion par produit à une date (409 `PROMOTION_EN_CONFLIT`) ; `prixApplique` et `promotion` du jour dans chaque produit (RG11), jour compté à l'heure de Tahiti
+- Historique et promotions rangés dans le document produit (composition du diagramme de classes)
+- Seed : 12 produits de démonstration (références `DEMO-…`), réinitialisés à chaque lancement sans toucher aux autres produits
+- 107 tests backend
+
+Reste à faire :
+- Disponibilité et suppression limitée aux produits sans historique (RG05) : avec le stock
+- Recherche insensible aux accents (« ile » ne trouve pas « Île »)
+- Front : brancher les écrans 2, 3 et 7 sur ces routes
+
