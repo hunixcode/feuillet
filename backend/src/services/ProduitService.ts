@@ -1,5 +1,6 @@
+import { randomUUID } from "node:crypto";
 import { ErreurApi } from "../erreurs.js";
-import { horlogeSysteme, type Horloge } from "../horloge.js";
+import { dateDuJour, horlogeSysteme, type Horloge } from "../horloge.js";
 import {
   CATEGORIES,
   TYPES_PRODUIT,
@@ -8,6 +9,7 @@ import {
   type FiltresProduits,
   type Produit,
   type ProduitCatalogue,
+  type Promotion,
   type TypeProduit,
 } from "../modeles/produit.js";
 import { ReferenceDejaUtiliseeErreur, type ProduitRepository } from "../repositories/ProduitRepository.js";
@@ -151,8 +153,35 @@ function lireFiltres(requete: unknown): FiltresProduits {
   return filtres;
 }
 
-function erreurIntrouvable(): ErreurApi {
-  return new ErreurApi(404, "INTROUVABLE", "Produit introuvable.");
+function validerPromotion(corps: unknown, aujourdhui: string): Omit<Promotion, "id"> {
+  const donnees = lireObjet(corps);
+  const champs: ErreursChamps = {};
+
+  const remise = donnees.remise;
+  if (!estEntierPositif(remise) || remise < 1 || remise > 100) {
+    champs.remise = "La remise doit être un pourcentage entier entre 1 et 100.";
+  }
+  const debut = lireTexte(donnees.debut);
+  if (!estDateValide(debut)) {
+    champs.debut = "La date de début doit être une date valide au format AAAA-MM-JJ.";
+  }
+  const fin = lireTexte(donnees.fin);
+  if (!estDateValide(fin)) {
+    champs.fin = "La date de fin doit être une date valide au format AAAA-MM-JJ.";
+  } else if (fin < debut) {
+    champs.fin = "La date de fin doit suivre la date de début.";
+  } else if (fin < aujourdhui) {
+    champs.fin = "Cette promotion serait déjà terminée.";
+  }
+
+  if (Object.keys(champs).length > 0) {
+    throw erreurValidation(champs);
+  }
+  return { remise: remise as number, debut, fin };
+}
+
+function erreurIntrouvable(message = "Produit introuvable."): ErreurApi {
+  return new ErreurApi(404, "INTROUVABLE", message);
 }
 
 function traduireErreurReference(erreur: unknown): never {
@@ -164,10 +193,21 @@ function traduireErreurReference(erreur: unknown): never {
   throw erreur;
 }
 
-function versCatalogue({ historiquePrix: _, ...produit }: Produit): ProduitCatalogue {
-  return produit;
+// RG11 : prix appliqué = arrondi(prix TTC × (100 − remise) / 100).
+export function prixApplique(prix: number, remise = 0): number {
+  return Math.round((prix * (100 - remise)) / 100);
 }
 
+function versCatalogue(
+  { historiquePrix: _, promotions, ...fiche }: Produit,
+  aujourdhui: string,
+): ProduitCatalogue {
+  const promotion = promotions.find((p) => p.debut <= aujourdhui && aujourdhui <= p.fin);
+  return { ...fiche, prixApplique: prixApplique(fiche.prix, promotion?.remise), ...(promotion && { promotion }) };
+}
+
+// shortcut: chaque écriture relit puis remplace le produit entier ; deux modifications simultanées
+// du même produit, la dernière gagne (un seul responsable). Passer à des mises à jour ciblées sinon.
 // shortcut: suppression toujours permise (RG05 : à restreindre aux produits sans historique
 // dès que mouvements et ventes existent).
 export class ProduitService {
@@ -177,11 +217,12 @@ export class ProduitService {
   ) {}
 
   async lister(requete: unknown): Promise<ProduitCatalogue[]> {
-    return (await this.produits.lister(lireFiltres(requete))).map(versCatalogue);
+    const aujourdhui = dateDuJour(this.horloge);
+    return (await this.produits.lister(lireFiltres(requete))).map((p) => versCatalogue(p, aujourdhui));
   }
 
   async obtenir(id: string): Promise<ProduitCatalogue> {
-    return versCatalogue(await this.trouver(id));
+    return versCatalogue(await this.trouver(id), dateDuJour(this.horloge));
   }
 
   async historiquePrix(id: string): Promise<EntreePrix[]> {
@@ -191,7 +232,10 @@ export class ProduitService {
   async creer(corps: unknown): Promise<ProduitCatalogue> {
     const fiche = validerFiche(corps);
     const historiquePrix = [{ date: this.horloge.maintenant(), prix: fiche.prix }];
-    return versCatalogue(await this.produits.creer({ ...fiche, historiquePrix }).catch(traduireErreurReference));
+    const cree = await this.produits
+      .creer({ ...fiche, historiquePrix, promotions: [] })
+      .catch(traduireErreurReference);
+    return versCatalogue(cree, dateDuJour(this.horloge));
   }
 
   // RG15 : un changement de prix ajoute une entrée datée ; l'historique existant n'est jamais modifié.
@@ -203,12 +247,12 @@ export class ProduitService {
         ? actuel.historiquePrix
         : [...actuel.historiquePrix, { date: this.horloge.maintenant(), prix: fiche.prix }];
     const modifie = await this.produits
-      .remplacer({ ...fiche, id, historiquePrix })
+      .remplacer({ ...fiche, id, historiquePrix, promotions: actuel.promotions })
       .catch(traduireErreurReference);
     if (!modifie) {
       throw erreurIntrouvable();
     }
-    return versCatalogue(modifie);
+    return versCatalogue(modifie, dateDuJour(this.horloge));
   }
 
   async supprimer(id: string): Promise<void> {
@@ -217,11 +261,43 @@ export class ProduitService {
     }
   }
 
+  async promotions(id: string): Promise<Promotion[]> {
+    return (await this.trouver(id)).promotions.sort((a, b) => a.debut.localeCompare(b.debut));
+  }
+
+  // Au plus une promotion active par produit à une date : les périodes ne se chevauchent pas.
+  async ajouterPromotion(id: string, corps: unknown): Promise<Promotion> {
+    const nouvelle = { id: randomUUID(), ...validerPromotion(corps, dateDuJour(this.horloge)) };
+    const produit = await this.trouver(id);
+    if (produit.promotions.some((p) => p.debut <= nouvelle.fin && nouvelle.debut <= p.fin)) {
+      throw new ErreurApi(409, "PROMOTION_EN_CONFLIT", "Une autre promotion couvre déjà une partie de ces dates.", {
+        champs: { debut: "Ces dates chevauchent une autre promotion." },
+      });
+    }
+    await this.enregistrer({ ...produit, promotions: [...produit.promotions, nouvelle] });
+    return nouvelle;
+  }
+
+  async supprimerPromotion(id: string, promotionId: string): Promise<void> {
+    const produit = await this.trouver(id);
+    const promotions = produit.promotions.filter((p) => p.id !== promotionId);
+    if (promotions.length === produit.promotions.length) {
+      throw erreurIntrouvable("Promotion introuvable.");
+    }
+    await this.enregistrer({ ...produit, promotions });
+  }
+
   private async trouver(id: string): Promise<Produit> {
     const produit = await this.produits.trouverParId(id);
     if (!produit) {
       throw erreurIntrouvable();
     }
     return produit;
+  }
+
+  private async enregistrer(produit: Produit): Promise<void> {
+    if (!(await this.produits.remplacer(produit))) {
+      throw erreurIntrouvable();
+    }
   }
 }

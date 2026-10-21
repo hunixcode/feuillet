@@ -25,6 +25,15 @@ const produitSchema = new Schema<NouveauProduit>(
     dateParution: String,
     marque: String,
     historiquePrix: [{ _id: false, date: { type: Date, required: true }, prix: { type: Number, required: true } }],
+    promotions: [
+      {
+        _id: false,
+        id: { type: String, required: true },
+        remise: { type: Number, required: true, min: 1, max: 100 },
+        debut: { type: String, required: true },
+        fin: { type: String, required: true },
+      },
+    ],
   },
   { versionKey: false },
 );

@@ -22,6 +22,7 @@ Toute erreur suit le format de `ApiError` (`frontend/src/types/api.ts`) :
 | 404 | `INTROUVABLE` | Route ou ressource inconnue |
 | 409 | `EMAIL_DEJA_UTILISE` | Inscription avec un e-mail existant (`details.champs.email`) |
 | 409 | `REFERENCE_DEJA_UTILISEE` | Produit avec une référence existante (`details.champs.reference`) |
+| 409 | `PROMOTION_EN_CONFLIT` | Promotion qui chevauche une autre promotion du même produit |
 | 500 | `ERREUR_SERVEUR` | Erreur inattendue |
 
 ## État de l'API
@@ -95,9 +96,13 @@ Lecture publique ; création, modification et suppression réservées au **respo
   "tauxTva": 5,
   "archive": false,
   "isbn": "9782070612758",
-  "auteur": "Robert Louis Stevenson"
+  "auteur": "Robert Louis Stevenson",
+  "prixApplique": 1530,
+  "promotion": { "id": "…", "remise": 15, "debut": "2026-10-10", "fin": "2026-10-31" }
 }
 ```
+
+`prixApplique` et `promotion` sont calculés, jamais envoyés par le client : `promotion` est la promotion du jour (absente s'il n'y en a pas) et `prixApplique` = arrondi(prix × (100 − remise) / 100) (RG11). Le jour est celui de Tahiti.
 
 | Champ | Règle |
 |---|---|
@@ -140,8 +145,20 @@ Responsable seulement (EX11, courbe des prix). Entrées dans l'ordre chronologiq
 
 Réponse `200` : `[{ "date": "2026-10-15T08:00:00.000Z", "prix": 1800 }, …]`. Erreur : `404 INTROUVABLE`.
 
+### Promotions (responsable seulement)
+
+`Promotion` : `{ "id": "…", "remise": 15, "debut": "2026-10-10", "fin": "2026-10-31" }`. Remise entière de 1 à 100 %, du jour de début au jour de fin inclus. Au plus une promotion par produit à une date : les périodes d'un produit ne se chevauchent pas.
+
+| Route | Réponse | Erreurs |
+|---|---|---|
+| `GET /api/produits/:id/promotions` | `200` : `Promotion[]` triées par début | `404` |
+| `POST /api/produits/:id/promotions` | `201` : `Promotion` | `400 VALIDATION` (remise, dates, fin avant début ou déjà passée), `404`, `409 PROMOTION_EN_CONFLIT` |
+| `DELETE /api/produits/:id/promotions/:promotionId` | `204` | `404` |
+
+Les promotions sont conservées quand la fiche est modifiée.
+
 ### `DELETE /api/produits/:id`
 
 Réponse `204` sans corps. Erreur : `404 INTROUVABLE`.
 
-Pas encore implémenté : suppression limitée aux produits sans historique (RG05), promotions, prix appliqué et disponibilité (attendus par les types du front), recherche texte.
+Pas encore implémenté : suppression limitée aux produits sans historique (RG05) et disponibilité (attendue par les types du front), qui dépendent du stock.

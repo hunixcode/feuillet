@@ -32,5 +32,23 @@ export function routesProduits(produits: ProduitService, auth: AuthService): Rou
     res.status(204).end();
   });
 
+  router.get("/:id/promotions", authentifier(auth), estResponsable, async (req: Request<{ id: string }>, res) => {
+    res.json(await produits.promotions(req.params.id));
+  });
+
+  router.post("/:id/promotions", authentifier(auth), estResponsable, async (req: Request<{ id: string }>, res) => {
+    res.status(201).json(await produits.ajouterPromotion(req.params.id, req.body));
+  });
+
+  router.delete(
+    "/:id/promotions/:promotionId",
+    authentifier(auth),
+    estResponsable,
+    async (req: Request<{ id: string; promotionId: string }>, res) => {
+      await produits.supprimerPromotion(req.params.id, req.params.promotionId);
+      res.status(204).end();
+    },
+  );
+
   return router;
 }

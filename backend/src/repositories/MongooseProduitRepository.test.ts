@@ -15,6 +15,7 @@ const livre: NouveauProduit = {
   archive: false,
   auteur: "Robert Louis Stevenson",
   historiquePrix: [{ date: new Date("2026-10-01T08:00:00Z"), prix: 1800 }],
+  promotions: [],
 };
 
 const cahier: NouveauProduit = {
@@ -27,6 +28,7 @@ const cahier: NouveauProduit = {
   archive: false,
   marque: "Clairefontaine",
   historiquePrix: [{ date: new Date("2026-10-01T08:00:00Z"), prix: 350 }],
+  promotions: [],
 };
 
 describe("MongooseProduitRepository", () => {
@@ -82,10 +84,11 @@ describe("MongooseProduitRepository", () => {
     const cree = await repository.creer(livre);
     const { auteur: _, ...sansAuteur } = cree;
     const historiquePrix = [...livre.historiquePrix, { date: new Date("2026-10-15T08:00:00Z"), prix: 2000 }];
+    const promotions = [{ id: "promo-1", remise: 10, debut: "2026-10-15", fin: "2026-10-31" }];
 
-    const remplace = await repository.remplacer({ ...sansAuteur, prix: 2000, historiquePrix });
+    const remplace = await repository.remplacer({ ...sansAuteur, prix: 2000, historiquePrix, promotions });
 
-    expect(remplace).toEqual({ ...sansAuteur, prix: 2000, historiquePrix });
+    expect(remplace).toEqual({ ...sansAuteur, prix: 2000, historiquePrix, promotions });
     await expect(repository.trouverParId(cree.id)).resolves.toEqual(remplace);
   });
 
