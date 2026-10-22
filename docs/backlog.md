@@ -135,3 +135,21 @@ Reste à faire :
 - Afficher « disponible » ou « épuisé » quand le backend enverra la disponibilité (dépend du stock)
 - Meilleures ventes (RG14) en haut de la page quand la route existera
 
+22/10/2026 - Back : stock et mouvements (EX02, EX04)
+
+Fait :
+- Stock par produit (physique, mis de côté, défectueux) et journal des mouvements (date, type, quantité, motif, opérateur ; avant et après pour un ajustement)
+- Correction d'inventaire, article abîmé (ajustement vers le stock défectueux, décision 9), sortie du stock défectueux ; jamais sous le mis de côté (RG04)
+- `GET /api/stock`, `GET /api/produits/:id/stock`, `GET /api/mouvements` pour l'écran 8 ; contrat dans `docs/api.md`
+- `disponibilite` (« disponible » ou « épuisé ») dans chaque produit du catalogue ; suppression refusée pour un produit qui a des mouvements (RG05, 409 `PRODUIT_AVEC_HISTORIQUE`)
+- Stock et mouvement écrits ensemble dans une transaction MongoDB, avec refus si le stock a changé entre-temps (409 `STOCK_MODIFIE`)
+- Seed : stock de départ des produits de démonstration (DEMO-LIV-006 épuisé)
+- Lecture des anciens produits sans historique des prix ni promotions (correctif séparé)
+- 136 tests backend ; le build n'embarque plus les repositories en mémoire
+
+Reste à faire :
+- RG05 : compter aussi les demandes et les commandes fournisseur quand elles existeront
+- Mis de côté : alimenté par les demandes (EX05)
+- Seuil d'alerte et quantité achetée à l'origine : avec le réapprovisionnement (EX06)
+- Front : écran 8 et affichage de la disponibilité
+
