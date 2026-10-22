@@ -17,9 +17,11 @@ export function formatXPF(montant: number): string {
 }
 
 export function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(
-    new Date(iso),
-  )
+  const jourSeul = /^\d{4}-\d{2}-\d{2}$/.test(iso)
+  return new Intl.DateTimeFormat('fr-FR', {
+    dateStyle: 'long',
+    ...(jourSeul ? { timeZone: 'UTC' } : {}),
+  }).format(new Date(iso))
 }
 
 export function formatJour(jour: string): string {

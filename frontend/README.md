@@ -28,8 +28,9 @@ Le proxy Vite redirige `/api/...` vers le backend sur le port 3000 (à changer d
 - routes/router.tsx : la liste des routes (adresse -> page)
 - layouts/ : le cadre commun des pages (ClientLayout pour l'espace client, ResponsableLayout pour l'espace responsable /admin)
 - pages/client/ et pages/responsable/ : une page par écran
-- components/common/ : composants réutilisables `Button`, `Input`, `ErrorMessage` et `Loader`, avec leurs styles dans `common.css`
+- components/common/ : composants réutilisables `Button`, `Input`, `Select`, `ErrorMessage` et `Loader`, avec leurs styles dans `common.css`
 - components/client/ : composants propres à l'espace client
+- components/responsable/ : composants propres à l'espace responsable (formulaire produit, promotions, courbe des prix, catégories)
 - services/api.ts : client HTTP commun (`get`, `post`, `put`, `delete`), préfixe `/api`, JSON et token `localStorage`
 - services/ : services d'accès aux données ; les pages et composants ne font pas d'appel réseau directement
 - contexts/ : l'état partagé entre les pages (utilisateur connecté, panier)

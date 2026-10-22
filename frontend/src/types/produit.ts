@@ -27,8 +27,19 @@ export interface Produit {
   dateParution?: string
   marque?: string
   disponibilite?: Disponibilite
+  quantiteVendable?: number
 }
 
 export interface ProduitDetail extends Produit {
   arriveePrevue?: string
+}
+
+export type FicheProduit = Omit<
+  Produit,
+  'id' | 'prixApplique' | 'promotion' | 'disponibilite' | 'quantiteVendable'
+>
+
+export interface EntreePrix {
+  date: string
+  prix: number
 }

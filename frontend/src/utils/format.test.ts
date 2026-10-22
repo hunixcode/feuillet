@@ -55,6 +55,11 @@ describe('formatDate', () => {
     expect(formatDate('2024-02-29T12:00:00.000Z')).toBe('29 février 2024')
   })
 
+  it('garde le jour d’une date sans heure, quel que soit le fuseau', () => {
+    expect(formatDate('2026-10-10')).toBe('10 octobre 2026')
+    expect(formatDate('2026-01-01')).toBe('1 janvier 2026')
+  })
+
   it('rejette une date vide ou invalide', () => {
     expect(() => formatDate('')).toThrow(RangeError)
     expect(() => formatDate('pas-une-date')).toThrow(RangeError)

@@ -137,21 +137,21 @@ Reste à faire :
 - Afficher « disponible » ou « épuisé » quand le backend enverra la disponibilité (dépend du stock)
 - Meilleures ventes (RG14) en haut de la page quand la route existera
 
-21/10/2026 - Noah (front A) : fiche produit (écran 3)
+
+21/10/2026 - Front : catalogue du responsable (écran 7, EX01, EX11)
 
 Fait :
-- Page /produits/:id reliée à GET /api/produits/:id (obtenirProduit dans services/produitService.ts)
-- Désignation, auteur ou marque, prix TTC en XPF, taux de TVA, référence et catégorie ; en promotion : prix barré, remise et date de fin
-- Champs selon le type : auteur et ISBN (livre), ISSN, numéro et date de parution (magazine), marque (papeterie)
-- Fil d'Ariane vers le catalogue et vers le rayon du produit ; page introuvable si le produit n'existe pas (404) ; erreur avec « Réessayer »
-- Couverture partagée avec le catalogue (components/client/Couverture)
-- utils/format.ts : formatJour pour les dates AAAA-MM-JJ de l'API, sans décalage d'un jour à l'heure de Tahiti (formatDate affichait le 30 au lieu du 31)
-- Quantité et bouton « Ajouter au panier » de la maquette, désactivés avec « L'ajout au panier sera bientôt disponible » en attendant le panier
-- 176 tests (vérifiés à l'heure de Tahiti et en UTC), le build et le lint passent ; fiche vérifiée avec la vraie base
-- Titre de l'onglet propre à chaque page (« Catalogue · Feuillet », « L'Île au trésor · Feuillet », Connexion, Créer un compte, Page introuvable) avec la balise title de React 19 ; 179 tests
-- Page d'erreur générale (pages/ErreurPage) branchée en haut du routeur (errorElement) : si une page plante, « Une erreur est survenue » avec Réessayer et Retour au catalogue, au lieu de l'écran brut de React Router ; 180 tests
-- Chargement de la fiche produit en squelette (blocs gris animés à la place de la couverture, du titre, du prix et des détails), comme le catalogue ; les styles des squelettes sont maintenant communs dans index.css
+- Page /admin/catalogue branchée sur `/api/produits` et `/api/categories` : articles actifs et archivés dans deux onglets, recherche, filtres par type et par catégorie ; prix barré et prix appliqué en cas de promotion
+- Panneau d'un article : modification de la fiche (champs du type choisi), archiver ou réactiver, supprimer après confirmation, promotions (programmer, supprimer, « en cours »), historique du prix en marches (SVG, sans bibliothèque) : prix catalogue, promotion en cours en pointillés, mois sous l'axe et légende
+- Colonne Promotion : remise ou « Aucune »
+- Création d'un article et gestion des catégories (ajouter, renommer, supprimer) dans le même panneau ; erreurs du backend affichées sous chaque champ
+- `services/catalogueAdminService.ts` (création, modification, archivage, suppression, promotions, historique des prix, catégories) ; réutilise `Produit`, `Promotion` et `Categorie` du catalogue client, ajoute `FicheProduit` et `EntreePrix` à `types/produit.ts` ; composant commun `Select`
+- `formatDate` garde le jour d'une date AAAA-MM-JJ (avant, une promotion du 10 octobre s'affichait « 9 octobre » à Tahiti) ; profite aussi au catalogue client
+- Vérifié contre la vraie API (repositories en mémoire) : création, modification, historique des prix, promotions, archivage, suppression et catégories, avec les erreurs 400 / 409
+- 183 tests frontend (20 nouveaux), lint et build passent
 
 Reste à faire :
-- Disponibilité, ajout au panier et demande d'un article épuisé, quand le stock, le panier et les demandes existeront
-
+- Colonne Disponibilité prête : elle affiche « 9 vendables » / « Épuisé » à partir d'un champ `quantiteVendable` (nom du diagramme de classes) que l'API doit ajouter à chaque produit avec le stock ; en attendant « Non renseigné ». Nom du champ à valider avec le back
+- Seuil d'alerte dans la liste : avec le stock
+- Bouton Supprimer seulement pour un article sans historique (RG05) : il faut que l'API indique si l'article est supprimable
+- Rattacher une demande hors catalogue à un article créé : avec les demandes
