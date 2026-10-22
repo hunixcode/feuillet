@@ -145,7 +145,8 @@ Fait :
 - Fil d'Ariane vers le catalogue et vers le rayon du produit ; page introuvable si le produit n'existe pas (404) ; erreur avec « Réessayer »
 - Couverture partagée avec le catalogue (components/client/Couverture)
 - utils/format.ts : formatJour pour les dates AAAA-MM-JJ de l'API, sans décalage d'un jour à l'heure de Tahiti (formatDate affichait le 30 au lieu du 31)
-- 175 tests (vérifiés à l'heure de Tahiti et en UTC), le build et le lint passent
+- Quantité et bouton « Ajouter au panier » de la maquette, désactivés avec « L'ajout au panier sera bientôt disponible » en attendant le panier
+- 176 tests (vérifiés à l'heure de Tahiti et en UTC), le build et le lint passent ; fiche vérifiée avec la vraie base
 
 Reste à faire :
 - Disponibilité, ajout au panier et demande d'un article épuisé, quand le stock, le panier et les demandes existeront

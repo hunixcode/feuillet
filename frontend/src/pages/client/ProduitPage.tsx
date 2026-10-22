@@ -135,6 +135,30 @@ function ProduitPage() {
                 `Promotion valable jusqu'au ${formatJour(produit.promotion.fin)}. `}
               TVA de {produit.tauxTva} % incluse.
             </p>
+            <div className="achat-ligne">
+              <div className="quantite">
+                <button type="button" aria-label="Retirer un exemplaire" disabled>
+                  −
+                </button>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  aria-label="Quantité"
+                  value="1"
+                  readOnly
+                  disabled
+                />
+                <button type="button" aria-label="Ajouter un exemplaire" disabled>
+                  +
+                </button>
+              </div>
+              <Button disabled aria-describedby="achat-bientot">
+                Ajouter au panier
+              </Button>
+            </div>
+            <p className="aide" id="achat-bientot">
+              L'ajout au panier sera bientôt disponible.
+            </p>
           </div>
 
           <dl className="details">

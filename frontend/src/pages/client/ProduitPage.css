@@ -85,6 +85,43 @@
   font-weight: 600;
 }
 
+.fiche .achat-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.fiche .quantite {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--ligne);
+  border-radius: var(--rayon-pilule);
+}
+
+.fiche .quantite button {
+  width: 42px;
+  height: 44px;
+  border: 0;
+  background: none;
+  font-size: 1.125rem;
+  cursor: pointer;
+}
+
+.fiche .quantite button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.fiche .quantite input {
+  width: 36px;
+  border: 0;
+  background: none;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 .fiche .aide {
   color: var(--gris);
   font-size: 0.875rem;

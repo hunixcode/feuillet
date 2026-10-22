@@ -113,6 +113,19 @@ describe('fiche produit', () => {
     expect(screen.getByText(/Promotion valable jusqu'au 31 octobre 2026\./)).toBeInTheDocument()
   })
 
+  it('montre l ajout au panier de la maquette, désactivé en attendant le panier', async () => {
+    simulerApi(ecume)
+    afficher('p-1')
+
+    const bouton = await screen.findByRole('button', { name: 'Ajouter au panier' })
+    expect(bouton).toBeDisabled()
+    expect(bouton).toHaveAccessibleDescription('L\'ajout au panier sera bientôt disponible.')
+    expect(screen.getByLabelText('Quantité')).toHaveValue('1')
+    expect(screen.getByLabelText('Quantité')).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Retirer un exemplaire' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Ajouter un exemplaire' })).toBeDisabled()
+  })
+
   it('affiche le prix sans promotion', async () => {
     simulerApi(carnet)
     afficher('p-3')
