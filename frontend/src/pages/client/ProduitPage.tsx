@@ -96,6 +96,7 @@ function ProduitPage() {
 
   return (
     <article className="fiche">
+      <title>{`${produit.designation} · Feuillet`}</title>
       <nav className="fil" aria-label="Fil d'Ariane">
         <Link to="/catalogue">Catalogue</Link>
         {categorie && (

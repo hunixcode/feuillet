@@ -184,6 +184,7 @@ function CataloguePage() {
 
   return (
     <div className="catalogue">
+      <title>Catalogue · Feuillet</title>
       <div className="page-intro">
         <h1>Catalogue</h1>
         <p>{intro()}</p>

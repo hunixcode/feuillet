@@ -92,6 +92,21 @@ describe('page du catalogue', () => {
     expect(screen.getByText('650 XPF')).toBeInTheDocument()
   })
 
+  it('donne son titre à l onglet, à la place du titre par défaut de index.html', async () => {
+    const titreParDefaut = document.createElement('title')
+    titreParDefaut.textContent = 'Feuillet'
+    document.head.appendChild(titreParDefaut)
+    try {
+      simulerApi([ileAuTresor])
+      afficher()
+      await screen.findByText('1 article')
+
+      expect(document.title).toBe('Catalogue · Feuillet')
+    } finally {
+      titreParDefaut.remove()
+    }
+  })
+
   it('affiche le prix remisé, le prix barré et la remise d une promotion', async () => {
     simulerApi([ileAuTresor])
     afficher()

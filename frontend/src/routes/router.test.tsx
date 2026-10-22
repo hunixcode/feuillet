@@ -48,6 +48,7 @@ describe('routes de l espace client', () => {
     afficher('/adresse-inconnue')
     expect(await screen.findByRole('heading', { name: 'Page introuvable' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Retour au catalogue' })).toHaveAttribute('href', '/catalogue')
+    expect(document.title).toBe('Page introuvable · Feuillet')
   })
 
   it('envoie vers la connexion un visiteur qui ouvre ses demandes', async () => {

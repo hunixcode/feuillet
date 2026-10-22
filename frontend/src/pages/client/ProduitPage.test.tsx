@@ -101,6 +101,7 @@ describe('fiche produit', () => {
     expect(details().getByText('Roman')).toBeInTheDocument()
     expect(details().getByText('9782253140870')).toBeInTheDocument()
     expect(screen.getByText(/TVA de 5 % incluse\./)).toBeInTheDocument()
+    expect(document.title).toBe('L\'Écume des jours · Feuillet')
   })
 
   it('affiche le prix remisé, le prix barré, la remise et la fin de la promotion', async () => {

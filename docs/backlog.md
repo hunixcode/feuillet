@@ -148,6 +148,7 @@ Fait :
 - utils/format.ts : formatJour pour les dates AAAA-MM-JJ de l'API, sans décalage d'un jour à l'heure de Tahiti (formatDate affichait le 30 au lieu du 31)
 - Quantité et bouton « Ajouter au panier » de la maquette, désactivés avec « L'ajout au panier sera bientôt disponible » en attendant le panier
 - 176 tests (vérifiés à l'heure de Tahiti et en UTC), le build et le lint passent ; fiche vérifiée avec la vraie base
+- Titre de l'onglet propre à chaque page (« Catalogue · Feuillet », « L'Île au trésor · Feuillet », Connexion, Créer un compte, Page introuvable) avec la balise title de React 19 ; 179 tests
 
 Reste à faire :
 - Disponibilité, ajout au panier et demande d'un article épuisé, quand le stock, le panier et les demandes existeront

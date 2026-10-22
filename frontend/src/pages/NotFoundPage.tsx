@@ -8,6 +8,7 @@ interface NotFoundPageProps {
 function NotFoundPage({ retour = { to: '/catalogue', label: 'Retour au catalogue' } }: NotFoundPageProps) {
   return (
     <section className="introuvable">
+      <title>Page introuvable · Feuillet</title>
       <p className="introuvable-code" aria-hidden="true">
         404
       </p>
