@@ -32,8 +32,26 @@
   background: var(--gris-fond);
 }
 
-.fiche-visuel .couverture {
+.fiche-visuel .couverture,
+.fiche-visuel .squelette-couverture {
   width: min(100%, 300px);
+}
+
+.fiche .squelette-fil {
+  width: 160px;
+  height: 19px;
+}
+
+.fiche .squelette-titre {
+  width: 80%;
+  height: 48px;
+  margin-top: 14px;
+}
+
+.fiche .squelette-prix {
+  width: 40%;
+  height: 36px;
+  margin-top: 40px;
 }
 
 .fiche-infos {

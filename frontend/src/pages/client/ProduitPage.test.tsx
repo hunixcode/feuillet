@@ -93,6 +93,7 @@ describe('fiche produit', () => {
     afficher('p-1')
 
     expect(screen.getByRole('status')).toHaveTextContent('Chargement de l\'article…')
+    expect(document.querySelector('.fiche .squelette-couverture')).not.toBeNull()
     expect(
       await screen.findByRole('heading', { level: 1, name: 'L\'Écume des jours' }),
     ).toBeInTheDocument()

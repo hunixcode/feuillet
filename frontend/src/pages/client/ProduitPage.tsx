@@ -3,7 +3,6 @@ import { Link, useParams } from 'react-router-dom'
 import Couverture from '../../components/client/Couverture.tsx'
 import Button from '../../components/common/Button.tsx'
 import ErrorMessage from '../../components/common/ErrorMessage.tsx'
-import Loader from '../../components/common/Loader.tsx'
 import { ApiRequestError } from '../../services/api'
 import { listerCategories } from '../../services/categorieService'
 import { obtenirProduit } from '../../services/produitService'
@@ -68,7 +67,28 @@ function ProduitPage() {
   }, [id, cle])
 
   if (chargement || !resultat) {
-    return <Loader>Chargement de l'article…</Loader>
+    return (
+      <div className="fiche" aria-busy="true">
+        <p className="visuellement-cache" role="status">
+          Chargement de l'article…
+        </p>
+        <div className="fil">
+          <div className="squelette squelette-fil" />
+        </div>
+        <div className="fiche-grille">
+          <div className="fiche-visuel">
+            <div className="squelette squelette-couverture" />
+          </div>
+          <div className="fiche-infos">
+            <div className="squelette squelette-ligne squelette-courte" />
+            <div className="squelette squelette-titre" />
+            <div className="squelette squelette-prix" />
+            <div className="squelette squelette-ligne" />
+            <div className="squelette squelette-ligne squelette-courte" />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (resultat.introuvable) {

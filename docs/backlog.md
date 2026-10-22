@@ -150,6 +150,7 @@ Fait :
 - 176 tests (vérifiés à l'heure de Tahiti et en UTC), le build et le lint passent ; fiche vérifiée avec la vraie base
 - Titre de l'onglet propre à chaque page (« Catalogue · Feuillet », « L'Île au trésor · Feuillet », Connexion, Créer un compte, Page introuvable) avec la balise title de React 19 ; 179 tests
 - Page d'erreur générale (pages/ErreurPage) branchée en haut du routeur (errorElement) : si une page plante, « Une erreur est survenue » avec Réessayer et Retour au catalogue, au lieu de l'écran brut de React Router ; 180 tests
+- Chargement de la fiche produit en squelette (blocs gris animés à la place de la couverture, du titre, du prix et des détails), comme le catalogue ; les styles des squelettes sont maintenant communs dans index.css
 
 Reste à faire :
 - Disponibilité, ajout au panier et demande d'un article épuisé, quand le stock, le panier et les demandes existeront
