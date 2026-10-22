@@ -135,3 +135,21 @@ Reste à faire :
 - Afficher « disponible » ou « épuisé » quand le backend enverra la disponibilité (dépend du stock)
 - Meilleures ventes (RG14) en haut de la page quand la route existera
 
+
+21/10/2026 - Front : catalogue du responsable (écran 7, EX01, EX11)
+
+Fait :
+- Page /admin/catalogue branchée sur `/api/produits` et `/api/categories` : articles actifs et archivés dans deux onglets, recherche, filtres par type et par catégorie ; prix barré et prix appliqué en cas de promotion
+- Panneau d'un article : modification de la fiche (champs du type choisi), archiver ou réactiver, supprimer après confirmation, promotions (programmer, supprimer, « en cours »), historique du prix en marches (SVG, sans bibliothèque) : prix catalogue, promotion en cours en pointillés, mois sous l'axe et légende
+- Colonne Promotion : remise ou « Aucune »
+- Création d'un article et gestion des catégories (ajouter, renommer, supprimer) dans le même panneau ; erreurs du backend affichées sous chaque champ
+- `services/catalogueAdminService.ts` (création, modification, archivage, suppression, promotions, historique des prix, catégories) ; réutilise `Produit`, `Promotion` et `Categorie` du catalogue client, ajoute `FicheProduit` et `EntreePrix` à `types/produit.ts` ; composant commun `Select`
+- `formatDate` garde le jour d'une date AAAA-MM-JJ (avant, une promotion du 10 octobre s'affichait « 9 octobre » à Tahiti) ; profite aussi au catalogue client
+- Vérifié contre la vraie API (repositories en mémoire) : création, modification, historique des prix, promotions, archivage, suppression et catégories, avec les erreurs 400 / 409
+- 183 tests frontend (20 nouveaux), lint et build passent
+
+Reste à faire :
+- Colonne Disponibilité prête : elle affiche « 9 vendables » / « Épuisé » à partir d'un champ `quantiteVendable` (nom du diagramme de classes) que l'API doit ajouter à chaque produit avec le stock ; en attendant « Non renseigné ». Nom du champ à valider avec le back
+- Seuil d'alerte dans la liste : avec le stock
+- Bouton Supprimer seulement pour un article sans historique (RG05) : il faut que l'API indique si l'article est supprimable
+- Rattacher une demande hors catalogue à un article créé : avec les demandes
