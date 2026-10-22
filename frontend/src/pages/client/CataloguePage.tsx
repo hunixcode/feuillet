@@ -15,6 +15,22 @@ interface Resultat {
   erreur: string
 }
 
+const tris = [
+  { valeur: '', libelle: 'Titre' },
+  { valeur: 'prix-croissant', libelle: 'Prix croissant' },
+  { valeur: 'prix-decroissant', libelle: 'Prix décroissant' },
+]
+
+function trier(produits: Produit[], tri: string): Produit[] {
+  if (tri === 'prix-croissant') {
+    return [...produits].sort((a, b) => a.prixApplique - b.prixApplique)
+  }
+  if (tri === 'prix-decroissant') {
+    return [...produits].sort((a, b) => b.prixApplique - a.prixApplique)
+  }
+  return produits
+}
+
 const types = [
   { valeur: '', libelle: 'Tous les types' },
   { valeur: 'livre', libelle: 'Livres' },
@@ -28,6 +44,7 @@ function CataloguePage() {
   const q = parametres.get('q') ?? ''
   const type = parametres.get('type') ?? ''
   const categorie = parametres.get('categorie') ?? ''
+  const tri = parametres.get('tri') ?? ''
 
   const [categories, setCategories] = useState<Categorie[]>([])
   const [essai, setEssai] = useState(0)
@@ -153,7 +170,7 @@ function CataloguePage() {
 
     return (
       <ul className="rayonnage">
-        {produits.map((produit) => (
+        {trier(produits, tri).map((produit) => (
           <li key={produit.id}>
             <ProduitCarte
               produit={produit}
@@ -207,18 +224,34 @@ function CataloguePage() {
           </ul>
         </nav>
         <div className="tri">
-          <label htmlFor="type-catalogue">Type</label>
-          <select
-            id="type-catalogue"
-            value={type}
-            onChange={(evenement) => navigate(adresseAvec('type', evenement.target.value))}
-          >
-            {types.map((option) => (
-              <option key={option.valeur} value={option.valeur}>
-                {option.libelle}
-              </option>
-            ))}
-          </select>
+          <div className="tri-champ">
+            <label htmlFor="type-catalogue">Type</label>
+            <select
+              id="type-catalogue"
+              value={type}
+              onChange={(evenement) => navigate(adresseAvec('type', evenement.target.value))}
+            >
+              {types.map((option) => (
+                <option key={option.valeur} value={option.valeur}>
+                  {option.libelle}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="tri-champ">
+            <label htmlFor="tri-catalogue">Trier par</label>
+            <select
+              id="tri-catalogue"
+              value={tri}
+              onChange={(evenement) => navigate(adresseAvec('tri', evenement.target.value))}
+            >
+              {tris.map((option) => (
+                <option key={option.valeur} value={option.valeur}>
+                  {option.libelle}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </form>
 

@@ -102,10 +102,17 @@
   grid-column: 3;
   grid-row: 1;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 12px 24px;
   color: var(--gris);
   font-size: 0.875rem;
+}
+
+.catalogue .tri-champ {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .catalogue .tri select {

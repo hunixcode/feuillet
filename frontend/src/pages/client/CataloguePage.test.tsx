@@ -56,6 +56,10 @@ function appelsProduits(fetchMock: ReturnType<typeof simulerApi>) {
     .filter((url) => url.startsWith('/api/produits'))
 }
 
+function titresAffiches() {
+  return Array.from(document.querySelectorAll('.livre-titre')).map((titre) => titre.textContent)
+}
+
 function afficher(url = '/catalogue') {
   const router = createMemoryRouter(
     [
@@ -158,6 +162,33 @@ describe('page du catalogue', () => {
       expect(appelsProduits(fetchMock)).toContain('/api/produits?type=papeterie'),
     )
     expect(screen.getByLabelText('Type')).toHaveValue('papeterie')
+  })
+
+  it('trie les articles par prix sans redemander la liste au serveur', async () => {
+    const fetchMock = simulerApi([ileAuTresor, carnet])
+    afficher()
+    await screen.findByText('2 articles')
+    expect(titresAffiches()).toEqual(['L\'Île au trésor', 'Carnet ligné'])
+    const appelsAvant = appelsProduits(fetchMock).length
+
+    fireEvent.change(screen.getByLabelText('Trier par'), { target: { value: 'prix-croissant' } })
+    await vi.waitFor(() => expect(titresAffiches()).toEqual(['Carnet ligné', 'L\'Île au trésor']))
+    expect(screen.getByLabelText('Trier par')).toHaveValue('prix-croissant')
+
+    fireEvent.change(screen.getByLabelText('Trier par'), { target: { value: 'prix-decroissant' } })
+    await vi.waitFor(() => expect(titresAffiches()).toEqual(['L\'Île au trésor', 'Carnet ligné']))
+
+    expect(appelsProduits(fetchMock)).toHaveLength(appelsAvant)
+  })
+
+  it('reprend le tri de l adresse', async () => {
+    simulerApi([ileAuTresor, carnet])
+    afficher('/catalogue?tri=prix-croissant')
+
+    await screen.findByText('2 articles')
+
+    expect(titresAffiches()).toEqual(['Carnet ligné', 'L\'Île au trésor'])
+    expect(screen.getByLabelText('Trier par')).toHaveValue('prix-croissant')
   })
 
   it('reprend les filtres de l adresse', async () => {

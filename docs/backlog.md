@@ -131,6 +131,7 @@ Fait :
 - types/produit.ts aligné sur docs/api.md (tauxTva, archive, champs par type, id de la promotion) et types/categorie.ts ajouté
 - Catégorie de chaque article affichée sur sa carte (libellé tiré de GET /api/categories), comme le demande l'écran 2
 - 164 tests, le build et le lint passent
+- Tri des articles « Trier par » de la maquette : titre, prix croissant, prix décroissant (sur le prix payé) ; gardé dans l'adresse (?tri=), fait dans le navigateur sans redemander la liste ; 178 tests
 
 Reste à faire :
 - Afficher « disponible » ou « épuisé » quand le backend enverra la disponibilité (dépend du stock)
