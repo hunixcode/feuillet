@@ -6,11 +6,12 @@ import { dateDuJour, horlogeSysteme } from "./horloge.js";
 import { CATEGORIES_DEPART, PRODUITS_DEMO } from "./produitsDemo.js";
 import { MongooseCategorieRepository } from "./repositories/MongooseCategorieRepository.js";
 import { MongooseProduitRepository, ProduitModel } from "./repositories/MongooseProduitRepository.js";
-import { MongooseStockRepository } from "./repositories/MongooseStockRepository.js";
+import { MongooseStockRepository, MouvementModel, StockModel } from "./repositories/MongooseStockRepository.js";
 import { UtilisateurModel } from "./repositories/MongooseUtilisateurRepository.js";
 import { hasherMotDePasse } from "./services/AuthService.js";
 import { CategorieService } from "./services/CategorieService.js";
 import { ProduitService } from "./services/ProduitService.js";
+import { StockService } from "./services/StockService.js";
 
 const mongoUri = lireVariable("MONGODB_URI");
 const email = lireVariable("RESPONSABLE_EMAIL").trim().toLowerCase();
@@ -47,11 +48,17 @@ console.log("Catégories de départ prêtes");
 
 // Seuls les produits de démonstration sont réinitialisés : les autres produits de la base sont conservés.
 const produits = new ProduitService(produitRepository, categorieRepository, stockRepository);
+const stocks = new StockService(stockRepository, produitRepository);
 const aujourdhui = dateDuJour(horlogeSysteme);
 await ProduitModel.init();
-await ProduitModel.deleteMany({ reference: { $in: PRODUITS_DEMO.map((p) => p.reference) } });
-for (const { promotion, ...fiche } of PRODUITS_DEMO) {
+const anciens = { reference: { $in: PRODUITS_DEMO.map((p) => p.reference) } };
+const idsAnciens = (await ProduitModel.find(anciens, { _id: 1 }).lean()).map((p) => p._id.toString());
+await StockModel.deleteMany({ _id: { $in: idsAnciens } });
+await MouvementModel.deleteMany({ produitId: { $in: idsAnciens } });
+await ProduitModel.deleteMany(anciens);
+for (const { promotion, stock, ...fiche } of PRODUITS_DEMO) {
   const { id } = await produits.creer(fiche);
+  await stocks.corrigerInventaire(id, { quantiteComptee: stock, motif: "Stock de démonstration" });
   if (promotion) {
     const fin = new Date(Date.parse(aujourdhui) + promotion.jours * 86_400_000).toISOString().slice(0, 10);
     await produits.ajouterPromotion(id, { remise: promotion.remise, debut: aujourdhui, fin });
