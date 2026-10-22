@@ -95,6 +95,41 @@ textarea {
   white-space: nowrap;
 }
 
+.page-intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px 32px;
+}
+
+.page-intro h1 {
+  font-size: clamp(2.75rem, 6vw, 4.75rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.page-intro p {
+  color: var(--gris);
+}
+
+.vide {
+  max-width: 640px;
+  padding: 48px 0 24px;
+}
+
+.vide h2 {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+}
+
+.vide p {
+  margin-top: 20px;
+  color: var(--gris);
+  font-size: 1.125rem;
+}
+
 .squelette {
   position: relative;
   overflow: hidden;

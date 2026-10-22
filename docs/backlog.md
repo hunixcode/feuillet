@@ -137,6 +137,23 @@ Reste à faire :
 - Afficher « disponible » ou « épuisé » quand le backend enverra la disponibilité (dépend du stock)
 - Meilleures ventes (RG14) en haut de la page quand la route existera
 
+21/10/2026 - Noah (front A) : fiche produit (écran 3)
+
+Fait :
+- Page /produits/:id reliée à GET /api/produits/:id (obtenirProduit dans services/produitService.ts)
+- Désignation, auteur ou marque, prix TTC en XPF, taux de TVA, référence et catégorie ; en promotion : prix barré, remise et date de fin
+- Champs selon le type : auteur et ISBN (livre), ISSN, numéro et date de parution (magazine), marque (papeterie)
+- Fil d'Ariane vers le catalogue et vers le rayon du produit ; page introuvable si le produit n'existe pas (404) ; erreur avec « Réessayer »
+- Couverture partagée avec le catalogue (components/client/Couverture)
+- utils/format.ts : formatJour pour les dates AAAA-MM-JJ de l'API, sans décalage d'un jour à l'heure de Tahiti (formatDate affichait le 30 au lieu du 31)
+- Quantité et bouton « Ajouter au panier » de la maquette, désactivés avec « L'ajout au panier sera bientôt disponible » en attendant le panier
+- 176 tests (vérifiés à l'heure de Tahiti et en UTC), le build et le lint passent ; fiche vérifiée avec la vraie base
+- Titre de l'onglet propre à chaque page (« Catalogue · Feuillet », « L'Île au trésor · Feuillet », Connexion, Créer un compte, Page introuvable) avec la balise title de React 19 ; 179 tests
+- Page d'erreur générale (pages/ErreurPage) branchée en haut du routeur (errorElement) : si une page plante, « Une erreur est survenue » avec Réessayer et Retour au catalogue, au lieu de l'écran brut de React Router ; 180 tests
+- Chargement de la fiche produit en squelette (blocs gris animés à la place de la couverture, du titre, du prix et des détails), comme le catalogue ; les styles des squelettes sont maintenant communs dans index.css
+
+Reste à faire :
+- Disponibilité, ajout au panier et demande d'un article épuisé, quand le stock, le panier et les demandes existeront
 
 21/10/2026 - Front : catalogue du responsable (écran 7, EX01, EX11)
 
@@ -155,3 +172,18 @@ Reste à faire :
 - Seuil d'alerte dans la liste : avec le stock
 - Bouton Supprimer seulement pour un article sans historique (RG05) : il faut que l'API indique si l'article est supprimable
 - Rattacher une demande hors catalogue à un article créé : avec les demandes
+
+22/10/2026 - Noah (front A) : page Mes demandes (écran 5)
+
+Fait :
+- Page /demandes (client connecté) de la maquette V2 : formulaire « Demander un livre » pour un livre absent du catalogue (titre, auteur et ISBN facultatifs, quantité)
+- Bouton « Envoyer la demande » grisé avec « L'envoi des demandes sera bientôt disponible » : le backend n'a pas encore de route pour les demandes
+- Zone de suivi avec un message d'attente qui annonce les statuts (en attente, mis de côté, honorée, expirée, annulée)
+- Styles du grand titre de page et du message vide mis en commun dans index.css (catalogue et demandes)
+- Entrée « fiche produit (écran 3) » du 21/10 remise dans le backlog : elle avait été perdue en réglant le conflit de la PR d'Hiva
+- 206 tests, le build et le lint passent
+
+Reste à faire, quand le backend aura les routes des demandes :
+- Envoyer la demande et afficher les erreurs du serveur sous chaque champ
+- Liste des demandes avec quantité, date, statut, et la date limite de retrait d'un article mis de côté
+- Annuler une demande en attente ; notifications de réapprovisionnement
