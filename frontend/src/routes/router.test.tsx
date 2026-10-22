@@ -51,6 +51,38 @@ describe('routes de l espace client', () => {
     expect(document.title).toBe('Page introuvable · Feuillet')
   })
 
+  it('affiche la page d erreur quand une page plante', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const produitInvalide = {
+      id: '7',
+      reference: 'LIV-007',
+      designation: 'Prix invalide',
+      type: 'livre',
+      categorie: 'roman',
+      prix: 1000,
+      tauxTva: 5,
+      archive: false,
+      prixApplique: 12.5,
+    }
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (entree) =>
+      new Response(
+        JSON.stringify(String(entree).startsWith('/api/produits/') ? produitInvalide : []),
+      ),
+    )
+
+    afficher('/produits/7')
+
+    expect(
+      await screen.findByRole('heading', { name: 'Une erreur est survenue' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Réessayer' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Retour au catalogue' })).toHaveAttribute(
+      'href',
+      '/catalogue',
+    )
+    expect(document.title).toBe('Erreur · Feuillet')
+  })
+
   it('envoie vers la connexion un visiteur qui ouvre ses demandes', async () => {
     afficher('/demandes')
     expect(await screen.findByRole('heading', { name: 'Connexion' })).toBeInTheDocument()

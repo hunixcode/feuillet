@@ -149,6 +149,7 @@ Fait :
 - Quantité et bouton « Ajouter au panier » de la maquette, désactivés avec « L'ajout au panier sera bientôt disponible » en attendant le panier
 - 176 tests (vérifiés à l'heure de Tahiti et en UTC), le build et le lint passent ; fiche vérifiée avec la vraie base
 - Titre de l'onglet propre à chaque page (« Catalogue · Feuillet », « L'Île au trésor · Feuillet », Connexion, Créer un compte, Page introuvable) avec la balise title de React 19 ; 179 tests
+- Page d'erreur générale (pages/ErreurPage) branchée en haut du routeur (errorElement) : si une page plante, « Une erreur est survenue » avec Réessayer et Retour au catalogue, au lieu de l'écran brut de React Router ; 180 tests
 
 Reste à faire :
 - Disponibilité, ajout au panier et demande d'un article épuisé, quand le stock, le panier et les demandes existeront
