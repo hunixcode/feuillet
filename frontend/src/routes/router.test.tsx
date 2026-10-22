@@ -16,6 +16,7 @@ function afficher(url: string) {
 describe('routes de l espace client', () => {
   beforeEach(() => {
     localStorage.clear()
+    vi.restoreAllMocks()
   })
 
   it('redirige la racine vers le catalogue', async () => {
@@ -24,14 +25,62 @@ describe('routes de l espace client', () => {
   })
 
   it('affiche la fiche du produit demandé', async () => {
+    const produit = {
+      id: '42',
+      reference: 'LIV-042',
+      designation: 'Casino Royale',
+      type: 'livre',
+      categorie: 'policier',
+      prix: 1450,
+      tauxTva: 5,
+      archive: false,
+      prixApplique: 1450,
+    }
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (entree) =>
+      new Response(JSON.stringify(String(entree).startsWith('/api/produits/') ? produit : [])),
+    )
     afficher('/produits/42')
-    expect(await screen.findByRole('heading', { name: 'Produit 42' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Casino Royale' })).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenCalledWith('/api/produits/42', expect.any(Object))
   })
 
   it('affiche une page introuvable pour une adresse inconnue', async () => {
     afficher('/adresse-inconnue')
     expect(await screen.findByRole('heading', { name: 'Page introuvable' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Retour au catalogue' })).toHaveAttribute('href', '/catalogue')
+    expect(document.title).toBe('Page introuvable · Feuillet')
+  })
+
+  it('affiche la page d erreur quand une page plante', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const produitInvalide = {
+      id: '7',
+      reference: 'LIV-007',
+      designation: 'Prix invalide',
+      type: 'livre',
+      categorie: 'roman',
+      prix: 1000,
+      tauxTva: 5,
+      archive: false,
+      prixApplique: 12.5,
+    }
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (entree) =>
+      new Response(
+        JSON.stringify(String(entree).startsWith('/api/produits/') ? produitInvalide : []),
+      ),
+    )
+
+    afficher('/produits/7')
+
+    expect(
+      await screen.findByRole('heading', { name: 'Une erreur est survenue' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Réessayer' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Retour au catalogue' })).toHaveAttribute(
+      'href',
+      '/catalogue',
+    )
+    expect(document.title).toBe('Erreur · Feuillet')
   })
 
   it('envoie vers la connexion un visiteur qui ouvre ses demandes', async () => {

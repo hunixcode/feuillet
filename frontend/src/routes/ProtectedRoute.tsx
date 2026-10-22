@@ -17,7 +17,13 @@ export default function ProtectedRoute({ role }: ProtectedRouteProps) {
   }
 
   if (!utilisateur) {
-    return <Navigate to="/connexion" replace state={{ depuis: location.pathname }} />
+    return (
+      <Navigate
+        to="/connexion"
+        replace
+        state={{ depuis: location.pathname + location.search }}
+      />
+    )
   }
 
   if (utilisateur.role !== role) {

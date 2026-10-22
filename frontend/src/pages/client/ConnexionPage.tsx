@@ -39,6 +39,7 @@ function ConnexionPage() {
 
   return (
     <AccesCadre>
+      <title>Connexion · Feuillet</title>
       <form className="formulaire" onSubmit={envoyer} noValidate>
         <h1>Connexion</h1>
         {message && <ErrorMessage>{message}</ErrorMessage>}

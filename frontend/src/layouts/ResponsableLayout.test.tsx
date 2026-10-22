@@ -24,6 +24,7 @@ function afficher(url: string, session: Partial<AuthContextValue>) {
   const router = createMemoryRouter(
     [
       { path: '/connexion', element: <h1>Connexion</h1> },
+      { path: '/catalogue', element: <h1>Accueil du catalogue</h1> },
       {
         path: '/admin',
         element: <ResponsableLayout />,
@@ -70,6 +71,16 @@ describe('cadre de l espace responsable', () => {
 
     expect(menu().getByRole('link', { name: 'Stock' })).toHaveAttribute('aria-current', 'page')
     expect(menu().getByRole('link', { name: 'Tableau de bord' })).not.toHaveAttribute('aria-current')
+  })
+
+  it("ramène à l'accueil client en cliquant sur le logo, sans déconnecter", async () => {
+    const deconnexion = vi.fn()
+    afficher('/admin/stock', { deconnexion })
+
+    fireEvent.click(screen.getByRole('link', { name: 'Feuillet' }))
+
+    expect(await screen.findByRole('heading', { name: 'Accueil du catalogue' })).toBeInTheDocument()
+    expect(deconnexion).not.toHaveBeenCalled()
   })
 
   it('affiche le nom du responsable connecté', () => {

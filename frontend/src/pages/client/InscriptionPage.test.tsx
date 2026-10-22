@@ -49,6 +49,7 @@ describe('page d inscription', () => {
     afficher()
 
     expect(screen.getByRole('heading', { name: 'Créer un compte' })).toBeInTheDocument()
+    expect(document.title).toBe('Créer un compte · Feuillet')
     expect(screen.getByLabelText('Nom complet')).toHaveAttribute('type', 'text')
     expect(screen.getByLabelText('Adresse e-mail')).toHaveAttribute('type', 'email')
     expect(screen.getByLabelText('Mot de passe')).toHaveAttribute('type', 'password')
@@ -72,6 +73,7 @@ describe('page d inscription', () => {
     creerCompte('Tiare', 'tiare@exemple.pf', 'motdepasse1')
 
     expect(await screen.findByRole('heading', { name: 'Bienvenue, Tiare' })).toBeInTheDocument()
+    expect(document.title).toBe('Compte créé · Feuillet')
     expect(screen.getByRole('status')).toHaveTextContent('Votre compte est créé.')
     expect(screen.getByRole('link', { name: 'Continuer' })).toHaveAttribute('href', '/catalogue')
     const [url, options] = fetchMock.mock.calls[0]
