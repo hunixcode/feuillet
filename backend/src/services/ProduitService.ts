@@ -192,7 +192,7 @@ export function prixApplique(prix: number, remise = 0): number {
 }
 
 function versCatalogue(
-  { historiquePrix: _, promotions, ...fiche }: Produit,
+  { historiquePrix: _, promotions = [], ...fiche }: Produit,
   aujourdhui: string,
 ): ProduitCatalogue {
   const promotion = promotions.find((p) => p.debut <= aujourdhui && aujourdhui <= p.fin);
