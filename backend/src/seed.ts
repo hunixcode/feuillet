@@ -6,6 +6,7 @@ import { dateDuJour, horlogeSysteme } from "./horloge.js";
 import { CATEGORIES_DEPART, PRODUITS_DEMO } from "./produitsDemo.js";
 import { MongooseCategorieRepository } from "./repositories/MongooseCategorieRepository.js";
 import { MongooseProduitRepository, ProduitModel } from "./repositories/MongooseProduitRepository.js";
+import { MongooseStockRepository } from "./repositories/MongooseStockRepository.js";
 import { UtilisateurModel } from "./repositories/MongooseUtilisateurRepository.js";
 import { hasherMotDePasse } from "./services/AuthService.js";
 import { CategorieService } from "./services/CategorieService.js";
@@ -31,6 +32,7 @@ console.log(`Compte responsable prêt : ${email}`);
 
 const produitRepository = new MongooseProduitRepository();
 const categorieRepository = new MongooseCategorieRepository();
+const stockRepository = new MongooseStockRepository();
 
 // Catégories de départ ajoutées si absentes ; celles créées ou renommées par le responsable sont conservées.
 const categories = new CategorieService(categorieRepository, produitRepository);
@@ -44,7 +46,7 @@ for (const libelle of CATEGORIES_DEPART) {
 console.log("Catégories de départ prêtes");
 
 // Seuls les produits de démonstration sont réinitialisés : les autres produits de la base sont conservés.
-const produits = new ProduitService(produitRepository, categorieRepository);
+const produits = new ProduitService(produitRepository, categorieRepository, stockRepository);
 const aujourdhui = dateDuJour(horlogeSysteme);
 await ProduitModel.init();
 await ProduitModel.deleteMany({ reference: { $in: PRODUITS_DEMO.map((p) => p.reference) } });
