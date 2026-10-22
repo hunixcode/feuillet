@@ -28,15 +28,16 @@ Le proxy Vite redirige `/api/...` vers le backend sur le port 3000 (à changer d
 - routes/router.tsx : la liste des routes (adresse -> page)
 - layouts/ : le cadre commun des pages (ClientLayout pour l'espace client, ResponsableLayout pour l'espace responsable /admin)
 - pages/client/ et pages/responsable/ : une page par écran
-- components/common/ : composants réutilisables `Button`, `Input`, `ErrorMessage` et `Loader`, avec leurs styles dans `common.css`
+- components/common/ : composants réutilisables `Button`, `Input`, `Select`, `ErrorMessage` et `Loader`, avec leurs styles dans `common.css`
 - components/client/ : composants propres à l'espace client
+- components/responsable/ : composants propres à l'espace responsable (formulaire produit, promotions, courbe des prix, catégories)
 - services/api.ts : client HTTP commun (`get`, `post`, `put`, `delete`), préfixe `/api`, JSON et token `localStorage`
 - services/ : services d'accès aux données ; les pages et composants ne font pas d'appel réseau directement
 - contexts/ : l'état partagé entre les pages (utilisateur connecté, panier)
 - types/ : propositions de contrats TypeScript pour l'API, à valider avec le backend
 - utils/format.ts : formatage des prix entiers en XPF et des dates en français
 
-Le client HTTP est un socle pour les intégrations futures. Il n'est pas relié aux formulaires ou aux pages : ne pas supposer de comportement d'endpoint avant que le contrat backend soit défini. Les réponses réseau ne sont pas validées à l'exécution contre les types TypeScript.
+Le contrat de l'API (routes, champs, codes d'erreur) est dans `docs/api.md` : les services et les types du front le suivent. Ne pas supposer le comportement d'une route qui n'y est pas encore décrite. Les réponses réseau ne sont pas validées à l'exécution contre les types TypeScript.
 
 Les prix sont des nombres entiers en XPF. `formatXPF` rejette les valeurs qui ne sont pas des entiers sûrs ; il ne convertit pas les chaînes ni n'arrondit les décimaux.
 
@@ -59,7 +60,7 @@ Le style suit la maquette V2 : noir, blanc et laiton, polices Geist (texte) et A
 - Prix en XPF, nombres entiers, TTC ; prix remisé et TVA calculés par le backend (RG11)
 - Les écrans suivent `docs/ecrans.md`
 - Pas de commentaires dans le code
-- Branche personnelle ou par tâche (`feature/front-...`), une PR relue par l'autre front avant de fusionner dans main
+- Branche commune `dev-front` pour les deux fronts (`git pull` avant de travailler et avant de pousser) ; quand les deux fronts sont d'accord, une PR `dev-front` → `main` relue par le chef de projet
 - Les fichiers partagés (router.tsx, types/, services/api.ts, layouts/) se modifient par petite PR
 
-Les fichiers `*.test.ts` et `*.test.tsx` sont exécutés par Vitest en environnement jsdom. Les tests du socle couvrent le client HTTP, le formatage, les composants communs et le routeur.
+Les fichiers `*.test.ts` et `*.test.tsx` sont exécutés par Vitest en environnement jsdom. Les pages reliées à l'API sont testées avec un `fetch` simulé : `npm test` ne demande pas de lancer le backend.

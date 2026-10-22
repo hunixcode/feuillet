@@ -95,6 +95,84 @@ textarea {
   white-space: nowrap;
 }
 
+.page-intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px 32px;
+}
+
+.page-intro h1 {
+  font-size: clamp(2.75rem, 6vw, 4.75rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.page-intro p {
+  color: var(--gris);
+}
+
+.vide {
+  max-width: 640px;
+  padding: 48px 0 24px;
+}
+
+.vide h2 {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+}
+
+.vide p {
+  margin-top: 20px;
+  color: var(--gris);
+  font-size: 1.125rem;
+}
+
+.squelette {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--gris-fond-2);
+}
+
+.squelette::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  transform: translateX(-100%);
+  animation: squelette-reflet 1.4s ease-in-out infinite;
+}
+
+.squelette-couverture {
+  aspect-ratio: 2 / 3;
+  border-radius: 2px 5px 5px 2px;
+}
+
+.squelette-ligne {
+  height: 14px;
+  margin-top: 14px;
+}
+
+.squelette-courte {
+  width: 55%;
+  margin-top: 8px;
+}
+
+@keyframes squelette-reflet {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .squelette::after {
+    animation: none;
+  }
+}
+
 .client-layout {
   display: flex;
   flex-direction: column;

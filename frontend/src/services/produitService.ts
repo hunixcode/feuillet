@@ -23,3 +23,7 @@ export function listerProduits(filtres: FiltresProduits = {}): Promise<Produit[]
   const texte = parametres.toString()
   return get<Produit[]>(texte ? `/produits?${texte}` : '/produits')
 }
+
+export function obtenirProduit(id: string): Promise<Produit> {
+  return get<Produit>(`/produits/${encodeURIComponent(id)}`)
+}

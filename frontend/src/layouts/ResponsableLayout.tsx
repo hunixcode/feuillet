@@ -25,7 +25,7 @@ function ResponsableLayout() {
   return (
     <div className="admin-layout">
       <aside className="admin-cote">
-        <Link to="/admin" className="admin-logo">
+        <Link to="/catalogue" className="admin-logo">
           Feuillet
         </Link>
         <p className="admin-espace">Espace responsable</p>

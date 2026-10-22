@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { listerCategories } from './categorieService'
-import { listerProduits } from './produitService'
+import { listerProduits, obtenirProduit } from './produitService'
 
 function reponse(corps: unknown) {
   return new Response(JSON.stringify(corps), { status: 200 })
@@ -40,6 +40,15 @@ describe('services du catalogue', () => {
     await listerProduits({ q: '   ', type: '', categorie: '' })
 
     expect(fetchMock).toHaveBeenCalledWith('/api/produits', expect.any(Object))
+  })
+
+  it('demande un produit par son identifiant', async () => {
+    const produit = { id: 'p-1', designation: 'Casino Royale' }
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(reponse(produit))
+
+    await expect(obtenirProduit('p-1')).resolves.toEqual(produit)
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/produits/p-1', expect.any(Object))
   })
 
   it('demande la liste des catégories', async () => {

@@ -1,0 +1,37 @@
+.demandes-grille {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 56px 80px;
+  align-items: start;
+  margin-top: 48px;
+}
+
+.demandes .vide {
+  padding-top: 0;
+}
+
+.demandes .formulaire {
+  display: grid;
+  gap: 20px;
+}
+
+.demandes .formulaire h2 {
+  font-size: 1.5rem;
+}
+
+.demandes .encadre {
+  padding: 32px;
+  border-radius: var(--rayon-carte);
+  background: var(--gris-fond);
+}
+
+.demandes .aide {
+  color: var(--gris);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 880px) {
+  .demandes-grille {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

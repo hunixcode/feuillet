@@ -1,6 +1,7 @@
 import { Navigate, createBrowserRouter, type RouteObject } from 'react-router-dom'
 import ClientLayout from '../layouts/ClientLayout.tsx'
 import ResponsableLayout from '../layouts/ResponsableLayout.tsx'
+import ErreurPage from '../pages/ErreurPage.tsx'
 import NotFoundPage from '../pages/NotFoundPage.tsx'
 import CataloguePage from '../pages/client/CataloguePage.tsx'
 import ConnexionPage from '../pages/client/ConnexionPage.tsx'
@@ -18,7 +19,7 @@ import TableauDeBordPage from '../pages/responsable/TableauDeBordPage.tsx'
 import VentesPage from '../pages/responsable/VentesPage.tsx'
 import ProtectedRoute from './ProtectedRoute.tsx'
 
-export const routes: RouteObject[] = [
+const pages: RouteObject[] = [
   { path: '/connexion', element: <ConnexionPage /> },
   { path: '/inscription', element: <InscriptionPage /> },
   {
@@ -60,5 +61,7 @@ export const routes: RouteObject[] = [
     ],
   },
 ]
+
+export const routes: RouteObject[] = [{ errorElement: <ErreurPage />, children: pages }]
 
 export const router = createBrowserRouter(routes)

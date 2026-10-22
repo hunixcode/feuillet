@@ -56,6 +56,10 @@ function appelsProduits(fetchMock: ReturnType<typeof simulerApi>) {
     .filter((url) => url.startsWith('/api/produits'))
 }
 
+function titresAffiches() {
+  return Array.from(document.querySelectorAll('.livre-titre')).map((titre) => titre.textContent)
+}
+
 function afficher(url = '/catalogue') {
   const router = createMemoryRouter(
     [
@@ -88,6 +92,21 @@ describe('page du catalogue', () => {
     expect(screen.getByText('650 XPF')).toBeInTheDocument()
   })
 
+  it('donne son titre à l onglet, à la place du titre par défaut de index.html', async () => {
+    const titreParDefaut = document.createElement('title')
+    titreParDefaut.textContent = 'Feuillet'
+    document.head.appendChild(titreParDefaut)
+    try {
+      simulerApi([ileAuTresor])
+      afficher()
+      await screen.findByText('1 article')
+
+      expect(document.title).toBe('Catalogue · Feuillet')
+    } finally {
+      titreParDefaut.remove()
+    }
+  })
+
   it('affiche le prix remisé, le prix barré et la remise d une promotion', async () => {
     simulerApi([ileAuTresor])
     afficher()
@@ -95,6 +114,17 @@ describe('page du catalogue', () => {
     expect(await screen.findByText('1 530 XPF')).toBeInTheDocument()
     expect(screen.getByText('1 800 XPF')).toBeInTheDocument()
     expect(screen.getByText('−15 %')).toBeInTheDocument()
+  })
+
+  it('affiche la catégorie de chaque article', async () => {
+    simulerApi([ileAuTresor, carnet])
+    afficher()
+
+    const ile = await screen.findByRole('link', { name: /L'Île au trésor/ })
+    const carte = screen.getByRole('link', { name: /Carnet ligné/ })
+
+    expect(within(ile).getByText('Roman')).toBeInTheDocument()
+    expect(within(carte).getByText('Papeterie')).toBeInTheDocument()
   })
 
   it('ouvre la fiche d un article', async () => {
@@ -149,6 +179,33 @@ describe('page du catalogue', () => {
     expect(screen.getByLabelText('Type')).toHaveValue('papeterie')
   })
 
+  it('trie les articles par prix sans redemander la liste au serveur', async () => {
+    const fetchMock = simulerApi([ileAuTresor, carnet])
+    afficher()
+    await screen.findByText('2 articles')
+    expect(titresAffiches()).toEqual(['L\'Île au trésor', 'Carnet ligné'])
+    const appelsAvant = appelsProduits(fetchMock).length
+
+    fireEvent.change(screen.getByLabelText('Trier par'), { target: { value: 'prix-croissant' } })
+    await vi.waitFor(() => expect(titresAffiches()).toEqual(['Carnet ligné', 'L\'Île au trésor']))
+    expect(screen.getByLabelText('Trier par')).toHaveValue('prix-croissant')
+
+    fireEvent.change(screen.getByLabelText('Trier par'), { target: { value: 'prix-decroissant' } })
+    await vi.waitFor(() => expect(titresAffiches()).toEqual(['L\'Île au trésor', 'Carnet ligné']))
+
+    expect(appelsProduits(fetchMock)).toHaveLength(appelsAvant)
+  })
+
+  it('reprend le tri de l adresse', async () => {
+    simulerApi([ileAuTresor, carnet])
+    afficher('/catalogue?tri=prix-croissant')
+
+    await screen.findByText('2 articles')
+
+    expect(titresAffiches()).toEqual(['Carnet ligné', 'L\'Île au trésor'])
+    expect(screen.getByLabelText('Trier par')).toHaveValue('prix-croissant')
+  })
+
   it('reprend les filtres de l adresse', async () => {
     const fetchMock = simulerApi([ileAuTresor])
     afficher('/catalogue?q=tr%C3%A9sor&categorie=roman')
@@ -168,7 +225,7 @@ describe('page du catalogue', () => {
     ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Demander ce livre' })).toHaveAttribute(
       'href',
-      '/demandes',
+      '/demandes?titre=Rivage',
     )
     expect(screen.getByRole('link', { name: 'Voir tout le catalogue' })).toHaveAttribute(
       'href',

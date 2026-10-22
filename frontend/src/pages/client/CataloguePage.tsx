@@ -15,6 +15,22 @@ interface Resultat {
   erreur: string
 }
 
+const tris = [
+  { valeur: '', libelle: 'Titre' },
+  { valeur: 'prix-croissant', libelle: 'Prix croissant' },
+  { valeur: 'prix-decroissant', libelle: 'Prix décroissant' },
+]
+
+function trier(produits: Produit[], tri: string): Produit[] {
+  if (tri === 'prix-croissant') {
+    return [...produits].sort((a, b) => a.prixApplique - b.prixApplique)
+  }
+  if (tri === 'prix-decroissant') {
+    return [...produits].sort((a, b) => b.prixApplique - a.prixApplique)
+  }
+  return produits
+}
+
 const types = [
   { valeur: '', libelle: 'Tous les types' },
   { valeur: 'livre', libelle: 'Livres' },
@@ -28,6 +44,7 @@ function CataloguePage() {
   const q = parametres.get('q') ?? ''
   const type = parametres.get('type') ?? ''
   const categorie = parametres.get('categorie') ?? ''
+  const tri = parametres.get('tri') ?? ''
 
   const [categories, setCategories] = useState<Categorie[]>([])
   const [essai, setEssai] = useState(0)
@@ -140,7 +157,10 @@ function CataloguePage() {
             catalogue, nous pouvons le commander pour vous.
           </p>
           <div className="achat-ligne">
-            <Link className="common-button common-button--primary" to="/demandes">
+            <Link
+              className="common-button common-button--primary"
+              to={q ? `/demandes?titre=${encodeURIComponent(q)}` : '/demandes'}
+            >
               Demander ce livre
             </Link>
             <Link className="common-button common-button--secondary" to="/catalogue">
@@ -153,9 +173,12 @@ function CataloguePage() {
 
     return (
       <ul className="rayonnage">
-        {produits.map((produit) => (
+        {trier(produits, tri).map((produit) => (
           <li key={produit.id}>
-            <ProduitCarte produit={produit} />
+            <ProduitCarte
+              produit={produit}
+              categorie={categories.find((rayon) => rayon.id === produit.categorie)?.libelle}
+            />
           </li>
         ))}
       </ul>
@@ -164,6 +187,7 @@ function CataloguePage() {
 
   return (
     <div className="catalogue">
+      <title>Catalogue · Feuillet</title>
       <div className="page-intro">
         <h1>Catalogue</h1>
         <p>{intro()}</p>
@@ -204,18 +228,34 @@ function CataloguePage() {
           </ul>
         </nav>
         <div className="tri">
-          <label htmlFor="type-catalogue">Type</label>
-          <select
-            id="type-catalogue"
-            value={type}
-            onChange={(evenement) => navigate(adresseAvec('type', evenement.target.value))}
-          >
-            {types.map((option) => (
-              <option key={option.valeur} value={option.valeur}>
-                {option.libelle}
-              </option>
-            ))}
-          </select>
+          <div className="tri-champ">
+            <label htmlFor="type-catalogue">Type</label>
+            <select
+              id="type-catalogue"
+              value={type}
+              onChange={(evenement) => navigate(adresseAvec('type', evenement.target.value))}
+            >
+              {types.map((option) => (
+                <option key={option.valeur} value={option.valeur}>
+                  {option.libelle}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="tri-champ">
+            <label htmlFor="tri-catalogue">Trier par</label>
+            <select
+              id="tri-catalogue"
+              value={tri}
+              onChange={(evenement) => navigate(adresseAvec('tri', evenement.target.value))}
+            >
+              {tris.map((option) => (
+                <option key={option.valeur} value={option.valeur}>
+                  {option.libelle}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </form>
 
