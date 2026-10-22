@@ -153,8 +153,9 @@ function CataloguePage() {
             {q ? `Aucun article ne correspond à « ${q} ».` : 'Aucun article dans cette sélection.'}
           </h2>
           <p>
-            Vérifiez l'orthographe ou essayez avec le nom de l'auteur. Si ce livre n'est pas au
-            catalogue, nous pouvons le commander pour vous.
+            {q
+              ? 'Vérifiez l\'orthographe ou essayez avec le nom de l\'auteur. Si ce livre n\'est pas au catalogue, nous pouvons le commander pour vous.'
+              : 'Ce rayon n\'a pas encore d\'article. Un livre vous intéresse ? Nous pouvons le commander pour vous.'}
           </p>
           <div className="achat-ligne">
             <Link

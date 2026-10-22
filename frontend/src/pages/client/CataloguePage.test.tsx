@@ -216,6 +216,21 @@ describe('page du catalogue', () => {
     expect(screen.getByLabelText('Rechercher dans le catalogue')).toHaveValue('trésor')
   })
 
+  it('explique qu un rayon est vide sans parler d orthographe', async () => {
+    simulerApi([])
+    afficher('/catalogue?categorie=policier')
+
+    expect(
+      await screen.findByRole('heading', { name: 'Aucun article dans cette sélection.' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/Ce rayon n'a pas encore d'article\./)).toBeInTheDocument()
+    expect(screen.queryByText(/Vérifiez l'orthographe/)).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Demander ce livre' })).toHaveAttribute(
+      'href',
+      '/demandes',
+    )
+  })
+
   it('explique quand aucun article ne correspond à la recherche', async () => {
     simulerApi([])
     afficher('/catalogue?q=Rivage')

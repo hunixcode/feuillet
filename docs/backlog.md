@@ -185,6 +185,8 @@ Fait :
 - formatJour supprimé : formatDate gère maintenant les dates AAAA-MM-JJ (correction d'Hiva), la fiche produit l'utilise
 - README du front mis à jour : contrat dans docs/api.md, branche commune dev-front, tests avec fetch simulé
 - 206 tests (heure de Tahiti et UTC), le build et le lint passent
+- Parcours client vérifié avec la vraie base (rayons, recherche, tri, fiche, 404, accès protégé, téléphone) ; rayon vide : le message ne parle plus d'orthographe quand rien n'a été cherché ; 207 tests
+- À savoir : la recherche est sensible aux accents (« tresor » ne trouve pas « trésor »), limite déjà notée côté back
 
 Reste à faire, quand le backend aura les routes des demandes :
 - Envoyer la demande et afficher les erreurs du serveur sous chaque champ
