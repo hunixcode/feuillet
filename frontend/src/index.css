@@ -95,6 +95,49 @@ textarea {
   white-space: nowrap;
 }
 
+.squelette {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--gris-fond-2);
+}
+
+.squelette::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  transform: translateX(-100%);
+  animation: squelette-reflet 1.4s ease-in-out infinite;
+}
+
+.squelette-couverture {
+  aspect-ratio: 2 / 3;
+  border-radius: 2px 5px 5px 2px;
+}
+
+.squelette-ligne {
+  height: 14px;
+  margin-top: 14px;
+}
+
+.squelette-courte {
+  width: 55%;
+  margin-top: 8px;
+}
+
+@keyframes squelette-reflet {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .squelette::after {
+    animation: none;
+  }
+}
+
 .client-layout {
   display: flex;
   flex-direction: column;

@@ -41,6 +41,7 @@ function InscriptionPage() {
   if (inscrit) {
     return (
       <AccesCadre>
+        <title>Compte créé · Feuillet</title>
         <div className="formulaire">
           <h1>Bienvenue, {inscrit.nom}</h1>
           <div className="acces-succes" role="status">
@@ -62,6 +63,7 @@ function InscriptionPage() {
 
   return (
     <AccesCadre>
+      <title>Créer un compte · Feuillet</title>
       <form className="formulaire" onSubmit={envoyer} noValidate>
         <h1>Créer un compte</h1>
         {message && <ErrorMessage>{message}</ErrorMessage>}
