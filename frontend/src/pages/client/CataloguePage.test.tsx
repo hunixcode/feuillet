@@ -225,7 +225,7 @@ describe('page du catalogue', () => {
     ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Demander ce livre' })).toHaveAttribute(
       'href',
-      '/demandes',
+      '/demandes?titre=Rivage',
     )
     expect(screen.getByRole('link', { name: 'Voir tout le catalogue' })).toHaveAttribute(
       'href',

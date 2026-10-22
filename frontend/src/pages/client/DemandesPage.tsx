@@ -1,8 +1,12 @@
+import { useSearchParams } from 'react-router-dom'
 import Button from '../../components/common/Button.tsx'
 import Input from '../../components/common/Input.tsx'
 import './DemandesPage.css'
 
 function DemandesPage() {
+  const [parametres] = useSearchParams()
+  const titre = parametres.get('titre') ?? ''
+
   return (
     <div className="demandes">
       <title>Mes demandes · Feuillet</title>
@@ -30,7 +34,12 @@ function DemandesPage() {
           <p className="aide">
             Pour un livre absent du catalogue. Une demande ne vous engage pas à l'acheter.
           </p>
-          <Input label="Titre" name="titre" placeholder="Ex. Le Rivage des Syrtes" />
+          <Input
+            label="Titre"
+            name="titre"
+            placeholder="Ex. Le Rivage des Syrtes"
+            defaultValue={titre}
+          />
           <Input label="Auteur (facultatif)" name="auteur" />
           <Input label="ISBN (facultatif)" name="isbn" />
           <Input label="Quantité" name="quantite" type="number" min={1} defaultValue={1} />

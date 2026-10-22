@@ -75,6 +75,13 @@ describe('route protégée', () => {
     expect(router.state.location.state).toEqual({ depuis: '/demandes' })
   })
 
+  it('garde aussi les paramètres de la page demandée', async () => {
+    const router = afficher('/demandes?titre=Rivage', {})
+
+    expect(await screen.findByRole('heading', { name: 'Connexion' })).toBeInTheDocument()
+    expect(router.state.location.state).toEqual({ depuis: '/demandes?titre=Rivage' })
+  })
+
   it('affiche la page au client connecté', async () => {
     afficher('/demandes', { utilisateur: client })
 

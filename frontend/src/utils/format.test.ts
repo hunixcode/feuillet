@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDate, formatJour, formatXPF } from './format'
+import { formatDate, formatXPF } from './format'
 
 describe('formatXPF', () => {
   it.each([
@@ -63,16 +63,5 @@ describe('formatDate', () => {
   it('rejette une date vide ou invalide', () => {
     expect(() => formatDate('')).toThrow(RangeError)
     expect(() => formatDate('pas-une-date')).toThrow(RangeError)
-  })
-})
-
-describe('formatJour', () => {
-  it('formate un jour AAAA-MM-JJ sans le décaler, quel que soit le fuseau horaire', () => {
-    expect(formatJour('2026-10-31')).toBe('31 octobre 2026')
-    expect(formatJour('2026-01-01')).toBe('1 janvier 2026')
-  })
-
-  it('rejette un jour invalide', () => {
-    expect(() => formatJour('pas-un-jour')).toThrow(RangeError)
   })
 })

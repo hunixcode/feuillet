@@ -9,7 +9,7 @@ import { obtenirProduit } from '../../services/produitService'
 import type { Categorie } from '../../types/categorie'
 import type { Produit } from '../../types/produit'
 import { messageErreur } from '../../utils/erreurs'
-import { formatJour, formatXPF } from '../../utils/format'
+import { formatDate, formatXPF } from '../../utils/format'
 import NotFoundPage from '../NotFoundPage.tsx'
 import './ProduitPage.css'
 
@@ -153,7 +153,7 @@ function ProduitPage() {
             </p>
             <p className="aide">
               {produit.promotion &&
-                `Promotion valable jusqu'au ${formatJour(produit.promotion.fin)}. `}
+                `Promotion valable jusqu'au ${formatDate(produit.promotion.fin)}. `}
               TVA de {produit.tauxTva} % incluse.
             </p>
             <div className="achat-ligne">
@@ -214,7 +214,7 @@ function ProduitPage() {
             {produit.type === 'magazine' && produit.dateParution && (
               <>
                 <dt>Parution</dt>
-                <dd>{formatJour(produit.dateParution)}</dd>
+                <dd>{formatDate(produit.dateParution)}</dd>
               </>
             )}
             {produit.type === 'papeterie' && produit.marque && (

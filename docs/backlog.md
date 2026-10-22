@@ -181,7 +181,10 @@ Fait :
 - Zone de suivi avec un message d'attente qui annonce les statuts (en attente, mis de côté, honorée, expirée, annulée)
 - Styles du grand titre de page et du message vide mis en commun dans index.css (catalogue et demandes)
 - Entrée « fiche produit (écran 3) » du 21/10 remise dans le backlog : elle avait été perdue en réglant le conflit de la PR d'Hiva
-- 206 tests, le build et le lint passent
+- « Demander ce livre » du catalogue (aucun résultat) pré-remplit le titre cherché dans le formulaire (/demandes?titre=...) ; la route protégée garde aussi ces paramètres quand elle renvoie vers la connexion
+- formatJour supprimé : formatDate gère maintenant les dates AAAA-MM-JJ (correction d'Hiva), la fiche produit l'utilise
+- README du front mis à jour : contrat dans docs/api.md, branche commune dev-front, tests avec fetch simulé
+- 206 tests (heure de Tahiti et UTC), le build et le lint passent
 
 Reste à faire, quand le backend aura les routes des demandes :
 - Envoyer la demande et afficher les erreurs du serveur sous chaque champ

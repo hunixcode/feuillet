@@ -3,9 +3,9 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import DemandesPage from './DemandesPage.tsx'
 
-function afficher() {
+function afficher(url = '/demandes') {
   render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[url]}>
       <DemandesPage />
     </MemoryRouter>,
   )
@@ -31,6 +31,12 @@ describe('page Mes demandes', () => {
     expect(screen.getByLabelText('Auteur (facultatif)')).toBeInTheDocument()
     expect(screen.getByLabelText('ISBN (facultatif)')).toBeInTheDocument()
     expect(screen.getByLabelText('Quantité')).toHaveValue(1)
+  })
+
+  it('reprend le titre cherché dans le catalogue', () => {
+    afficher('/demandes?titre=Le%20Rivage%20des%20Syrtes')
+
+    expect(screen.getByLabelText('Titre')).toHaveValue('Le Rivage des Syrtes')
   })
 
   it('laisse remplir les champs', () => {

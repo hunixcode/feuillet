@@ -157,7 +157,10 @@ function CataloguePage() {
             catalogue, nous pouvons le commander pour vous.
           </p>
           <div className="achat-ligne">
-            <Link className="common-button common-button--primary" to="/demandes">
+            <Link
+              className="common-button common-button--primary"
+              to={q ? `/demandes?titre=${encodeURIComponent(q)}` : '/demandes'}
+            >
               Demander ce livre
             </Link>
             <Link className="common-button common-button--secondary" to="/catalogue">
