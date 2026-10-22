@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { Produit } from '../../types/produit'
 import { formatXPF } from '../../utils/format'
+import Couverture from './Couverture.tsx'
 import './ProduitCarte.css'
 
 interface ProduitCarteProps {
@@ -13,11 +14,7 @@ export default function ProduitCarte({ produit, categorie }: ProduitCarteProps) 
 
   return (
     <Link className="livre" to={`/produits/${produit.id}`}>
-      <div className={`couverture couverture-${produit.type}`} aria-hidden="true">
-        <span className="couv-lettre">{produit.designation.charAt(0)}</span>
-        <span className="couv-titre">{produit.designation}</span>
-        {sousTitre && <span className="couv-auteur">{sousTitre}</span>}
-      </div>
+      <Couverture produit={produit} />
       <div className="livre-infos">
         {categorie && <span className="livre-categorie">{categorie}</span>}
         <span className="livre-titre">{produit.designation}</span>

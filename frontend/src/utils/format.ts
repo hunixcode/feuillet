@@ -21,3 +21,9 @@ export function formatDate(iso: string): string {
     new Date(iso),
   )
 }
+
+export function formatJour(jour: string): string {
+  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'UTC' }).format(
+    new Date(`${jour}T00:00:00Z`),
+  )
+}
