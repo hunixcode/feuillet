@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import ChoixQuantite from '../../components/client/ChoixQuantite.tsx'
 import Couverture from '../../components/client/Couverture.tsx'
 import Button from '../../components/common/Button.tsx'
 import ErrorMessage from '../../components/common/ErrorMessage.tsx'
+import { usePanier } from '../../contexts/usePanier'
 import { ApiRequestError } from '../../services/api'
 import { listerCategories } from '../../services/categorieService'
 import { obtenirProduit } from '../../services/produitService'
@@ -12,6 +14,62 @@ import { messageErreur } from '../../utils/erreurs'
 import { formatDate, formatXPF } from '../../utils/format'
 import NotFoundPage from '../NotFoundPage.tsx'
 import './ProduitPage.css'
+
+function Achat({ produit }: { produit: Produit }) {
+  const { ajouter } = usePanier()
+  const [quantite, setQuantite] = useState(1)
+  const [ajoute, setAjoute] = useState(false)
+  const epuise = produit.disponibilite === 'epuise'
+
+  return (
+    <>
+      {produit.disponibilite && (
+        <p className={`etat ${epuise ? 'etat-manque' : 'etat-ok'}`}>
+          {epuise ? 'Épuisé' : 'Disponible'}
+        </p>
+      )}
+      {epuise ? (
+        <>
+          <div className="achat-ligne">
+            <Button disabled>Ajouter au panier</Button>
+            <Link
+              className="common-button common-button--secondary"
+              to={`/demandes?titre=${encodeURIComponent(produit.designation)}`}
+            >
+              Demander ce livre
+            </Link>
+          </div>
+          <p className="aide">
+            Cet article est épuisé. Demandez-le : nous vous prévenons dès son retour en rayon.
+          </p>
+        </>
+      ) : (
+        <>
+          <div className="achat-ligne">
+            <ChoixQuantite valeur={quantite} onChange={setQuantite} libelle="Quantité" />
+            <Button
+              onClick={() => {
+                ajouter(produit.id, quantite)
+                setAjoute(true)
+              }}
+            >
+              Ajouter au panier
+            </Button>
+          </div>
+          {ajoute && (
+            <p className="aide" role="status">
+              Ajouté au panier. <Link to="/panier">Voir le panier</Link>
+            </p>
+          )}
+          <p className="aide">
+            Le panier ne réserve pas l'article. Sa disponibilité est vérifiée quand vous confirmez
+            votre commande.
+          </p>
+        </>
+      )}
+    </>
+  )
+}
 
 interface Resultat {
   cle: string
@@ -156,30 +214,7 @@ function ProduitPage() {
                 `Promotion valable jusqu'au ${formatDate(produit.promotion.fin)}. `}
               TVA de {produit.tauxTva} % incluse.
             </p>
-            <div className="achat-ligne">
-              <div className="quantite">
-                <button type="button" aria-label="Retirer un exemplaire" disabled>
-                  −
-                </button>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  aria-label="Quantité"
-                  value="1"
-                  readOnly
-                  disabled
-                />
-                <button type="button" aria-label="Ajouter un exemplaire" disabled>
-                  +
-                </button>
-              </div>
-              <Button disabled aria-describedby="achat-bientot">
-                Ajouter au panier
-              </Button>
-            </div>
-            <p className="aide" id="achat-bientot">
-              L'ajout au panier sera bientôt disponible.
-            </p>
+            <Achat key={produit.id} produit={produit} />
           </div>
 
           <dl className="details">

@@ -11,8 +11,10 @@ import {
   type Promotion,
   type TypeProduit,
 } from "../modeles/produit.js";
+import { quantiteVendable, type Stock } from "../modeles/stock.js";
 import type { CategorieRepository } from "../repositories/CategorieRepository.js";
 import { ReferenceDejaUtiliseeErreur, type ProduitRepository } from "../repositories/ProduitRepository.js";
+import type { StockRepository } from "../repositories/StockRepository.js";
 import { erreurValidation, lireObjet, type ErreursChamps } from "../validation.js";
 
 const LONGUEUR_MAX_TEXTE = 200;
@@ -122,7 +124,7 @@ function validerFiche(corps: unknown, categoriesConnues: string[]): FicheProduit
   };
 }
 
-function lireFiltres(requete: unknown): FiltresProduits {
+export function lireFiltres(requete: unknown): FiltresProduits {
   const parametres = lireObjet(requete);
   const filtres: FiltresProduits = { archive: parametres.archive === "true" };
 
@@ -192,31 +194,36 @@ export function prixApplique(prix: number, remise = 0): number {
 }
 
 function versCatalogue(
-  { historiquePrix: _, promotions = [], ...fiche }: Produit,
+  { historiquePrix: _, promotions, ...fiche }: Produit,
   aujourdhui: string,
+  stock: Stock,
 ): ProduitCatalogue {
   const promotion = promotions.find((p) => p.debut <= aujourdhui && aujourdhui <= p.fin);
-  return { ...fiche, prixApplique: prixApplique(fiche.prix, promotion?.remise), ...(promotion && { promotion }) };
+  return {
+    ...fiche,
+    prixApplique: prixApplique(fiche.prix, promotion?.remise),
+    ...(promotion && { promotion }),
+    disponibilite: quantiteVendable(stock) > 0 ? "disponible" : "epuise",
+  };
 }
 
 // shortcut: chaque écriture relit puis remplace le produit entier ; deux modifications simultanées
 // du même produit, la dernière gagne (un seul responsable). Passer à des mises à jour ciblées sinon.
-// shortcut: suppression toujours permise (RG05 : à restreindre aux produits sans historique
-// dès que mouvements et ventes existent).
+// shortcut: RG05 ne regarde que les mouvements (les ventes en créent) ; ajouter demandes et commandes fournisseur.
 export class ProduitService {
   constructor(
     private readonly produits: ProduitRepository,
     private readonly categories: CategorieRepository,
+    private readonly stocks: StockRepository,
     private readonly horloge: Horloge = horlogeSysteme,
   ) {}
 
   async lister(requete: unknown): Promise<ProduitCatalogue[]> {
-    const aujourdhui = dateDuJour(this.horloge);
-    return (await this.produits.lister(lireFiltres(requete))).map((p) => versCatalogue(p, aujourdhui));
+    return this.versReponses(await this.produits.lister(lireFiltres(requete)));
   }
 
   async obtenir(id: string): Promise<ProduitCatalogue> {
-    return versCatalogue(await this.trouver(id), dateDuJour(this.horloge));
+    return this.versReponse(await this.trouver(id));
   }
 
   async historiquePrix(id: string): Promise<EntreePrix[]> {
@@ -229,7 +236,7 @@ export class ProduitService {
     const cree = await this.produits
       .creer({ ...fiche, historiquePrix, promotions: [] })
       .catch(traduireErreurReference);
-    return versCatalogue(cree, dateDuJour(this.horloge));
+    return this.versReponse(cree);
   }
 
   // RG15 : un changement de prix ajoute une entrée datée ; l'historique existant n'est jamais modifié.
@@ -246,10 +253,17 @@ export class ProduitService {
     if (!modifie) {
       throw erreurIntrouvable();
     }
-    return versCatalogue(modifie, dateDuJour(this.horloge));
+    return this.versReponse(modifie);
   }
 
   async supprimer(id: string): Promise<void> {
+    if (await this.stocks.aDesMouvements(id)) {
+      throw new ErreurApi(
+        409,
+        "PRODUIT_AVEC_HISTORIQUE",
+        "Ce produit a déjà des mouvements de stock : archivez-le plutôt que de le supprimer.",
+      );
+    }
     if (!(await this.produits.supprimer(id))) {
       throw erreurIntrouvable();
     }
@@ -279,6 +293,16 @@ export class ProduitService {
       throw erreurIntrouvable("Promotion introuvable.");
     }
     await this.enregistrer({ ...produit, promotions });
+  }
+
+  private async versReponses(produits: Produit[]): Promise<ProduitCatalogue[]> {
+    const aujourdhui = dateDuJour(this.horloge);
+    const stocks = await this.stocks.trouverPlusieurs(produits.map((p) => p.id));
+    return produits.map((p) => versCatalogue(p, aujourdhui, stocks.get(p.id)!));
+  }
+
+  private async versReponse(produit: Produit): Promise<ProduitCatalogue> {
+    return (await this.versReponses([produit]))[0]!;
   }
 
   private async identifiantsCategories(): Promise<string[]> {

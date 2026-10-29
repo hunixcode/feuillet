@@ -3,6 +3,7 @@ import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Categorie } from '../../types/categorie'
 import type { Produit } from '../../types/produit'
+import { PanierProvider } from '../../contexts/PanierContext.tsx'
 import ProduitPage from './ProduitPage.tsx'
 
 const ecume: Produit = {
@@ -72,10 +73,20 @@ function afficher(id: string) {
     [
       { path: '/produits/:id', element: <ProduitPage /> },
       { path: '/catalogue', element: <h1>Catalogue</h1> },
+      { path: '/panier', element: <h1>Panier</h1> },
+      { path: '/demandes', element: <h1>Mes demandes</h1> },
     ],
     { initialEntries: [`/produits/${id}`] },
   )
-  render(<RouterProvider router={router} />)
+  render(
+    <PanierProvider>
+      <RouterProvider router={router} />
+    </PanierProvider>,
+  )
+}
+
+function panierEnregistre() {
+  return JSON.parse(localStorage.getItem('panier') ?? '[]')
 }
 
 function details() {
@@ -115,17 +126,44 @@ describe('fiche produit', () => {
     expect(screen.getByText(/Promotion valable jusqu'au 31 octobre 2026\./)).toBeInTheDocument()
   })
 
-  it('montre l ajout au panier de la maquette, désactivé en attendant le panier', async () => {
-    simulerApi(ecume)
+  it('indique qu un article est disponible et l ajoute au panier avec la quantité choisie', async () => {
+    simulerApi({ ...ecume, disponibilite: 'disponible' })
+    afficher('p-1')
+
+    expect(await screen.findByText('Disponible')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Ajouter un exemplaire' }))
+    expect(screen.getByLabelText('Quantité')).toHaveValue('2')
+    fireEvent.click(screen.getByRole('button', { name: 'Ajouter au panier' }))
+
+    expect(panierEnregistre()).toEqual([{ produitId: 'p-1', quantite: 2 }])
+    expect(screen.getByRole('status')).toHaveTextContent('Ajouté au panier.')
+    expect(screen.getByRole('link', { name: 'Voir le panier' })).toHaveAttribute('href', '/panier')
+    expect(screen.getByText(/Le panier ne réserve pas l'article\./)).toBeInTheDocument()
+  })
+
+  it('additionne les quantités quand on ajoute deux fois le même article', async () => {
+    simulerApi({ ...ecume, disponibilite: 'disponible' })
     afficher('p-1')
 
     const bouton = await screen.findByRole('button', { name: 'Ajouter au panier' })
-    expect(bouton).toBeDisabled()
-    expect(bouton).toHaveAccessibleDescription('L\'ajout au panier sera bientôt disponible.')
-    expect(screen.getByLabelText('Quantité')).toHaveValue('1')
-    expect(screen.getByLabelText('Quantité')).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Retirer un exemplaire' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Ajouter un exemplaire' })).toBeDisabled()
+    fireEvent.click(bouton)
+    fireEvent.click(bouton)
+
+    expect(panierEnregistre()).toEqual([{ produitId: 'p-1', quantite: 2 }])
+  })
+
+  it('grise l ajout d un article épuisé et propose de le demander', async () => {
+    simulerApi({ ...ecume, disponibilite: 'epuise' })
+    afficher('p-1')
+
+    expect(await screen.findByText('Épuisé')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ajouter au panier' })).toBeDisabled()
+    expect(screen.queryByLabelText('Quantité')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Demander ce livre' })).toHaveAttribute(
+      'href',
+      `/demandes?titre=${encodeURIComponent('L\'Écume des jours')}`,
+    )
+    expect(panierEnregistre()).toEqual([])
   })
 
   it('affiche le prix sans promotion', async () => {

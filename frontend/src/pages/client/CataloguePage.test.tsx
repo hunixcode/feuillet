@@ -116,6 +116,20 @@ describe('page du catalogue', () => {
     expect(screen.getByText('−15 %')).toBeInTheDocument()
   })
 
+  it('affiche la disponibilité envoyée par l API', async () => {
+    simulerApi([
+      { ...ileAuTresor, disponibilite: 'disponible' },
+      { ...carnet, disponibilite: 'epuise' },
+    ])
+    afficher()
+
+    const ile = await screen.findByRole('link', { name: /L'Île au trésor/ })
+    const carte = screen.getByRole('link', { name: /Carnet ligné/ })
+
+    expect(within(ile).getByText('Disponible')).toBeInTheDocument()
+    expect(within(carte).getByText('Épuisé')).toBeInTheDocument()
+  })
+
   it('affiche la catégorie de chaque article', async () => {
     simulerApi([ileAuTresor, carnet])
     afficher()
