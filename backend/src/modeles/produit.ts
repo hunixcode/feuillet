@@ -39,7 +39,12 @@ export interface Produit extends FicheProduit {
 export type NouveauProduit = Omit<Produit, "id">;
 
 // Ce que voit le catalogue : la fiche, le prix appliqué (RG11) et la promotion du jour, sans les historiques.
-export type ProduitCatalogue = FicheProduit & { id: string; prixApplique: number; promotion?: Promotion };
+export type ProduitCatalogue = FicheProduit & {
+  id: string;
+  prixApplique: number;
+  promotion?: Promotion;
+  disponibilite: "disponible" | "epuise";
+};
 
 // shortcut: recherche sensible aux accents (« ile » ne trouve pas « Île ») ; normaliser un champ dédié si besoin.
 export const CHAMPS_RECHERCHE = ["designation", "reference", "auteur", "isbn", "issn", "marque"] as const;

@@ -137,56 +137,21 @@ Reste à faire :
 - Afficher « disponible » ou « épuisé » quand le backend enverra la disponibilité (dépend du stock)
 - Meilleures ventes (RG14) en haut de la page quand la route existera
 
-21/10/2026 - Noah (front A) : fiche produit (écran 3)
+22/10/2026 - Back : stock et mouvements (EX02, EX04)
 
 Fait :
-- Page /produits/:id reliée à GET /api/produits/:id (obtenirProduit dans services/produitService.ts)
-- Désignation, auteur ou marque, prix TTC en XPF, taux de TVA, référence et catégorie ; en promotion : prix barré, remise et date de fin
-- Champs selon le type : auteur et ISBN (livre), ISSN, numéro et date de parution (magazine), marque (papeterie)
-- Fil d'Ariane vers le catalogue et vers le rayon du produit ; page introuvable si le produit n'existe pas (404) ; erreur avec « Réessayer »
-- Couverture partagée avec le catalogue (components/client/Couverture)
-- utils/format.ts : formatJour pour les dates AAAA-MM-JJ de l'API, sans décalage d'un jour à l'heure de Tahiti (formatDate affichait le 30 au lieu du 31)
-- Quantité et bouton « Ajouter au panier » de la maquette, désactivés avec « L'ajout au panier sera bientôt disponible » en attendant le panier
-- 176 tests (vérifiés à l'heure de Tahiti et en UTC), le build et le lint passent ; fiche vérifiée avec la vraie base
-- Titre de l'onglet propre à chaque page (« Catalogue · Feuillet », « L'Île au trésor · Feuillet », Connexion, Créer un compte, Page introuvable) avec la balise title de React 19 ; 179 tests
-- Page d'erreur générale (pages/ErreurPage) branchée en haut du routeur (errorElement) : si une page plante, « Une erreur est survenue » avec Réessayer et Retour au catalogue, au lieu de l'écran brut de React Router ; 180 tests
-- Chargement de la fiche produit en squelette (blocs gris animés à la place de la couverture, du titre, du prix et des détails), comme le catalogue ; les styles des squelettes sont maintenant communs dans index.css
+- Stock par produit (physique, mis de côté, défectueux) et journal des mouvements (date, type, quantité, motif, opérateur ; avant et après pour un ajustement)
+- Correction d'inventaire, article abîmé (ajustement vers le stock défectueux, décision 9), sortie du stock défectueux ; jamais sous le mis de côté (RG04)
+- `GET /api/stock`, `GET /api/produits/:id/stock`, `GET /api/mouvements` pour l'écran 8 ; contrat dans `docs/api.md`
+- `disponibilite` (« disponible » ou « épuisé ») dans chaque produit du catalogue ; suppression refusée pour un produit qui a des mouvements (RG05, 409 `PRODUIT_AVEC_HISTORIQUE`)
+- Stock et mouvement écrits ensemble dans une transaction MongoDB, avec refus si le stock a changé entre-temps (409 `STOCK_MODIFIE`)
+- Seed : stock de départ des produits de démonstration (DEMO-LIV-006 épuisé)
+- Lecture des anciens produits sans historique des prix ni promotions (correctif séparé)
+- 136 tests backend ; le build n'embarque plus les repositories en mémoire
 
 Reste à faire :
-- Disponibilité, ajout au panier et demande d'un article épuisé, quand le stock, le panier et les demandes existeront
+- RG05 : compter aussi les demandes et les commandes fournisseur quand elles existeront
+- Mis de côté : alimenté par les demandes (EX05)
+- Seuil d'alerte et quantité achetée à l'origine : avec le réapprovisionnement (EX06)
+- Front : écran 8 et affichage de la disponibilité
 
-21/10/2026 - Front : catalogue du responsable (écran 7, EX01, EX11)
-
-Fait :
-- Page /admin/catalogue branchée sur `/api/produits` et `/api/categories` : articles actifs et archivés dans deux onglets, recherche, filtres par type et par catégorie ; prix barré et prix appliqué en cas de promotion
-- Panneau d'un article : modification de la fiche (champs du type choisi), archiver ou réactiver, supprimer après confirmation, promotions (programmer, supprimer, « en cours »), historique du prix en marches (SVG, sans bibliothèque) : prix catalogue, promotion en cours en pointillés, mois sous l'axe et légende
-- Colonne Promotion : remise ou « Aucune »
-- Création d'un article et gestion des catégories (ajouter, renommer, supprimer) dans le même panneau ; erreurs du backend affichées sous chaque champ
-- `services/catalogueAdminService.ts` (création, modification, archivage, suppression, promotions, historique des prix, catégories) ; réutilise `Produit`, `Promotion` et `Categorie` du catalogue client, ajoute `FicheProduit` et `EntreePrix` à `types/produit.ts` ; composant commun `Select`
-- `formatDate` garde le jour d'une date AAAA-MM-JJ (avant, une promotion du 10 octobre s'affichait « 9 octobre » à Tahiti) ; profite aussi au catalogue client
-- Vérifié contre la vraie API (repositories en mémoire) : création, modification, historique des prix, promotions, archivage, suppression et catégories, avec les erreurs 400 / 409
-- 183 tests frontend (20 nouveaux), lint et build passent
-
-Reste à faire :
-- Colonne Disponibilité prête : elle affiche « 9 vendables » / « Épuisé » à partir d'un champ `quantiteVendable` (nom du diagramme de classes) que l'API doit ajouter à chaque produit avec le stock ; en attendant « Non renseigné ». Nom du champ à valider avec le back
-- Seuil d'alerte dans la liste : avec le stock
-- Bouton Supprimer seulement pour un article sans historique (RG05) : il faut que l'API indique si l'article est supprimable
-- Rattacher une demande hors catalogue à un article créé : avec les demandes
-
-22/10/2026 - Noah (front A) : page Mes demandes (écran 5)
-
-Fait :
-- Page /demandes (client connecté) de la maquette V2 : formulaire « Demander un livre » pour un livre absent du catalogue (titre, auteur et ISBN facultatifs, quantité)
-- Bouton « Envoyer la demande » grisé avec « L'envoi des demandes sera bientôt disponible » : le backend n'a pas encore de route pour les demandes
-- Zone de suivi avec un message d'attente qui annonce les statuts (en attente, mis de côté, honorée, expirée, annulée)
-- Styles du grand titre de page et du message vide mis en commun dans index.css (catalogue et demandes)
-- Entrée « fiche produit (écran 3) » du 21/10 remise dans le backlog : elle avait été perdue en réglant le conflit de la PR d'Hiva
-- « Demander ce livre » du catalogue (aucun résultat) pré-remplit le titre cherché dans le formulaire (/demandes?titre=...) ; la route protégée garde aussi ces paramètres quand elle renvoie vers la connexion
-- formatJour supprimé : formatDate gère maintenant les dates AAAA-MM-JJ (correction d'Hiva), la fiche produit l'utilise
-- README du front mis à jour : contrat dans docs/api.md, branche commune dev-front, tests avec fetch simulé
-- 206 tests (heure de Tahiti et UTC), le build et le lint passent
-
-Reste à faire, quand le backend aura les routes des demandes :
-- Envoyer la demande et afficher les erreurs du serveur sous chaque champ
-- Liste des demandes avec quantité, date, statut, et la date limite de retrait d'un article mis de côté
-- Annuler une demande en attente ; notifications de réapprovisionnement

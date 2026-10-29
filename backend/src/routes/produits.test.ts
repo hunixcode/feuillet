@@ -1,12 +1,9 @@
 import request from "supertest";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../app.js";
-import { MemoireCategorieRepository } from "../repositories/MemoireCategorieRepository.js";
-import { MemoireProduitRepository } from "../repositories/MemoireProduitRepository.js";
 import { MemoireUtilisateurRepository } from "../repositories/MemoireUtilisateurRepository.js";
 import { AuthService, hasherMotDePasse } from "../services/AuthService.js";
-import { CategorieService } from "../services/CategorieService.js";
-import { ProduitService } from "../services/ProduitService.js";
+import { servicesMemoire } from "../tests/servicesMemoire.js";
 
 const livre = {
   reference: "LIV-001",
@@ -40,16 +37,14 @@ describe("API des produits", () => {
   beforeEach(async () => {
     horloge = { date: new Date("2026-10-15T20:00:00Z"), maintenant: () => horloge.date };
     const utilisateurs = new MemoireUtilisateurRepository();
-    const produits = new MemoireProduitRepository();
-    const categories = new MemoireCategorieRepository();
+    const services = servicesMemoire(horloge);
     for (const libelle of ["Roman", "Presse"]) {
-      await categories.creer({ id: libelle.toLowerCase(), libelle });
+      await services.repositories.categories.creer({ id: libelle.toLowerCase(), libelle });
     }
     const authService = new AuthService(utilisateurs, { secretJwt: "secret-de-test", coutHash: 4 });
     app = createApp({
       authService,
-      produitService: new ProduitService(produits, categories, horloge),
-      categorieService: new CategorieService(categories, produits),
+      ...services,
       verifierBase: async () => true,
     });
 
@@ -82,7 +77,13 @@ describe("API des produits", () => {
       const reponse = await creer(livre);
 
       expect(reponse.status).toBe(201);
-      expect(reponse.body).toEqual({ ...livre, id: expect.any(String), archive: false, prixApplique: 1800 });
+      expect(reponse.body).toEqual({
+        ...livre,
+        id: expect.any(String),
+        archive: false,
+        prixApplique: 1800,
+        disponibilite: "epuise",
+      });
     });
 
     it("ne garde que les champs propres au type", async () => {

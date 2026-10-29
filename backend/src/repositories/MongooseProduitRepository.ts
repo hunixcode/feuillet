@@ -42,8 +42,9 @@ export const ProduitModel = mongoose.model<NouveauProduit>("Produit", produitSch
 
 type DocumentProduit = NouveauProduit & { _id: mongoose.Types.ObjectId };
 
-function versProduit({ _id, ...produit }: DocumentProduit): Produit {
-  return { id: _id.toString(), ...produit };
+// Les produits créés avant l'historique des prix ou les promotions n'ont pas ces tableaux en base.
+function versProduit({ _id, historiquePrix = [], promotions = [], ...fiche }: DocumentProduit): Produit {
+  return { id: _id.toString(), ...fiche, historiquePrix, promotions };
 }
 
 export class MongooseProduitRepository implements ProduitRepository {
