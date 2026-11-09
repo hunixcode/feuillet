@@ -66,7 +66,7 @@ Lancera les tests, le lint et le build TypeScript du front et du back à chaque 
 | **Mouvement** | Entrée (réception), vente, retour, remplacement ou ajustement (date, quantité, motif, opérateur) |
 | **Opérateur** | Origine d'un mouvement : `responsable`, `client` (commande en ligne) ou `systeme` (traitement automatique). Jamais un employé nominatif |
 | **Vente** | Transaction validée : lignes à prix figé, options, total, canal (`en_ligne` ou `comptoir`), client facultatif au comptoir |
-| **Commande (client)** | Vente passée en ligne depuis le panier ; retrait en magasin ou livraison |
+| **Commande (client)** | Vente passée en ligne depuis le panier, toujours livrée à une adresse |
 | **Option cadeau** | Vente marquée comme cadeau pour une occasion (Noël, anniversaire, fête) ; allonge le délai de retour, emballage cadeau possible |
 | **Demande** | Requête d'un client sur un livre indisponible : produit épuisé du catalogue ou livre absent du catalogue |
 | **Fournisseur** | Entreprise auprès de laquelle la librairie commande ; il y en a plusieurs |
@@ -124,7 +124,7 @@ Hors périmètre : emprunt de livres (consigne de l'enseignant), paiement réel,
 | Objet | Statuts |
 |---|---|
 | Demande | `en_attente` → `mise_de_cote` → `honoree` ; `mise_de_cote` → `expiree` ; `en_attente` → `annulee` (par le client) |
-| Commande client (en ligne) | `a_preparer` → `remise` (retirée en magasin ou livrée) |
+| Commande client (en ligne) | `a_preparer` → `remise` (livrée) |
 | Commande fournisseur | `en_cours` → `partiellement_recue` → `recue` |
 
 ### Qualité
@@ -175,6 +175,7 @@ Source **Prof** : réponse de l'enseignant (notes dans `questions-prof.md`). Sou
 | 21 | Semaine du lundi 00:00 au dimanche 23:59 (heure de Tahiti) ; période libre possible | Équipe |
 | 22 | Ventes, retours, net, stock restant, pourcentage vendu de la quantité achetée, statistiques globales, aucune par employé | Prof |
 | — | Frais d'emballage cadeau et de livraison : montants fixes paramétrables | Équipe |
+| | Commande en ligne toujours livrée (pas de retrait en magasin) : livraison et adresse obligatoires, frais de livraison toujours comptés. Au comptoir, la livraison reste facultative | Équipe |
 | — | Pas d'emprunt de livres | Prof |
 | — | Pas de type de client : les meilleures ventes sont les mêmes pour tous (RG14). Écart assumé à la demande de l'enseignant (meilleures ventes selon le type du client) | Équipe |
 

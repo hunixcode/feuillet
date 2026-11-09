@@ -34,7 +34,7 @@ C'est la première page de l'application.
 ### 4. Panier et commande
 
 - **But :** vérifier les articles et les options avant de confirmer l'achat.
-- **Contenu :** articles, quantités, prix unitaires remisés, TVA incluse et total en XPF ; options : cadeau (occasion : Noël, anniversaire, fête), emballage cadeau, livraison (adresse) ou retrait en magasin, avec leurs frais.
+- **Contenu :** articles, quantités, prix unitaires remisés, TVA incluse et total en XPF ; options : cadeau (occasion : Noël, anniversaire, fête), emballage cadeau, livraison à une adresse (obligatoire en ligne, pas de retrait en magasin), avec leurs frais.
 - **Actions :** modifier les quantités, retirer un article, choisir les options, confirmer la commande.
 - **Affichage :** préciser que la présence d'un article dans le panier ne le réserve pas (RG03). Afficher le total, la TVA incluse et les frais d'options avant confirmation. Si un article n'est plus disponible au moment de confirmer, rien n'est enregistré : indiquer les lignes en cause et laisser le client corriger son panier.
 
@@ -74,7 +74,7 @@ Une demande sur un article épuisé du catalogue se fait depuis sa fiche produit
 
 - **But :** enregistrer et consulter les opérations faites en magasin.
 - **Contenu :** recherche d'articles et panier de vente avec les mêmes options que l'écran 4, client facultatif ; liste et détail des ventes (en ligne et comptoir) ; pour une vente, articles et quantités déjà retournés.
-- **Actions :** enregistrer une vente (y compris le retrait d'une commande en ligne ou d'une mise de côté), marquer une commande en ligne comme remise, enregistrer un retour avec son issue : remboursement, échange (plastique intact) ou remplacement d'un défectueux par un neuf (RG12).
+- **Actions :** enregistrer une vente (y compris le retrait d'une mise de côté), marquer une commande en ligne comme remise (livrée), enregistrer un retour avec son issue : remboursement, échange (plastique intact) ou remplacement d'un défectueux par un neuf (RG12).
 - **Affichage :** prix figés, remises et TVA de la vente en XPF. Afficher la date limite de retour (14 jours, ou 1 mois pour un cadeau, RG09), la quantité encore retournable et le montant remboursé. Pour un article revendable rendu ouvert, indiquer qu'il peut être remis en rayon sous cellophane.
 
 ### 10. Demandes et mises de côté
