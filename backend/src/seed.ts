@@ -5,6 +5,7 @@ import { ErreurApi } from "./erreurs.js";
 import { dateDuJour, horlogeSysteme } from "./horloge.js";
 import { CATEGORIES_DEPART, PRODUITS_DEMO } from "./produitsDemo.js";
 import { MongooseCategorieRepository } from "./repositories/MongooseCategorieRepository.js";
+import { MongooseParametresRepository } from "./repositories/MongooseParametresRepository.js";
 import { MongooseProduitRepository, ProduitModel } from "./repositories/MongooseProduitRepository.js";
 import { MongooseStockRepository, MouvementModel, StockModel } from "./repositories/MongooseStockRepository.js";
 import { UtilisateurModel } from "./repositories/MongooseUtilisateurRepository.js";
@@ -30,6 +31,10 @@ await UtilisateurModel.findOneAndUpdate(
   { upsert: true },
 );
 console.log(`Compte responsable prêt : ${email}`);
+
+// Valeurs de départ des paramètres, sans écraser celles réglées par le responsable.
+await new MongooseParametresRepository().initialiser();
+console.log("Paramètres prêts");
 
 const produitRepository = new MongooseProduitRepository();
 const categorieRepository = new MongooseCategorieRepository();

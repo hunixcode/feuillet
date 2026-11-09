@@ -219,3 +219,27 @@ Responsable seulement. Un produit jamais compté a un stock vide.
 | `POST /api/produits/:id/stock/defectueux/sortie` | `{ "quantite": 2, "motif": "Renvoi fournisseur" }` | `200` : `EtatStock` ; renvoi ou destruction, pas de mouvement (le physique ne change pas) | `400`, `404`, `409 STOCK_INSUFFISANT` au-delà du défectueux |
 
 Une écriture faite pendant qu'une autre modifiait le même stock est refusée (`409 STOCK_MODIFIE`) : recharger et recommencer. Le stock et son mouvement sont enregistrés ensemble dans une transaction MongoDB.
+
+## Paramètres (écran 13)
+
+Responsable seulement. Un seul jeu de paramètres pour la librairie ; le seed crée les valeurs de départ sans écraser celles déjà réglées.
+
+`Parametres` :
+
+```json
+{
+  "dureeMiseDeCoteJours": 7,
+  "delaiRetourJours": 14,
+  "delaiRetourCadeauJours": 30,
+  "fraisEmballage": 300,
+  "fraisLivraison": 800,
+  "seuilAlerteDefaut": 20
+}
+```
+
+Durées en jours (RG06, RG09), frais en XPF (RG13), seuil d'alerte en % de la quantité achetée à l'origine (RG10). Chaque valeur est un entier strictement positif ; le seuil va de 1 à 100.
+
+| Route | Corps | Réponse | Erreurs |
+|---|---|---|---|
+| `GET /api/parametres` | | `200` : `Parametres` | |
+| `PUT /api/parametres` | `Parametres` complet | `200` : `Parametres` enregistrés | `400 VALIDATION` (`details.champs` par valeur) |

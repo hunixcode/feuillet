@@ -4,11 +4,13 @@ import { createApp } from "./app.js";
 import { verifierMongo } from "./baseDeDonnees.js";
 import { lireVariable } from "./config.js";
 import { MongooseCategorieRepository } from "./repositories/MongooseCategorieRepository.js";
+import { MongooseParametresRepository } from "./repositories/MongooseParametresRepository.js";
 import { MongooseProduitRepository } from "./repositories/MongooseProduitRepository.js";
 import { MongooseStockRepository } from "./repositories/MongooseStockRepository.js";
 import { MongooseUtilisateurRepository } from "./repositories/MongooseUtilisateurRepository.js";
 import { AuthService } from "./services/AuthService.js";
 import { CategorieService } from "./services/CategorieService.js";
+import { ParametresService } from "./services/ParametresService.js";
 import { ProduitService } from "./services/ProduitService.js";
 import { StockService } from "./services/StockService.js";
 
@@ -31,7 +33,16 @@ const stocks = new MongooseStockRepository();
 const produitService = new ProduitService(produits, categories, stocks);
 const categorieService = new CategorieService(categories, produits);
 const stockService = new StockService(stocks, produits);
+const parametresService = new ParametresService(new MongooseParametresRepository());
 
-createApp({ authService, produitService, categorieService, stockService, verifierBase: verifierMongo }).listen(port, () => {
+const app = createApp({
+  authService,
+  produitService,
+  categorieService,
+  stockService,
+  parametresService,
+  verifierBase: verifierMongo,
+});
+app.listen(port, () => {
   console.log(`API → http://localhost:${port}`);
 });
