@@ -11,7 +11,7 @@ export const CATEGORIES_DEPART = [
 ];
 
 // Catalogue de démonstration (EQ03) ; promotion : remise en %, du jour du seed à J + jours ;
-// stock : quantité posée par une correction d'inventaire (0 = épuisé).
+// stock : quantité posée par une correction d'inventaire avant les ventes de démonstration (0 = épuisé).
 export const PRODUITS_DEMO = [
   { reference: "DEMO-LIV-001", designation: "L'Île au trésor", type: "livre", categorie: "roman", prix: 1800, tauxTva: 5, auteur: "Robert Louis Stevenson", promotion: { remise: 15, jours: 30 } , stock: 12 },
   { reference: "DEMO-LIV-002", designation: "Le Petit Prince", type: "livre", categorie: "jeunesse", prix: 1200, tauxTva: 5, isbn: "9782070612758", auteur: "Antoine de Saint-Exupéry" , stock: 8 },
@@ -26,3 +26,17 @@ export const PRODUITS_DEMO = [
   { reference: "DEMO-PAP-002", designation: "Stylo bille bleu (lot de 4)", type: "papeterie", categorie: "fournitures", prix: 450, tauxTva: 16, marque: "Bic", promotion: { remise: 20, jours: 7 } , stock: 25 },
   { reference: "DEMO-PAP-003", designation: "Calculatrice collège", type: "papeterie", categorie: "scolaire", prix: 2900, tauxTva: 16, marque: "Casio" , stock: 4 },
 ];
+
+// Ventes au comptoir de démonstration (EQ03), passées il y a `jours` jours, pour les meilleures ventes (RG14).
+export const VENTES_DEMO = [
+  { jours: 28, lignes: [["DEMO-LIV-004", 3], ["DEMO-PAP-001", 5]] },
+  { jours: 21, lignes: [["DEMO-LIV-002", 1]], occasionCadeau: "anniversaire", emballageCadeau: true },
+  { jours: 14, lignes: [["DEMO-LIV-004", 2], ["DEMO-PAP-002", 2]] },
+  { jours: 10, lignes: [["DEMO-LIV-007", 2], ["DEMO-PAP-001", 4], ["DEMO-PAP-003", 1]] },
+  { jours: 6, lignes: [["DEMO-LIV-001", 1], ["DEMO-MAG-001", 1]], adresseLivraison: "BP 120, 98713 Papeete" },
+  { jours: 3, lignes: [["DEMO-LIV-004", 1], ["DEMO-LIV-005", 1]] },
+  { jours: 1, lignes: [["DEMO-PAP-001", 3], ["DEMO-PAP-002", 1]] },
+] as const;
+
+// Le stock de départ est compté avant la première vente de démonstration.
+export const JOURS_INVENTAIRE_DEMO = 30;
