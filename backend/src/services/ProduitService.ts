@@ -193,12 +193,13 @@ export function prixApplique(prix: number, remise = 0): number {
   return Math.round((prix * (100 - remise)) / 100);
 }
 
-function versCatalogue(
-  { historiquePrix: _, promotions, ...fiche }: Produit,
-  aujourdhui: string,
-  stock: Stock,
-): ProduitCatalogue {
-  const promotion = promotions.find((p) => p.debut <= aujourdhui && aujourdhui <= p.fin);
+export function promotionDuJour({ promotions }: Produit, aujourdhui: string): Promotion | undefined {
+  return promotions.find((p) => p.debut <= aujourdhui && aujourdhui <= p.fin);
+}
+
+function versCatalogue(produit: Produit, aujourdhui: string, stock: Stock): ProduitCatalogue {
+  const { historiquePrix: _, promotions: __, ...fiche } = produit;
+  const promotion = promotionDuJour(produit, aujourdhui);
   return {
     ...fiche,
     prixApplique: prixApplique(fiche.prix, promotion?.remise),
