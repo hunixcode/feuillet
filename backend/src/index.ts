@@ -2,7 +2,7 @@ import "dotenv/config";
 import mongoose from "mongoose";
 import { createApp } from "./app.js";
 import { verifierMongo } from "./baseDeDonnees.js";
-import { lireVariable } from "./config.js";
+import { lireConfianceProxy, lireVariable } from "./config.js";
 import { MongooseCategorieRepository } from "./repositories/MongooseCategorieRepository.js";
 import { MongooseProduitRepository } from "./repositories/MongooseProduitRepository.js";
 import { MongooseStockRepository } from "./repositories/MongooseStockRepository.js";
@@ -32,6 +32,13 @@ const produitService = new ProduitService(produits, categories, stocks);
 const categorieService = new CategorieService(categories, produits);
 const stockService = new StockService(stocks, produits);
 
-createApp({ authService, produitService, categorieService, stockService, verifierBase: verifierMongo }).listen(port, () => {
+createApp({
+  authService,
+  produitService,
+  categorieService,
+  stockService,
+  verifierBase: verifierMongo,
+  confianceProxy: lireConfianceProxy(process.env.TRUST_PROXY),
+}).listen(port, () => {
   console.log(`API → http://localhost:${port}`);
 });
