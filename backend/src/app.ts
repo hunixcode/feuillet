@@ -5,6 +5,7 @@ import { routesCategories } from "./routes/categories.js";
 import { routesProduits } from "./routes/produits.js";
 import { routesSante, type VerifierBase } from "./routes/sante.js";
 import { routesStock } from "./routes/stock.js";
+import { corsAutorise, enTetesSecurite, TAILLE_MAX_CORPS } from "./securite.js";
 import type { AuthService } from "./services/AuthService.js";
 import type { CategorieService } from "./services/CategorieService.js";
 import type { ProduitService } from "./services/ProduitService.js";
@@ -16,13 +17,27 @@ export interface Dependances {
   categorieService: CategorieService;
   stockService: StockService;
   verifierBase: VerifierBase;
+  /** Active Strict-Transport-Security (HTTPS seulement). */
+  production?: boolean;
+  /** Origines autorisées en CORS, seulement si le front est servi ailleurs ; vide : même origine. */
+  originesCors?: string[];
 }
 
-export function createApp({ authService, produitService, categorieService, stockService, verifierBase }: Dependances) {
+export function createApp({
+  authService,
+  produitService,
+  categorieService,
+  stockService,
+  verifierBase,
+  production = false,
+  originesCors = [],
+}: Dependances) {
   const app = express();
 
   app.disable("x-powered-by");
-  app.use(express.json());
+  app.use(enTetesSecurite({ production }));
+  app.use(corsAutorise(originesCors));
+  app.use(express.json({ limit: TAILLE_MAX_CORPS }));
 
   app.use("/api/health", routesSante(verifierBase));
   app.use("/api/auth", routesAuth(authService));

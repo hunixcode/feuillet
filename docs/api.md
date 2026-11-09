@@ -28,7 +28,18 @@ Toute erreur suit le format de `ApiError` (`frontend/src/types/api.ts`) :
 | 409 | `PRODUIT_AVEC_HISTORIQUE` | Suppression d'un produit qui a des mouvements de stock (RG05) |
 | 409 | `STOCK_INSUFFISANT` | Sortie de stock supérieure à la quantité disponible, ou compte inférieur au mis de côté |
 | 409 | `STOCK_MODIFIE` | Le stock a changé pendant l'opération |
-| 500 | `ERREUR_SERVEUR` | Erreur inattendue |
+| 413 | `CORPS_TROP_VOLUMINEUX` | Corps JSON de plus de 100 ko |
+| 415 | `ENCODAGE_NON_SUPPORTE` | Encodage du corps non supporté |
+| 500 | `ERREUR_SERVEUR` | Erreur inattendue (ni trace ni message d'origine renvoyés au client, l'erreur est journalisée côté serveur) |
+
+## Sécurité HTTP
+
+- **Taille du corps** : 100 ko au plus par requête JSON (`TAILLE_MAX_CORPS`), au-delà `413 CORPS_TROP_VOLUMINEUX`.
+- **En-têtes** (helmet, sur toutes les réponses) : `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-Frame-Options: DENY`, `Strict-Transport-Security` (un an) seulement quand `NODE_ENV=production`, plus les en-têtes par défaut de helmet (`Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`...).
+- **Content Security Policy**, prévue pour le front compilé servi par l'application :
+  `default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'`.
+  Aucun script inline ni externe : le token étant dans `localStorage`, c'est la protection principale contre son vol par XSS. Une nouvelle ressource externe (images de couverture, autre police) doit être ajoutée dans `backend/src/securite.ts`.
+- **CORS** : par défaut aucun en-tête, le front appelle `/api` sur la même origine. Si le front est servi ailleurs, `CORS_ORIGINES` liste les origines autorisées (séparées par des virgules) ; une autre origine ne reçoit pas `Access-Control-Allow-Origin` et le navigateur bloque la réponse.
 
 ## État de l'API
 
