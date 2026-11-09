@@ -155,3 +155,12 @@ Reste à faire :
 - Seuil d'alerte et quantité achetée à l'origine : avec le réapprovisionnement (EX06)
 - Front : écran 8 et affichage de la disponibilité
 
+09/11/2026 - Sécurité : limites de requêtes (#50)
+
+Fait :
+- `express-rate-limit` : connexion limitée à 10 essais échoués par 15 minutes (par IP et e-mail), inscription à 5 comptes par heure et par IP, routes publiques (`GET /api/produits`, `POST /api/commandes/devis`) à 120 requêtes par minute et par IP
+- Réponse `429 TROP_DE_REQUETES` au format commun avec `Retry-After` ; contrat dans `docs/api.md`, message affiché par la page de connexion
+- `TRUST_PROXY` pour lire l'IP réelle derrière le proxy de Render ; limites réglables dans `createApp` (valeurs basses dans les tests)
+
+Reste à faire :
+- Compteurs en mémoire, pour une seule instance du serveur : passer à Redis ou à la base si l'API tourne un jour sur plusieurs instances
