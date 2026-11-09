@@ -228,3 +228,11 @@ Fait :
 
 Reste à faire, quand le back aura la route des ventes :
 - Afficher le vrai total, la TVA et les frais ; confirmer la commande (tout ou rien, RG03) ; signaler les lignes refusées ; page « Commande confirmée »
+
+08/11/2026 - Noah (front A) : vraies couvertures des livres (issue #47)
+
+Fait :
+- Composant Couverture : la vraie couverture est chargée depuis Open Library avec l'ISBN du livre, par-dessus la couverture dessinée
+- Sans ISBN, ou si Open Library n'a pas d'image, la couverture dessinée reste affichée (aussi pendant le chargement)
+- Les images ne sont chargées qu'en arrivant à l'écran (loading="lazy")
+- 244 tests, le build et le lint passent
