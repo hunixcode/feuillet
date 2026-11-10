@@ -155,3 +155,17 @@ Reste à faire :
 - Seuil d'alerte et quantité achetée à l'origine : avec le réapprovisionnement (EX06)
 - Front : écran 8 et affichage de la disponibilité
 
+
+09/11/2026 - Production : front servi par l'API, arrêt propre, journaux (#54)
+
+Fait :
+- En production, l'API sert le front compilé (`frontend/dist`) sur la même origine et renvoie `index.html` pour les routes de React Router ; `/api` inconnue reste un 404 JSON, un asset absent aussi ; assets en cache un an, `index.html` sans cache
+- Vérification de toutes les variables d'environnement au démarrage, avec tous les problèmes signalés d'un coup
+- Arrêt propre sur `SIGTERM` : plus de nouvelles requêtes, fin de celles en cours (10 s au plus), fermeture de MongoDB
+- Journal d'une ligne par requête sans corps ni en-têtes ; erreur 500 avec un identifiant de requête (`X-Request-Id`)
+- Index MongoDB créés au démarrage (`autoIndex` coupé en production)
+- `package.json` à la racine : `npm run installer`, `npm run build`, `npm start`, `npm run seed` ; section « Déployer » du README
+
+Reste à faire :
+- HSTS en production : PR #60 (#51)
+- Docker (#53) et déploiement sur Render (#55)
