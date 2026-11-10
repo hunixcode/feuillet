@@ -4,10 +4,8 @@ import type { Parametres } from "../modeles/parametres.js";
 import { quantiteVendable, type ChangementStock, type Stock } from "../modeles/stock.js";
 import type { UtilisateurPublic } from "../modeles/utilisateur.js";
 import {
-  CANAUX_VENTE,
   OCCASIONS_CADEAU,
   STATUTS_VENTE,
-  type CanalVente,
   type ClientVente,
   type FiltresVentes,
   type LigneCommande,
@@ -21,7 +19,6 @@ import {
 import type { ParametresRepository } from "../repositories/ParametresRepository.js";
 import type { ProduitRepository } from "../repositories/ProduitRepository.js";
 import { StockModifieErreur, type StockRepository } from "../repositories/StockRepository.js";
-import type { UtilisateurRepository } from "../repositories/UtilisateurRepository.js";
 import type { VenteRepository } from "../repositories/VenteRepository.js";
 import { erreurValidation, lireObjet, type ErreursChamps } from "../validation.js";
 import { prixApplique, promotionDuJour } from "./ProduitService.js";
@@ -112,11 +109,8 @@ function lirePanier(corps: unknown, adresseObligatoire: boolean): Panier {
 }
 
 function lireFiltresVentes(requete: unknown): FiltresVentes {
-  const { canal, statut } = lireObjet(requete);
+  const { statut } = lireObjet(requete);
   const champs: ErreursChamps = {};
-  if (canal !== undefined && !CANAUX_VENTE.includes(canal as CanalVente)) {
-    champs.canal = `Le canal doit être : ${CANAUX_VENTE.join(", ")}.`;
-  }
   if (statut !== undefined && !STATUTS_VENTE.includes(statut as StatutVente)) {
     champs.statut = `Le statut doit être : ${STATUTS_VENTE.join(", ")}.`;
   }
@@ -124,7 +118,6 @@ function lireFiltresVentes(requete: unknown): FiltresVentes {
     throw erreurValidation(champs);
   }
   return {
-    ...(canal !== undefined && { canal: canal as CanalVente }),
     ...(statut !== undefined && { statut: statut as StatutVente }),
   };
 }
@@ -149,45 +142,25 @@ export class VenteService {
     private readonly produits: ProduitRepository,
     private readonly stocks: StockRepository,
     private readonly parametres: ParametresRepository,
-    private readonly utilisateurs: UtilisateurRepository,
     private readonly horloge: Horloge = horlogeSysteme,
   ) {}
 
-  // Panier en ligne : la livraison y est toujours comptée, l'adresse ne sera exigée qu'à la confirmation.
+  // Panier : la livraison y est toujours comptée, l'adresse ne sera exigée qu'à la confirmation.
   async devisEnLigne(corps: unknown): Promise<Devis> {
-    return (await this.calculer(lirePanier(corps, false), "en_ligne")).devis;
-  }
-
-  async devisComptoir(corps: unknown): Promise<Devis> {
-    return (await this.calculer(lirePanier(corps, false), "comptoir")).devis;
+    return (await this.calculer(lirePanier(corps, false))).devis;
   }
 
   async commanderEnLigne(client: UtilisateurPublic, corps: unknown): Promise<Vente> {
-    return this.enregistrer(lirePanier(corps, true), "en_ligne", versClient(client));
-  }
-
-  // Au comptoir, le client est facultatif : on le retrouve par l'e-mail de son compte.
-  async vendreAuComptoir(corps: unknown): Promise<Vente> {
-    const panier = lirePanier(corps, false);
-    const email = lireTexte(lireObjet(corps).emailClient).toLowerCase();
-    let client: ClientVente | undefined;
-    if (email) {
-      const compte = await this.utilisateurs.trouverParEmail(email);
-      if (!compte || compte.role !== "client") {
-        throw erreurValidation({ emailClient: "Aucun compte client avec cette adresse e-mail." });
-      }
-      client = versClient(compte);
-    }
-    return this.enregistrer(panier, "comptoir", client);
+    return this.enregistrer(lirePanier(corps, true), versClient(client));
   }
 
   mesCommandes(client: UtilisateurPublic): Promise<Vente[]> {
-    return this.ventes.lister({ clientId: client.id, canal: "en_ligne" });
+    return this.ventes.lister({ clientId: client.id });
   }
 
   async maCommande(client: UtilisateurPublic, id: string): Promise<Vente> {
     const vente = await this.ventes.trouverParId(id);
-    if (!vente || vente.canal !== "en_ligne" || vente.client?.id !== client.id) {
+    if (!vente || vente.client.id !== client.id) {
       throw erreurIntrouvable("Commande introuvable.");
     }
     return vente;
@@ -205,19 +178,19 @@ export class VenteService {
     return vente;
   }
 
-  // Commande en ligne retirée en magasin ou livrée.
-  async marquerRemise(id: string): Promise<Vente> {
+  // Commande préparée et confiée au transporteur pour être livrée à l'adresse du client.
+  async marquerExpediee(id: string): Promise<Vente> {
     await this.obtenir(id);
-    const remise = await this.ventes.marquerRemise(id, this.horloge.maintenant());
-    if (!remise) {
-      throw new ErreurApi(409, "COMMANDE_DEJA_REMISE", "Cette vente a déjà été remise au client.");
+    const expediee = await this.ventes.marquerExpediee(id, this.horloge.maintenant());
+    if (!expediee) {
+      throw new ErreurApi(409, "COMMANDE_DEJA_EXPEDIEE", "Cette commande a déjà été expédiée.");
     }
-    return remise;
+    return expediee;
   }
 
   // RG03 : tout ou rien. Les disponibilités sont relues ici, puis le stock est réécrit seulement s'il n'a pas bougé.
-  private async enregistrer(panier: Panier, canal: CanalVente, client?: ClientVente): Promise<Vente> {
-    const { devis, stocks } = await this.calculer(panier, canal);
+  private async enregistrer(panier: Panier, client: ClientVente): Promise<Vente> {
+    const { devis, stocks } = await this.calculer(panier);
     if (devis.lignesIndisponibles.length > 0) {
       throw new ErreurApi(
         409,
@@ -239,8 +212,8 @@ export class VenteService {
           date,
           type: "vente",
           quantite: -quantite,
-          motif: canal === "en_ligne" ? "Vente en ligne" : "Vente au comptoir",
-          operateur: canal === "en_ligne" ? "client" : "responsable",
+          motif: "Vente en ligne",
+          operateur: "client",
         },
       };
     });
@@ -248,9 +221,8 @@ export class VenteService {
       return await this.ventes.creer(
         {
           date,
-          canal,
-          statut: canal === "en_ligne" ? "a_preparer" : "remise",
-          ...(client && { client }),
+          statut: "a_preparer",
+          client,
           emballageCadeau: panier.emballageCadeau,
           ...(panier.occasionCadeau && { occasionCadeau: panier.occasionCadeau }),
           ...(panier.adresseLivraison && { adresseLivraison: panier.adresseLivraison }),
@@ -267,7 +239,7 @@ export class VenteService {
   }
 
   // Un produit inconnu ou archivé n'est pas chiffré ; un produit connu est chiffré même si son stock manque.
-  private async calculer(panier: Panier, canal: CanalVente): Promise<Calcul> {
+  private async calculer(panier: Panier): Promise<Calcul> {
     const aujourdhui = dateDuJour(this.horloge);
     const produits = await Promise.all(panier.lignes.map((l) => this.produits.trouverParId(l.produitId)));
     const stocks = await this.stocks.trouverPlusieurs(panier.lignes.map((l) => l.produitId));
@@ -299,17 +271,15 @@ export class VenteService {
       });
     });
 
-    const montants = this.montants(lignes, panier, canal, await this.parametres.obtenir());
+    const montants = this.montants(lignes, panier, await this.parametres.obtenir());
     return { devis: { lignes, lignesIndisponibles, ...montants }, stocks };
   }
 
-  // RG13 : frais fixes des paramètres, ajoutés au total. En ligne, la livraison est obligatoire ;
-  // au comptoir, elle est comptée seulement si une adresse est donnée.
-  private montants(lignes: LigneVente[], panier: Panier, canal: CanalVente, parametres: Parametres): Montants {
+  // RG13 : frais fixes des paramètres, ajoutés au total ; toute commande est livrée.
+  private montants(lignes: LigneVente[], panier: Panier, parametres: Parametres): Montants {
     const sousTotal = lignes.reduce((somme, l) => somme + l.montant, 0);
     const fraisEmballage = panier.emballageCadeau ? parametres.fraisEmballage : 0;
-    const livraison = canal === "en_ligne" || panier.adresseLivraison !== undefined;
-    const fraisLivraison = livraison ? parametres.fraisLivraison : 0;
+    const fraisLivraison = parametres.fraisLivraison;
     const frais = fraisEmballage + fraisLivraison;
     return {
       sousTotal,

@@ -1,8 +1,5 @@
-export const CANAUX_VENTE = ["en_ligne", "comptoir"] as const;
-export type CanalVente = (typeof CANAUX_VENTE)[number];
-
-// Commande en ligne : a_preparer → remise. Une vente au comptoir est remise tout de suite.
-export const STATUTS_VENTE = ["a_preparer", "remise"] as const;
+// La librairie vend uniquement en ligne : chaque vente est une commande livrée, a_preparer → expediee.
+export const STATUTS_VENTE = ["a_preparer", "expediee"] as const;
 export type StatutVente = (typeof STATUTS_VENTE)[number];
 
 export const OCCASIONS_CADEAU = ["noel", "anniversaire", "fete"] as const;
@@ -50,11 +47,10 @@ export interface ClientVente {
 export interface Vente extends OptionsVente, Montants {
   id: string;
   date: Date;
-  canal: CanalVente;
   statut: StatutVente;
-  client?: ClientVente;
+  client: ClientVente;
   lignes: LigneVente[];
-  dateRemise?: Date;
+  dateExpedition?: Date;
 }
 
 export type NouvelleVente = Omit<Vente, "id">;
@@ -63,7 +59,6 @@ export type NouvelleVente = Omit<Vente, "id">;
 export const LIMITE_VENTES = 500;
 
 export interface FiltresVentes {
-  canal?: CanalVente;
   statut?: StatutVente;
   clientId?: string;
 }

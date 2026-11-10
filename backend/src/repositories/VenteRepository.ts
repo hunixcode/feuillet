@@ -7,6 +7,6 @@ export interface VenteRepository {
   creer(vente: NouvelleVente, changements: ChangementStock[]): Promise<Vente>;
   lister(filtres: FiltresVentes): Promise<Vente[]>;
   trouverParId(id: string): Promise<Vente | null>;
-  // Passe une commande de a_preparer à remise ; null si elle n'est pas (ou plus) à préparer.
-  marquerRemise(id: string, date: Date): Promise<Vente | null>;
+  // Passe une commande de a_preparer à expediee ; null si elle n'est pas (ou plus) à préparer.
+  marquerExpediee(id: string, date: Date): Promise<Vente | null>;
 }

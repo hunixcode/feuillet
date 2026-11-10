@@ -27,15 +27,18 @@ export const PRODUITS_DEMO = [
   { reference: "DEMO-PAP-003", designation: "Calculatrice collège", type: "papeterie", categorie: "scolaire", prix: 2900, tauxTva: 16, marque: "Casio" , stock: 4 },
 ];
 
-// Ventes au comptoir de démonstration (EQ03), passées il y a `jours` jours, pour les meilleures ventes (RG14).
+// Compte client auquel sont rattachées les commandes de démonstration.
+export const CLIENT_DEMO = { nom: "Client de démonstration", email: "client.demo@librairie.example" };
+
+// Commandes de démonstration (EQ03), passées il y a `jours` jours, pour les meilleures ventes (RG14).
 export const VENTES_DEMO = [
-  { jours: 28, lignes: [["DEMO-LIV-004", 3], ["DEMO-PAP-001", 5]] },
-  { jours: 21, lignes: [["DEMO-LIV-002", 1]], occasionCadeau: "anniversaire", emballageCadeau: true },
-  { jours: 14, lignes: [["DEMO-LIV-004", 2], ["DEMO-PAP-002", 2]] },
-  { jours: 10, lignes: [["DEMO-LIV-007", 2], ["DEMO-PAP-001", 4], ["DEMO-PAP-003", 1]] },
+  { jours: 28, lignes: [["DEMO-LIV-004", 3], ["DEMO-PAP-001", 5]], adresseLivraison: "BP 120, 98713 Papeete" },
+  { jours: 21, lignes: [["DEMO-LIV-002", 1]], occasionCadeau: "anniversaire", emballageCadeau: true, adresseLivraison: "BP 45, 98702 Faa'a" },
+  { jours: 14, lignes: [["DEMO-LIV-004", 2], ["DEMO-PAP-002", 2]], adresseLivraison: "BP 120, 98713 Papeete" },
+  { jours: 10, lignes: [["DEMO-LIV-007", 2], ["DEMO-PAP-001", 4], ["DEMO-PAP-003", 1]], adresseLivraison: "BP 8, 98728 Moorea" },
   { jours: 6, lignes: [["DEMO-LIV-001", 1], ["DEMO-MAG-001", 1]], adresseLivraison: "BP 120, 98713 Papeete" },
-  { jours: 3, lignes: [["DEMO-LIV-004", 1], ["DEMO-LIV-005", 1]] },
-  { jours: 1, lignes: [["DEMO-PAP-001", 3], ["DEMO-PAP-002", 1]] },
+  { jours: 3, lignes: [["DEMO-LIV-004", 1], ["DEMO-LIV-005", 1]], adresseLivraison: "BP 45, 98702 Faa'a" },
+  { jours: 1, lignes: [["DEMO-PAP-001", 3], ["DEMO-PAP-002", 1]], adresseLivraison: "BP 8, 98728 Moorea" },
 ] as const;
 
 // Le stock de départ est compté avant la première vente de démonstration.

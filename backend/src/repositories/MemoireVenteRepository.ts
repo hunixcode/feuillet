@@ -20,13 +20,12 @@ export class MemoireVenteRepository implements VenteRepository {
     return structuredClone(vente);
   }
 
-  async lister({ canal, statut, clientId }: FiltresVentes): Promise<Vente[]> {
+  async lister({ statut, clientId }: FiltresVentes): Promise<Vente[]> {
     return [...this.ventes.values()]
       .filter(
         (v) =>
-          (canal === undefined || v.canal === canal) &&
           (statut === undefined || v.statut === statut) &&
-          (clientId === undefined || v.client?.id === clientId),
+          (clientId === undefined || v.client.id === clientId),
       )
       .sort((a, b) => b.date.getTime() - a.date.getTime() || Number(b.id) - Number(a.id))
       .slice(0, LIMITE_VENTES)
@@ -38,13 +37,13 @@ export class MemoireVenteRepository implements VenteRepository {
     return vente ? structuredClone(vente) : null;
   }
 
-  async marquerRemise(id: string, date: Date): Promise<Vente | null> {
+  async marquerExpediee(id: string, date: Date): Promise<Vente | null> {
     const vente = this.ventes.get(id);
     if (!vente || vente.statut !== "a_preparer") {
       return null;
     }
-    vente.statut = "remise";
-    vente.dateRemise = date;
+    vente.statut = "expediee";
+    vente.dateExpedition = date;
     return structuredClone(vente);
   }
 }

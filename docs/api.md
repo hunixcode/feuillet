@@ -29,7 +29,7 @@ Toute erreur suit le format de `ApiError` (`frontend/src/types/api.ts`) :
 | 409 | `STOCK_INSUFFISANT` | Sortie de stock supérieure à la quantité disponible, ou compte inférieur au mis de côté |
 | 409 | `STOCK_MODIFIE` | Le stock a changé pendant l'opération (correction de stock ou vente) |
 | 409 | `LIGNE_INDISPONIBLE` | Vente refusée : un article n'est plus disponible dans la quantité demandée (`details.lignes`) |
-| 409 | `COMMANDE_DEJA_REMISE` | Vente déjà remise au client |
+| 409 | `COMMANDE_DEJA_EXPEDIEE` | Commande déjà expédiée |
 | 500 | `ERREUR_SERVEUR` | Erreur inattendue |
 
 ## État de l'API
@@ -266,8 +266,7 @@ Tous les montants sont calculés par le back, en XPF entiers ; le front affiche 
 | `lignes` | De 1 à 100 lignes ; `produitId` obligatoire, `quantite` entier ≥ 1. Deux lignes du même produit sont regroupées (999 au plus par produit) |
 | `occasionCadeau` | Facultatif : `noel`, `anniversaire` ou `fete` ; une vente avec occasion est un cadeau (délai de retour allongé, RG09) |
 | `emballageCadeau` | Booléen, `false` par défaut ; ajoute les frais d'emballage des paramètres |
-| `adresseLivraison` | 300 caractères au plus. **En ligne** : la livraison est obligatoire (pas de retrait en magasin), l'adresse est exigée à la confirmation et les frais de livraison sont toujours comptés. **Au comptoir** : facultative, les frais ne sont comptés que si une adresse est donnée |
-| `emailClient` | Comptoir seulement, facultatif : e-mail du compte client à qui la vente est rattachée |
+| `adresseLivraison` | 300 caractères au plus. La librairie vend uniquement en ligne : toute commande est livrée, l'adresse est exigée à la confirmation et les frais de livraison sont toujours comptés |
 
 ### Calcul
 
@@ -306,7 +305,7 @@ Pour chaque ligne, au jour de Tahiti : `prixUnitaire` = prix appliqué avec la p
 
 `lignesIndisponibles` : lignes qui seraient refusées à la confirmation, avec la quantité demandée : produit inconnu ou archivé (absent de `lignes`, non chiffré), ou quantité supérieure au stock vendable (chiffrée dans `lignes`). Le stock exact n'est pas donné au client.
 
-`Vente` : les champs du devis sans `lignesIndisponibles`, avec `id`, `date`, `canal` (`en_ligne` ou `comptoir`), `statut` (`a_preparer` ou `remise`), les options, `client` facultatif (`{ "id", "nom", "email" }`, figé à la vente) et `dateRemise` quand une commande en ligne est remise. Les lignes gardent prix, remise, TVA, référence et désignation du jour de la vente (RG02) : elles ne changent pas si le catalogue change.
+`Vente` : les champs du devis sans `lignesIndisponibles`, avec `id`, `date`, `statut` (`a_preparer` ou `expediee`), les options, `client` (`{ "id", "nom", "email" }`, figé à la vente) et `dateExpedition` quand la commande est expédiée. Les lignes gardent prix, remise, TVA, référence et désignation du jour de la vente (RG02) : elles ne changent pas si le catalogue change.
 
 ### Validation (RG03)
 
@@ -316,25 +315,23 @@ Tout ou rien : les disponibilités sont revérifiées à la confirmation sur le 
 { "code": "LIGNE_INDISPONIBLE", "message": "…", "details": { "lignes": [{ "produitId": "…", "quantite": 6 }] } }
 ```
 
-Sinon la vente et la sortie de stock de chaque ligne (un mouvement `vente` par ligne, opérateur `client` en ligne, `responsable` au comptoir) sont écrites dans une même transaction ; si le stock a changé entre-temps, rien n'est écrit (`409 STOCK_MODIFIE`, recharger le panier et recommencer). Un produit vendu a des mouvements et n'est donc plus supprimable (RG05).
+Sinon la vente et la sortie de stock de chaque ligne (un mouvement `vente` par ligne, opérateur `client`) sont écrites dans une même transaction ; si le stock a changé entre-temps, rien n'est écrit (`409 STOCK_MODIFIE`, recharger le panier et recommencer). Un produit vendu a des mouvements et n'est donc plus supprimable (RG05).
 
-### Commandes en ligne (client)
+### Commandes (client)
 
 | Route | Accès | Réponse | Erreurs |
 |---|---|---|---|
 | `POST /api/commandes/devis` | public (panier sans compte) | `200` : `Devis` en ligne | `400 VALIDATION` |
 | `POST /api/commandes` | client | `201` : `Vente` au statut `a_preparer` | `400` (dont `adresseLivraison`), `409 LIGNE_INDISPONIBLE`, `409 STOCK_MODIFIE` |
-| `GET /api/commandes` | client | `200` : ses commandes en ligne, de la plus récente à la plus ancienne | |
+| `GET /api/commandes` | client | `200` : ses commandes, de la plus récente à la plus ancienne | |
 | `GET /api/commandes/:id` | client | `200` : `Vente` | `404` si la commande n'est pas la sienne |
 
 Le responsable n'a pas accès à ces routes de commande (`403`), sauf au devis public.
 
-### Ventes au comptoir et suivi (responsable)
+### Suivi des commandes (responsable)
 
 | Route | Réponse | Erreurs |
 |---|---|---|
-| `POST /api/ventes/devis` | `200` : `Devis` au comptoir | `400` |
-| `POST /api/ventes` | `201` : `Vente` au statut `remise`, client facultatif (`emailClient`) | `400` (dont `emailClient` sans compte client), `409 LIGNE_INDISPONIBLE`, `409 STOCK_MODIFIE` |
-| `GET /api/ventes` | `200` : `Vente[]`, en ligne et comptoir, de la plus récente à la plus ancienne, 500 au plus ; filtres facultatifs `canal` et `statut` | `400` sur un canal ou un statut inconnu |
+| `GET /api/ventes` | `200` : `Vente[]`, de la plus récente à la plus ancienne, 500 au plus ; filtre facultatif `statut` | `400` sur un statut inconnu |
 | `GET /api/ventes/:id` | `200` : `Vente` | `404` |
-| `POST /api/ventes/:id/remise` | `200` : `Vente` passée de `a_preparer` à `remise` (commande retirée ou livrée) | `404`, `409 COMMANDE_DEJA_REMISE` (déjà remise, ou vente au comptoir) |
+| `POST /api/ventes/:id/expedition` | `200` : `Vente` passée de `a_preparer` à `expediee` (confiée au transporteur) | `404`, `409 COMMANDE_DEJA_EXPEDIEE` |

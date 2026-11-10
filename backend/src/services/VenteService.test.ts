@@ -28,7 +28,7 @@ describe("VenteService", () => {
   beforeEach(async () => {
     horloge = { date: new Date("2026-11-08T20:00:00Z"), maintenant: () => horloge.date };
     utilisateurs = new MemoireUtilisateurRepository();
-    services = servicesMemoire(horloge, utilisateurs);
+    services = servicesMemoire(horloge);
     await services.repositories.categories.creer({ id: "roman", libelle: "Roman" });
     await services.repositories.categories.creer({ id: "fournitures", libelle: "Fournitures" });
     const { motDePasseHash: _, ...compte } = await utilisateurs.creer({
@@ -64,6 +64,7 @@ describe("VenteService", () => {
     lignes: lignes.map(([produitId, quantite]) => ({ produitId, quantite })),
     ...options,
   });
+  const livraison = { adresseLivraison: "Papeete" };
 
   it("calcule la TVA incluse arrondie à l'unité (RG11)", () => {
     expect(montantTva(3060, 5)).toBe(146);
@@ -111,7 +112,7 @@ describe("VenteService", () => {
     await expect(services.repositories.ventes.lister({})).resolves.toEqual([]);
   });
 
-  it("ne compte la livraison au comptoir que si une adresse est donnée, avec les frais des paramètres", async () => {
+  it("compte toujours la livraison, avec les frais des paramètres", async () => {
     await services.parametresService.modifier({
       dureeMiseDeCoteJours: 7,
       delaiRetourJours: 14,
@@ -121,15 +122,15 @@ describe("VenteService", () => {
       seuilAlerteDefaut: 20,
     });
 
-    const surPlace = await services.venteService.devisComptoir(panier([[cahier, 1]], { emballageCadeau: true }));
-    const aLivrer = await services.venteService.devisComptoir(panier([[cahier, 1]], { adresseLivraison: "Papeete" }));
+    const emballe = await services.venteService.devisEnLigne(panier([[cahier, 1]], { emballageCadeau: true }));
+    const simple = await services.venteService.devisEnLigne(panier([[cahier, 1]], { adresseLivraison: "Papeete" }));
 
-    expect(surPlace).toMatchObject({ fraisEmballage: 150, fraisLivraison: 0, total: 500 });
-    expect(aLivrer).toMatchObject({ fraisEmballage: 0, fraisLivraison: 1000, total: 1350 });
+    expect(emballe).toMatchObject({ fraisEmballage: 150, fraisLivraison: 1000, total: 1500 });
+    expect(simple).toMatchObject({ fraisEmballage: 0, fraisLivraison: 1000, total: 1350 });
   });
 
   it("regroupe les lignes d'un même produit", async () => {
-    const devis = await services.venteService.devisComptoir(panier([[cahier, 2], [cahier, 3]]));
+    const devis = await services.venteService.devisEnLigne(panier([[cahier, 2], [cahier, 3]]));
 
     expect(devis.lignes).toEqual([expect.objectContaining({ produitId: cahier, quantite: 5, montant: 1750 })]);
   });
@@ -165,7 +166,6 @@ describe("VenteService", () => {
     expect(vente).toMatchObject({
       id: expect.any(String),
       date: horloge.date,
-      canal: "en_ligne",
       statut: "a_preparer",
       client: { id: client.id, nom: "Marie", email: "marie@example.pf" },
       occasionCadeau: "noel",
@@ -240,10 +240,10 @@ describe("VenteService", () => {
       { quantitePhysique: 5, quantiteMiseDeCote: 4, quantiteDefectueuse: 0 },
     );
 
-    const erreur = await erreurDe(services.venteService.vendreAuComptoir(panier([[livre, 2]])));
+    const erreur = await erreurDe(services.venteService.commanderEnLigne(client, panier([[livre, 2]], livraison)));
 
     expect(erreur.code).toBe("LIGNE_INDISPONIBLE");
-    await expect(services.venteService.vendreAuComptoir(panier([[livre, 1]]))).resolves.toBeDefined();
+    await expect(services.venteService.commanderEnLigne(client, panier([[livre, 1]], livraison))).resolves.toBeDefined();
   });
 
   it("refuse la vente si le stock a changé entre la vérification et l'écriture, sans rien écrire", async () => {
@@ -256,42 +256,27 @@ describe("VenteService", () => {
       }
     }
     const ventes = new VentesConcurrentes(stocks);
-    const service = new VenteService(ventes, produits, stocks, parametres, utilisateurs, horloge);
+    const service = new VenteService(ventes, produits, stocks, parametres, horloge);
 
-    const erreur = await erreurDe(service.vendreAuComptoir(panier([[cahier, 1], [livre, 1]])));
+    const erreur = await erreurDe(service.commanderEnLigne(client, panier([[cahier, 1], [livre, 1]], livraison)));
 
     expect(erreur).toMatchObject({ statut: 409, code: "STOCK_MODIFIE" });
     expect((await stocks.trouver(cahier)).quantitePhysique).toBe(10);
     await expect(ventes.lister({})).resolves.toEqual([]);
   });
 
-  it("vend au comptoir, remis tout de suite, avec le client facultatif retrouvé par son e-mail", async () => {
-    const anonyme = await services.venteService.vendreAuComptoir(panier([[cahier, 1]]));
-    const nominative = await services.venteService.vendreAuComptoir(panier([[cahier, 1]], { emailClient: " MARIE@example.pf " }));
-    const inconnu = await erreurDe(services.venteService.vendreAuComptoir(panier([[cahier, 1]], { emailClient: "x@y.pf" })));
-
-    expect(anonyme).toMatchObject({ canal: "comptoir", statut: "remise", fraisLivraison: 0, total: 350 });
-    expect(anonyme.client).toBeUndefined();
-    expect(nominative.client).toEqual({ id: client.id, nom: "Marie", email: "marie@example.pf" });
-    expect(inconnu.details).toEqual({ champs: { emailClient: expect.any(String) } });
-    const [mouvement] = await services.stockService.mouvements({ type: "vente" });
-    expect(mouvement).toMatchObject({ operateur: "responsable", motif: "Vente au comptoir" });
-  });
-
-  it("passe une commande en ligne à remise une seule fois", async () => {
-    const commande = await services.venteService.commanderEnLigne(client, panier([[cahier, 1]], { adresseLivraison: "Papeete" }));
-    const comptoir = await services.venteService.vendreAuComptoir(panier([[cahier, 1]]));
+  it("passe une commande à expédiée une seule fois", async () => {
+    const commande = await services.venteService.commanderEnLigne(client, panier([[cahier, 1]], livraison));
     horloge.date = new Date("2026-11-09T01:00:00Z");
 
-    const remise = await services.venteService.marquerRemise(commande.id);
+    const expediee = await services.venteService.marquerExpediee(commande.id);
 
-    expect(remise).toMatchObject({ statut: "remise", dateRemise: horloge.date });
-    expect((await erreurDe(services.venteService.marquerRemise(commande.id))).code).toBe("COMMANDE_DEJA_REMISE");
-    expect((await erreurDe(services.venteService.marquerRemise(comptoir.id))).code).toBe("COMMANDE_DEJA_REMISE");
-    expect((await erreurDe(services.venteService.marquerRemise("inconnue"))).statut).toBe(404);
+    expect(expediee).toMatchObject({ statut: "expediee", dateExpedition: horloge.date });
+    expect((await erreurDe(services.venteService.marquerExpediee(commande.id))).code).toBe("COMMANDE_DEJA_EXPEDIEE");
+    expect((await erreurDe(services.venteService.marquerExpediee("inconnue"))).statut).toBe(404);
   });
 
-  it("ne montre au client que ses propres commandes en ligne", async () => {
+  it("ne montre au client que ses propres commandes", async () => {
     const { motDePasseHash: _, ...autre } = await utilisateurs.creer({
       nom: "Teva",
       email: "teva@example.pf",
@@ -299,7 +284,6 @@ describe("VenteService", () => {
       role: "client",
     });
     const sienne = await services.venteService.commanderEnLigne(client, panier([[cahier, 1]], { adresseLivraison: "Papeete" }));
-    await services.venteService.vendreAuComptoir(panier([[cahier, 1]], { emailClient: "marie@example.pf" }));
     const autreCommande = await services.venteService.commanderEnLigne(autre, panier([[cahier, 1]], { adresseLivraison: "Faa'a" }));
 
     expect((await services.venteService.mesCommandes(client)).map((v) => v.id)).toEqual([sienne.id]);

@@ -3,7 +3,6 @@ import { MemoireCategorieRepository } from "../repositories/MemoireCategorieRepo
 import { MemoireParametresRepository } from "../repositories/MemoireParametresRepository.js";
 import { MemoireProduitRepository } from "../repositories/MemoireProduitRepository.js";
 import { MemoireStockRepository } from "../repositories/MemoireStockRepository.js";
-import { MemoireUtilisateurRepository } from "../repositories/MemoireUtilisateurRepository.js";
 import { MemoireVenteRepository } from "../repositories/MemoireVenteRepository.js";
 import { CategorieService } from "../services/CategorieService.js";
 import { ParametresService } from "../services/ParametresService.js";
@@ -11,8 +10,7 @@ import { ProduitService } from "../services/ProduitService.js";
 import { StockService } from "../services/StockService.js";
 import { VenteService } from "../services/VenteService.js";
 
-// utilisateurs : le repository de l'AuthService du test, pour retrouver les clients au comptoir.
-export function servicesMemoire(horloge?: Horloge, utilisateurs = new MemoireUtilisateurRepository()) {
+export function servicesMemoire(horloge?: Horloge) {
   const produits = new MemoireProduitRepository();
   const categories = new MemoireCategorieRepository();
   const stocks = new MemoireStockRepository();
@@ -24,6 +22,6 @@ export function servicesMemoire(horloge?: Horloge, utilisateurs = new MemoireUti
     categorieService: new CategorieService(categories, produits),
     stockService: new StockService(stocks, produits, horloge),
     parametresService: new ParametresService(parametres),
-    venteService: new VenteService(ventes, produits, stocks, parametres, utilisateurs, horloge),
+    venteService: new VenteService(ventes, produits, stocks, parametres, horloge),
   };
 }

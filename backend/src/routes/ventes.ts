@@ -32,18 +32,10 @@ export function routesCommandes(ventes: VenteService, auth: AuthService): Router
   return router;
 }
 
-// Ventes au comptoir et suivi de toutes les ventes, réservés au responsable.
+// Suivi de toutes les commandes, réservé au responsable.
 export function routesVentes(ventes: VenteService, auth: AuthService): Router {
   const router = Router();
   router.use(authentifier(auth), exigerRole("responsable"));
-
-  router.post("/devis", async (req, res) => {
-    res.json(await ventes.devisComptoir(req.body));
-  });
-
-  router.post("/", async (req, res) => {
-    res.status(201).json(await ventes.vendreAuComptoir(req.body));
-  });
 
   router.get("/", async (req, res) => {
     res.json(await ventes.lister(req.query));
@@ -53,8 +45,8 @@ export function routesVentes(ventes: VenteService, auth: AuthService): Router {
     res.json(await ventes.obtenir(req.params.id));
   });
 
-  router.post("/:id/remise", async (req: Request<{ id: string }>, res) => {
-    res.json(await ventes.marquerRemise(req.params.id));
+  router.post("/:id/expedition", async (req: Request<{ id: string }>, res) => {
+    res.json(await ventes.marquerExpediee(req.params.id));
   });
 
   return router;

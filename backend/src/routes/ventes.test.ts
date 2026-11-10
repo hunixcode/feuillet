@@ -16,7 +16,7 @@ describe("API des ventes", () => {
     horloge = { date: new Date("2026-11-08T20:00:00Z"), maintenant: () => horloge.date };
     const utilisateurs = new MemoireUtilisateurRepository();
     const authService = new AuthService(utilisateurs, { secretJwt: "secret-de-test", coutHash: 4, horloge });
-    const services = servicesMemoire(horloge, utilisateurs);
+    const services = servicesMemoire(horloge);
     app = createApp({ authService, ...services, verifierBase: async () => true });
 
     await services.repositories.categories.creer({ id: "roman", libelle: "Roman" });
@@ -78,7 +78,6 @@ describe("API des ventes", () => {
     expect(creee.status).toBe(201);
     expect(creee.body).toMatchObject({
       date: "2026-11-08T20:00:00.000Z",
-      canal: "en_ligne",
       statut: "a_preparer",
       client: { nom: "Marie", email: "marie@example.pf" },
       total: 4400,
@@ -109,56 +108,40 @@ describe("API des ventes", () => {
     expect(reponse.body.details.champs).toEqual({ adresseLivraison: expect.any(String) });
   });
 
-  it("réserve la commande en ligne au client et le comptoir au responsable", async () => {
+  it("réserve la commande au client et le suivi des commandes au responsable", async () => {
     await envoyer("post", "/api/commandes", commande(), null).expect(401);
     await envoyer("post", "/api/commandes", commande(), tokenResponsable).expect(403);
     await envoyer("get", "/api/commandes", undefined, null).expect(401);
-    await envoyer("post", "/api/ventes", commande(), tokenClient).expect(403);
-    await envoyer("post", "/api/ventes/devis", commande(), tokenClient).expect(403);
     await envoyer("get", "/api/ventes", undefined, tokenClient).expect(403);
     await envoyer("get", "/api/ventes", undefined, null).expect(401);
+    await envoyer("post", "/api/ventes", commande(), tokenResponsable).expect(404);
   });
 
-  it("enregistre une vente au comptoir pour un client facultatif", async () => {
-    const devis = await envoyer("post", "/api/ventes/devis", { lignes: [{ produitId, quantite: 1 }], emballageCadeau: true });
-    const vente = await envoyer("post", "/api/ventes", {
-      lignes: [{ produitId, quantite: 1 }],
-      emballageCadeau: true,
-      occasionCadeau: "anniversaire",
-      emailClient: "marie@example.pf",
-    });
-
-    expect(devis.body).toMatchObject({ fraisEmballage: 300, fraisLivraison: 0, total: 2100 });
-    expect(vente.status).toBe(201);
-    expect(vente.body).toMatchObject({ canal: "comptoir", statut: "remise", occasionCadeau: "anniversaire", total: 2100 });
-    expect((await envoyer("get", "/api/commandes", undefined, tokenClient)).body).toEqual([]);
-  });
-
-  it("liste les ventes avec les filtres canal et statut, et passe une commande à remise", async () => {
-    const { body: enLigne } = await envoyer("post", "/api/commandes", commande(), tokenClient);
+  it("liste les commandes avec le filtre statut, et passe une commande à expédiée", async () => {
+    const { body: premiere } = await envoyer("post", "/api/commandes", commande(), tokenClient);
     horloge.date = new Date("2026-11-08T21:00:00Z");
-    const { body: comptoir } = await envoyer("post", "/api/ventes", { lignes: [{ produitId, quantite: 1 }] });
+    const { body: seconde } = await envoyer("post", "/api/commandes", commande(), tokenClient);
+
+    const expediee = await envoyer("post", `/api/ventes/${premiere.id}/expedition`);
+    expect(expediee.status).toBe(200);
+    expect(expediee.body).toMatchObject({ statut: "expediee", dateExpedition: "2026-11-08T21:00:00.000Z" });
+    expect((await envoyer("post", `/api/ventes/${premiere.id}/expedition`)).body.code).toBe("COMMANDE_DEJA_EXPEDIEE");
+    expect((await envoyer("get", `/api/ventes/${premiere.id}`)).body.statut).toBe("expediee");
 
     const ids = async (filtres: string) => (await envoyer("get", `/api/ventes${filtres}`)).body.map((v: { id: string }) => v.id);
-    expect(await ids("")).toEqual([comptoir.id, enLigne.id]);
-    expect(await ids("?canal=en_ligne")).toEqual([enLigne.id]);
-    expect(await ids("?statut=a_preparer")).toEqual([enLigne.id]);
-    await envoyer("get", "/api/ventes?canal=telephone").expect(400);
-
-    const remise = await envoyer("post", `/api/ventes/${enLigne.id}/remise`);
-    expect(remise.status).toBe(200);
-    expect(remise.body).toMatchObject({ statut: "remise", dateRemise: "2026-11-08T21:00:00.000Z" });
-    expect((await envoyer("post", `/api/ventes/${enLigne.id}/remise`)).body.code).toBe("COMMANDE_DEJA_REMISE");
-    expect((await envoyer("get", `/api/ventes/${enLigne.id}`)).body.statut).toBe("remise");
+    expect(await ids("")).toEqual([seconde.id, premiere.id]);
+    expect(await ids("?statut=a_preparer")).toEqual([seconde.id]);
+    expect(await ids("?statut=expediee")).toEqual([premiere.id]);
+    await envoyer("get", "/api/ventes?statut=remise").expect(400);
     await envoyer("get", "/api/ventes/inconnue").expect(404);
   });
 
   it("crée un mouvement vente par ligne et rend le produit vendu non supprimable (RG05)", async () => {
-    const { body: vente } = await envoyer("post", "/api/ventes", { lignes: [{ produitId, quantite: 2 }] });
+    const { body: vente } = await envoyer("post", "/api/commandes", commande(2), tokenClient);
 
     const { body: journal } = await envoyer("get", `/api/mouvements?type=vente`);
     expect(journal).toEqual([
-      expect.objectContaining({ produitId, quantite: -2, operateur: "responsable", venteId: vente.id }),
+      expect.objectContaining({ produitId, quantite: -2, operateur: "client", venteId: vente.id }),
     ]);
     const suppression = await envoyer("delete", `/api/produits/${produitId}`);
     expect(suppression.status).toBe(409);

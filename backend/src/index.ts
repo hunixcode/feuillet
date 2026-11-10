@@ -38,7 +38,7 @@ const categorieService = new CategorieService(categories, produits);
 const stockService = new StockService(stocks, produits);
 const parametres = new MongooseParametresRepository();
 const parametresService = new ParametresService(parametres);
-const venteService = new VenteService(new MongooseVenteRepository(), produits, stocks, parametres, utilisateurs);
+const venteService = new VenteService(new MongooseVenteRepository(), produits, stocks, parametres);
 
 const app = createApp({
   authService,

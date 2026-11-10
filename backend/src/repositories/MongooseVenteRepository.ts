@@ -1,7 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import type { ChangementStock } from "../modeles/stock.js";
 import {
-  CANAUX_VENTE,
   LIMITE_VENTES,
   OCCASIONS_CADEAU,
   STATUTS_VENTE,
@@ -17,11 +16,10 @@ const montant = { type: Number, required: true, min: 0 };
 const venteSchema = new Schema<NouvelleVente>(
   {
     date: { type: Date, required: true },
-    canal: { type: String, enum: CANAUX_VENTE, required: true },
     statut: { type: String, enum: STATUTS_VENTE, required: true },
     client: {
       type: new Schema({ id: String, nom: String, email: String }, { _id: false }),
-      required: false,
+      required: true,
     },
     lignes: [
       {
@@ -39,14 +37,14 @@ const venteSchema = new Schema<NouvelleVente>(
     ],
     occasionCadeau: { type: String, enum: OCCASIONS_CADEAU },
     emballageCadeau: { type: Boolean, required: true },
-    adresseLivraison: String,
+    adresseLivraison: { type: String, required: true },
     sousTotal: montant,
     fraisEmballage: montant,
     fraisLivraison: montant,
     frais: montant,
     montantTva: montant,
     total: montant,
-    dateRemise: Date,
+    dateExpedition: Date,
   },
   { versionKey: false },
 );
@@ -78,9 +76,8 @@ export class MongooseVenteRepository implements VenteRepository {
     return { ...structuredClone(nouvelle), id: venteId };
   }
 
-  async lister({ canal, statut, clientId }: FiltresVentes): Promise<Vente[]> {
+  async lister({ statut, clientId }: FiltresVentes): Promise<Vente[]> {
     const documents = await VenteModel.find({
-      ...(canal === undefined ? {} : { canal }),
       ...(statut === undefined ? {} : { statut }),
       ...(clientId === undefined ? {} : { "client.id": clientId }),
     })
@@ -98,13 +95,13 @@ export class MongooseVenteRepository implements VenteRepository {
     return document ? versVente(document) : null;
   }
 
-  async marquerRemise(id: string, date: Date): Promise<Vente | null> {
+  async marquerExpediee(id: string, date: Date): Promise<Vente | null> {
     if (!mongoose.isValidObjectId(id)) {
       return null;
     }
     const document = await VenteModel.findOneAndUpdate(
       { _id: id, statut: "a_preparer" },
-      { $set: { statut: "remise", dateRemise: date } },
+      { $set: { statut: "expediee", dateExpedition: date } },
       { returnDocument: "after" },
     ).lean<DocumentVente>();
     return document ? versVente(document) : null;

@@ -59,4 +59,4 @@ backend/src/
 
 Les services reçoivent leurs dépendances (repository, horloge, secret) par constructeur : les tests unitaires utilisent le repository en mémoire (`tests/servicesMemoire.ts` les assemble), les tests d'API passent par supertest et les tests de persistance par une base MongoDB en mémoire (un replica set pour ceux qui utilisent une transaction).
 
-Les employés au comptoir n'ont pas de compte ni d'espace applicatif propre ; leurs opérations passent par l'espace responsable.
+La librairie vend uniquement en ligne : pas de magasin ni de vente au comptoir. Les seuls comptes sont ceux des clients et du responsable.

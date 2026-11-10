@@ -160,16 +160,16 @@ Reste à faire :
 
 Fait :
 - Paramètres (écran 13) : `GET` et `PUT /api/parametres` (responsable), entiers strictement positifs, seuil d'alerte ≤ 100 % ; valeurs de départ créées par le seed sans écraser celles réglées
-- `VenteService` : panier en ligne (client connecté) ou au comptoir (responsable, client facultatif retrouvé par l'e-mail de son compte)
-- Devis sans enregistrement (`POST /api/commandes/devis` public, `POST /api/ventes/devis`) : prix du jour, remise, TVA incluse par ligne, frais d'emballage et de livraison des paramètres, total ; lignes indisponibles signalées
+- `VenteService` : panier et commande en ligne du client connecté
+- Devis sans enregistrement (`POST /api/commandes/devis` public) : prix du jour, remise, TVA incluse par ligne, frais d'emballage et de livraison des paramètres, total ; lignes indisponibles signalées
 - Validation tout ou rien (RG03) : 409 `LIGNE_INDISPONIBLE` avec les lignes en cause ; vente et sortie de stock dans une même transaction, un mouvement `vente` par ligne lié à la vente, 409 `STOCK_MODIFIE` si le stock a changé entre-temps
-- En ligne : livraison et adresse obligatoires, commande `a_preparer` puis `remise` ; mes commandes (client), liste filtrée par canal et statut et détail des ventes (responsable)
+- Livraison et adresse obligatoires, commande `a_preparer` puis `expediee` ; mes commandes (client), liste filtrée par statut et détail des commandes (responsable)
 - Lignes à prix figés (RG02) ; un produit vendu n'est plus supprimable (RG05, par ses mouvements)
-- Seed : 7 ventes au comptoir de démonstration sur les 30 derniers jours (EQ03)
-- Décision d'équipe consignée dans `rapport.md` : commande en ligne toujours livrée
-- 170 tests backend (service, API, persistance avec transaction) ; seed et API vérifiés de bout en bout sur une base temporaire
+- Seed : 7 commandes de démonstration d'un client fictif sur les 30 derniers jours (EQ03), expédiées sauf la plus récente
+- Décision d'équipe consignée dans `rapport.md` : commande toujours livrée
+- 10/11/2026 : vente au comptoir retirée, la librairie vend uniquement en ligne (pas de magasin ni de retrait sur place)
+- 168 tests backend (service, API, persistance avec transaction) ; seed et API vérifiés de bout en bout sur une base temporaire
 
 Reste à faire :
 - Vendre au client titulaire d'une mise de côté doit la consommer (avec les demandes, #39)
-- Front : brancher le panier (#37) et la page Ventes et retours au comptoir sur ces routes
-- Rechercher un client au comptoir autrement que par son e-mail, si besoin
+- Front : brancher le panier (#37) et la page Ventes et retours sur ces routes

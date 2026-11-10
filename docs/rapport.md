@@ -22,7 +22,7 @@ Même langage que le front → un seul typage, un seul outillage, partage de cod
 
 ### Interface — **React + Vite**
 
-Composants réutilisables, build instantané, une seule base de code pour les 2 espaces (client / responsable). Les employés en magasin sont des personnes physiques, sans compte ni session dans l'application ; leurs opérations au comptoir sont saisies dans l'espace du responsable. Alternative écartée : Vue.js (écosystème moins large), React Native / Electron (pas de besoin mobile ou desktop).
+Composants réutilisables, build instantané, une seule base de code pour les 2 espaces (client / responsable). Alternative écartée : Vue.js (écosystème moins large), React Native / Electron (pas de besoin mobile ou desktop).
 
 ### Base de données — **MongoDB + Mongoose**
 
@@ -59,13 +59,13 @@ Lancera les tests, le lint et le build TypeScript du front et du back à chaque 
 | **Catégorie** | Rayon qui guide le client (roman, policier, BD et manga, jeunesse, documentaire, scolaire, presse, fournitures…). Liste gérée par le responsable (créer, renommer, supprimer si aucun produit ne l'utilise) ; le seed crée la liste de départ |
 | **Promotion** | Remise en pourcentage sur un produit, valable entre deux dates |
 | **Historique des prix** | Suite datée des prix catalogue d'un produit, affichée en courbe |
-| **Stock physique** | Quantité en bon état en magasin |
+| **Stock physique** | Exemplaires en bon état présents dans le stock de la librairie |
 | **Stock défectueux** | Exemplaires défectueux rapportés par des clients ; jamais vendables |
 | **Mise de côté** | Quantité réservée pour un client après un réapprovisionnement, jusqu'à une échéance |
 | **Stock vendable** | Stock physique − quantités mises de côté |
 | **Mouvement** | Entrée (réception), vente, retour, remplacement ou ajustement (date, quantité, motif, opérateur) |
-| **Opérateur** | Origine d'un mouvement : `responsable`, `client` (commande en ligne) ou `systeme` (traitement automatique). Jamais un employé nominatif |
-| **Vente** | Transaction validée : lignes à prix figé, options, total, canal (`en_ligne` ou `comptoir`), client facultatif au comptoir |
+| **Opérateur** | Origine d'un mouvement : `responsable`, `client` (commande) ou `systeme` (traitement automatique). Jamais un employé nominatif |
+| **Vente** | Commande validée par un client : lignes à prix figé, options, adresse de livraison, total |
 | **Commande (client)** | Vente passée en ligne depuis le panier, toujours livrée à une adresse |
 | **Option cadeau** | Vente marquée comme cadeau pour une occasion (Noël, anniversaire, fête) ; allonge le délai de retour, emballage cadeau possible |
 | **Demande** | Requête d'un client sur un livre indisponible : produit épuisé du catalogue ou livre absent du catalogue |
@@ -77,9 +77,9 @@ Lancera les tests, le lint et le build TypeScript du front et du back à chaque 
 | Acteur | Droits |
 |---|---|
 | **Client** (compte) | Consulter le catalogue et les meilleures ventes, commander en ligne, demander des livres indisponibles, suivre ses demandes |
-| **Responsable de stock** (compte) | Gérer le catalogue, les prix, les fournisseurs, les approvisionnements, les inventaires et les rapports ; enregistrer les ventes, retours et remplacements au comptoir, effectués par les employés sans compte ni session individuelle |
+| **Responsable de stock** (compte) | Gérer le catalogue, les prix, les fournisseurs, les approvisionnements, les inventaires et les rapports ; suivre et expédier les commandes, enregistrer les retours, échanges et remplacements |
 
-Aucune statistique par employé (consigne de l'enseignant). Les traitements automatiques (expiration des mises de côté) sont déclenchés par l'horloge du système.
+La librairie vend uniquement en ligne : pas de magasin, pas de vente au comptoir, pas de retrait sur place. Aucune statistique par employé (consigne de l'enseignant). Les traitements automatiques (expiration des mises de côté) sont déclenchés par l'horloge du système.
 
 ### Exigences fonctionnelles
 
@@ -87,7 +87,7 @@ Aucune statistique par employé (consigne de l'enseignant). Les traitements auto
 |---|---|---|---|
 | **EX01** | Gérer le catalogue | Haute | Créer, modifier, rechercher, archiver ou réactiver des produits. Référence unique, type, catégorie, désignation, prix TTC, taux de TVA, promotions. Filtre par type et par catégorie |
 | **EX02** | Enregistrer les mouvements de stock | Haute | Chaque mouvement a une date, une quantité, un motif et un opérateur. Une correction d'inventaire conserve la quantité avant et après |
-| **EX03** | Constituer un panier et valider un achat | Haute | En ligne (client) ou au comptoir (responsable). Options : cadeau (occasion), emballage cadeau, livraison. Vente entière ou rien ; si une ligne n'est plus disponible, les lignes en cause sont indiquées |
+| **EX03** | Constituer un panier et valider un achat | Haute | Le client commande en ligne, depuis son compte. Options : cadeau (occasion), emballage cadeau ; livraison obligatoire. Vente entière ou rien ; si une ligne n'est plus disponible, les lignes en cause sont indiquées |
 | **EX04** | Afficher la disponibilité | Haute | Le client voit « disponible » ou « épuisé » et, si une commande fournisseur est en cours, la date d'arrivée prévue. Le responsable voit stock physique, mis de côté, vendable et défectueux |
 | **EX05** | Enregistrer les demandes de livres indisponibles | Moyenne | Produit épuisé du catalogue ou livre absent du catalogue (titre, auteur, ISBN facultatif), client, quantité, date. À la réception : mise de côté et notification du client |
 | **EX06** | Gérer le réapprovisionnement | Haute | Plusieurs fournisseurs. Alerte quand le stock passe sous un pourcentage de la quantité achetée à l'origine. Commandes fournisseur avec date d'arrivée prévue, réceptions (y compris partielles) |
@@ -124,7 +124,7 @@ Hors périmètre : emprunt de livres (consigne de l'enseignant), paiement réel,
 | Objet | Statuts |
 |---|---|
 | Demande | `en_attente` → `mise_de_cote` → `honoree` ; `mise_de_cote` → `expiree` ; `en_attente` → `annulee` (par le client) |
-| Commande client (en ligne) | `a_preparer` → `remise` (livrée) |
+| Commande client | `a_preparer` → `expediee` |
 | Commande fournisseur | `en_cours` → `partiellement_recue` → `recue` |
 
 ### Qualité
@@ -160,9 +160,9 @@ Source **Prof** : réponse de l'enseignant (notes dans `questions-prof.md`). Sou
 | 6 | Historique des prix conservé et affiché en courbe ; prix payé figé dans la vente | Prof |
 | 7 | XPF, gestion des promotions et de la TVA (calcul : RG11) | Prof (calcul : Équipe) |
 | 8 | Un produit archivé peut être réactivé | Équipe |
-| 9 | Produit défectueux : stock défectueux séparé ; abîmé en magasin → ajustement vers le stock défectueux | Prof |
-| 10 | Le client commande en ligne avec option de livraison ; le responsable enregistre aussi les ventes au comptoir | Prof |
-| 11 | Compte obligatoire en ligne ; au comptoir le client est facultatif | Équipe |
+| 9 | Produit défectueux : stock défectueux séparé ; abîmé dans le stock → ajustement vers le stock défectueux | Prof |
+| 10 | Le client commande en ligne avec livraison. La librairie vend uniquement en ligne : pas de magasin ni de vente au comptoir | Prof (en ligne), Équipe (pas de magasin) |
+| 11 | Compte client obligatoire pour commander | Équipe |
 | 12 | Un article dans le panier n'est pas réservé (RG03) | Prof |
 | 13 | Retour sous 14 jours, 1 mois pour un cadeau lié à une occasion passée (RG09) | Prof |
 | 14 | Remboursement, échange si plastique intact, remplacement si défectueux (RG12) | Prof (remboursement : Équipe) |
@@ -175,7 +175,7 @@ Source **Prof** : réponse de l'enseignant (notes dans `questions-prof.md`). Sou
 | 21 | Semaine du lundi 00:00 au dimanche 23:59 (heure de Tahiti) ; période libre possible | Équipe |
 | 22 | Ventes, retours, net, stock restant, pourcentage vendu de la quantité achetée, statistiques globales, aucune par employé | Prof |
 | — | Frais d'emballage cadeau et de livraison : montants fixes paramétrables | Équipe |
-| | Commande en ligne toujours livrée (pas de retrait en magasin) : livraison et adresse obligatoires, frais de livraison toujours comptés. Au comptoir, la livraison reste facultative | Équipe |
+| | Toute commande est livrée (pas de retrait sur place) : adresse obligatoire, frais de livraison toujours comptés. Les retours et échanges arrivent par colis | Équipe |
 | — | Pas d'emprunt de livres | Prof |
 | — | Pas de type de client : les meilleures ventes sont les mêmes pour tous (RG14). Écart assumé à la demande de l'enseignant (meilleures ventes selon le type du client) | Équipe |
 
@@ -195,7 +195,7 @@ Le détail de chaque écran est dans [`ecrans.md`](./ecrans.md). Les routes resp
 | 6 | Tableau de bord | `/admin` | EX06, EX08 |
 | 7 | Catalogue et prix | `/admin/catalogue` | EX01, EX11 |
 | 8 | Stock et mouvements | `/admin/stock` | EX02, EX04 |
-| 9 | Ventes et retours au comptoir | `/admin/ventes` | EX03, EX07 |
+| 9 | Ventes et retours | `/admin/ventes` | EX03, EX07 |
 | 10 | Demandes et mises de côté | `/admin/demandes` | EX05 |
 | 11 | Fournisseurs, commandes et réceptions | `/admin/commandes` | EX06 |
 | 12 | Réapprovisionnement et rapports | `/admin/rapports` | EX06, EX08 |

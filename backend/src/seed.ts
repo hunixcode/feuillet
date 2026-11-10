@@ -1,14 +1,15 @@
 import "dotenv/config";
+import { randomBytes } from "node:crypto";
 import mongoose from "mongoose";
 import { lireVariable } from "./config.js";
 import { ErreurApi } from "./erreurs.js";
 import { dateDuJour, horlogeSysteme, type Horloge } from "./horloge.js";
-import { CATEGORIES_DEPART, JOURS_INVENTAIRE_DEMO, PRODUITS_DEMO, VENTES_DEMO } from "./produitsDemo.js";
+import { CATEGORIES_DEPART, CLIENT_DEMO, JOURS_INVENTAIRE_DEMO, PRODUITS_DEMO, VENTES_DEMO } from "./produitsDemo.js";
 import { MongooseCategorieRepository } from "./repositories/MongooseCategorieRepository.js";
 import { MongooseParametresRepository } from "./repositories/MongooseParametresRepository.js";
 import { MongooseProduitRepository, ProduitModel } from "./repositories/MongooseProduitRepository.js";
 import { MongooseStockRepository, MouvementModel, StockModel } from "./repositories/MongooseStockRepository.js";
-import { MongooseUtilisateurRepository, UtilisateurModel } from "./repositories/MongooseUtilisateurRepository.js";
+import { UtilisateurModel } from "./repositories/MongooseUtilisateurRepository.js";
 import { MongooseVenteRepository, VenteModel } from "./repositories/MongooseVenteRepository.js";
 import { hasherMotDePasse } from "./services/AuthService.js";
 import { CategorieService } from "./services/CategorieService.js";
@@ -33,6 +34,13 @@ await UtilisateurModel.findOneAndUpdate(
   { upsert: true },
 );
 console.log(`Compte responsable prêt : ${email}`);
+
+// Client des commandes de démonstration ; son mot de passe aléatoire n'est jamais affiché, personne ne s'y connecte.
+const clientDemo = await UtilisateurModel.findOneAndUpdate(
+  { email: CLIENT_DEMO.email },
+  { $setOnInsert: { ...CLIENT_DEMO, motDePasseHash: await hasherMotDePasse(randomBytes(24).toString("hex")), role: "client" } },
+  { upsert: true, returnDocument: "after" },
+).lean();
 
 // Valeurs de départ des paramètres, sans écraser celles réglées par le responsable.
 const parametresRepository = new MongooseParametresRepository();
@@ -82,22 +90,18 @@ for (const { promotion, stock, ...fiche } of PRODUITS_DEMO) {
 }
 console.log(`${PRODUITS_DEMO.length} produits de démonstration prêts`);
 
-// Ventes au comptoir passées, enregistrées comme au comptoir avec l'horloge du jour de la vente.
+// Commandes passées, enregistrées avec l'horloge du jour de la commande ; celles de plus d'un jour sont expédiées.
 const ventesRepository = new MongooseVenteRepository();
-const utilisateurRepository = new MongooseUtilisateurRepository();
+const client = { id: clientDemo!._id.toString(), nom: clientDemo!.nom, email: clientDemo!.email, role: "client" as const };
 for (const { jours, lignes, ...options } of VENTES_DEMO) {
-  const ventes = new VenteService(
-    ventesRepository,
-    produitRepository,
-    stockRepository,
-    parametresRepository,
-    utilisateurRepository,
-    ilYa(jours),
-  );
-  await ventes.vendreAuComptoir({
+  const ventes = new VenteService(ventesRepository, produitRepository, stockRepository, parametresRepository, ilYa(jours));
+  const commande = await ventes.commanderEnLigne(client, {
     ...options,
     lignes: lignes.map(([reference, quantite]) => ({ produitId: idsDemo.get(reference), quantite })),
   });
+  if (jours > 1) {
+    await ventes.marquerExpediee(commande.id);
+  }
 }
 console.log(`${VENTES_DEMO.length} ventes de démonstration prêtes`);
 
