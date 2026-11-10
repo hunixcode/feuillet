@@ -53,6 +53,13 @@ export class MemoireStockRepository implements StockRepository {
       .map((m) => structuredClone(m));
   }
 
+  async stockInitial(produitId: string): Promise<number | undefined> {
+    const premier = this.mouvements
+      .filter((m) => m.produitId === produitId)
+      .sort((a, b) => a.date.getTime() - b.date.getTime() || Number(a.id) - Number(b.id))[0];
+    return premier && (premier.quantiteApres ?? premier.quantite);
+  }
+
   async aDesMouvements(produitId: string): Promise<boolean> {
     return this.mouvements.some((m) => m.produitId === produitId);
   }

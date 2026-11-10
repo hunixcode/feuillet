@@ -4,17 +4,36 @@ import mongoose from "mongoose";
 import { lireVariable } from "./config.js";
 import { ErreurApi } from "./erreurs.js";
 import { dateDuJour, horlogeSysteme, type Horloge } from "./horloge.js";
-import { CATEGORIES_DEPART, CLIENT_DEMO, JOURS_INVENTAIRE_DEMO, PRODUITS_DEMO, VENTES_DEMO } from "./produitsDemo.js";
+import {
+  CATEGORIES_DEPART,
+  CLIENT_DEMO,
+  COMMANDES_FOURNISSEUR_DEMO,
+  FOURNISSEURS_DEMO,
+  JOURS_INVENTAIRE_DEMO,
+  PRODUITS_DEMO,
+  VENTES_DEMO,
+} from "./produitsDemo.js";
 import { MongooseCategorieRepository } from "./repositories/MongooseCategorieRepository.js";
 import { DemandeModel, MongooseDemandeRepository, NotificationModel } from "./repositories/MongooseDemandeRepository.js";
+import { MongooseNotificationRepository } from "./repositories/MongooseNotificationRepository.js";
 import { MongooseParametresRepository } from "./repositories/MongooseParametresRepository.js";
 import { MongooseProduitRepository, ProduitModel } from "./repositories/MongooseProduitRepository.js";
+import {
+  CommandeFournisseurModel,
+  FournisseurModel,
+  MongooseCommandeFournisseurRepository,
+  MongooseFournisseurRepository,
+  MongooseSeuilAlerteRepository,
+  ReceptionModel,
+} from "./repositories/MongooseReapproRepository.js";
 import { MongooseStockRepository, MouvementModel, StockModel } from "./repositories/MongooseStockRepository.js";
 import { UtilisateurModel } from "./repositories/MongooseUtilisateurRepository.js";
 import { MongooseVenteRepository, VenteModel } from "./repositories/MongooseVenteRepository.js";
 import { hasherMotDePasse } from "./services/AuthService.js";
 import { CategorieService } from "./services/CategorieService.js";
+import { DemandeService } from "./services/DemandeService.js";
 import { ProduitService } from "./services/ProduitService.js";
+import { ReapproService } from "./services/ReapproService.js";
 import { StockService } from "./services/StockService.js";
 import { VenteService } from "./services/VenteService.js";
 
@@ -80,6 +99,8 @@ await MouvementModel.deleteMany({ produitId: { $in: idsAnciens } });
 await VenteModel.deleteMany({ "lignes.produitId": { $in: idsAnciens } });
 await DemandeModel.deleteMany({ produitId: { $in: idsAnciens } });
 await NotificationModel.deleteMany({ produitId: { $in: idsAnciens } });
+await ReceptionModel.deleteMany({ produitId: { $in: idsAnciens } });
+await CommandeFournisseurModel.deleteMany({ produitId: { $in: idsAnciens } });
 await ProduitModel.deleteMany(anciens);
 const idsDemo = new Map<string, string>();
 for (const { promotion, stock, ...fiche } of PRODUITS_DEMO) {
@@ -114,5 +135,39 @@ for (const { jours, lignes, ...options } of VENTES_DEMO) {
   }
 }
 console.log(`${VENTES_DEMO.length} ventes de démonstration prêtes`);
+
+// Fournisseurs de démonstration (reconnus à leur nom) et commandes en cours, avec la date d'arrivée prévue.
+await FournisseurModel.deleteMany({ nom: { $in: FOURNISSEURS_DEMO.map((f) => f.nom) } });
+const commandesFournisseur = new MongooseCommandeFournisseurRepository();
+const demandes = new DemandeService(
+  new MongooseDemandeRepository(),
+  new MongooseNotificationRepository(),
+  produitRepository,
+  stockRepository,
+  parametresRepository,
+);
+const reappro = new ReapproService(
+  new MongooseFournisseurRepository(),
+  commandesFournisseur,
+  new MongooseSeuilAlerteRepository(),
+  produitRepository,
+  stockRepository,
+  parametresRepository,
+  demandes,
+);
+const fournisseursDemo = [];
+for (const fournisseur of FOURNISSEURS_DEMO) {
+  fournisseursDemo.push(await reappro.creerFournisseur(fournisseur));
+}
+for (const { fournisseur, reference, quantiteCommandee, jours } of COMMANDES_FOURNISSEUR_DEMO) {
+  const dateArriveePrevue = new Date(Date.parse(aujourdhui) + jours * 86_400_000).toISOString().slice(0, 10);
+  await reappro.creerCommande({
+    fournisseurId: fournisseursDemo[fournisseur]!.id,
+    produitId: idsDemo.get(reference),
+    quantiteCommandee,
+    dateArriveePrevue,
+  });
+}
+console.log(`${FOURNISSEURS_DEMO.length} fournisseurs et ${COMMANDES_FOURNISSEUR_DEMO.length} commandes fournisseur de démonstration prêts`);
 
 await mongoose.disconnect();

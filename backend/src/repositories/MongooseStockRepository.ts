@@ -36,6 +36,7 @@ const mouvementSchema = new Schema<NouveauMouvement>(
     quantiteAvant: Number,
     quantiteApres: Number,
     venteId: String,
+    receptionId: String,
   },
   { versionKey: false },
 );
@@ -94,6 +95,11 @@ export class MongooseStockRepository implements StockRepository {
       .limit(LIMITE_JOURNAL)
       .lean();
     return documents.map(({ _id, ...mouvement }) => ({ id: _id.toString(), ...mouvement }));
+  }
+
+  async stockInitial(produitId: string): Promise<number | undefined> {
+    const premier = await MouvementModel.findOne({ produitId }).sort({ date: 1, _id: 1 }).lean();
+    return premier ? (premier.quantiteApres ?? premier.quantite) : undefined;
   }
 
   async aDesMouvements(produitId: string): Promise<boolean> {

@@ -25,7 +25,7 @@ Toute erreur suit le format de `ApiError` (`frontend/src/types/api.ts`) :
 | 409 | `PROMOTION_EN_CONFLIT` | Promotion qui chevauche une autre promotion du même produit |
 | 409 | `CATEGORIE_DEJA_EXISTANTE` | Catégorie au nom déjà pris (`details.champs.libelle`) |
 | 409 | `CATEGORIE_UTILISEE` | Suppression d'une catégorie encore utilisée par un produit |
-| 409 | `PRODUIT_AVEC_HISTORIQUE` | Suppression d'un produit qui a des mouvements de stock ou des demandes (RG05) |
+| 409 | `PRODUIT_AVEC_HISTORIQUE` | Suppression d'un produit qui a des mouvements de stock, des demandes ou des commandes fournisseur (RG05) |
 | 409 | `STOCK_INSUFFISANT` | Sortie de stock supérieure à la quantité disponible, ou compte inférieur au mis de côté |
 | 409 | `STOCK_MODIFIE` | Le stock a changé pendant l'opération (correction de stock ou vente) |
 | 409 | `LIGNE_INDISPONIBLE` | Vente refusée : un article n'est plus disponible dans la quantité demandée (`details.lignes`) |
@@ -34,6 +34,9 @@ Toute erreur suit le format de `ApiError` (`frontend/src/types/api.ts`) :
 | 409 | `DEMANDE_EN_COURS` | Le client a déjà une demande en attente ou mise de côté pour ce produit |
 | 409 | `DEMANDE_NON_ANNULABLE` | Annulation d'une demande qui n'est plus en attente |
 | 409 | `DEMANDE_NON_RATTACHABLE` | Rattachement d'une demande déjà liée à un produit ou plus en attente |
+| 409 | `COMMANDE_DEJA_RECUE` | Réception sur une commande fournisseur déjà entièrement reçue |
+| 409 | `QUANTITE_SUPERIEURE_AU_RESTANT` | Réception supérieure à ce qui reste à recevoir (`details.restant`, RG07) |
+| 409 | `RECEPTION_DEJA_VALIDEE` | Réception déjà validée : aucun mouvement n'est créé (RG07) |
 | 500 | `ERREUR_SERVEUR` | Erreur inattendue |
 
 ## État de l'API
@@ -384,7 +387,7 @@ Corps de `POST /api/demandes` : `{ "produitId": "…", "quantiteSouhaitee": 2 }`
 
 ### Mises de côté
 
-- **Création** : à l'arrivée d'un produit (réception d'une commande fournisseur, EX06), ses demandes en attente sont mises de côté par ordre d'arrivée tant qu'il reste du stock vendable, et chaque client est prévenu par une notification. `Stock.quantiteMiseDeCote` reste égal à la somme des mises de côté du produit.
+- **Création** : à la validation d'une réception de commande fournisseur (voir [Réceptions](#réceptions-rg07-décision-20-diagramme-de-séquence)), les demandes en attente sont mises de côté par ordre d'arrivée tant qu'il reste du stock vendable, et chaque client est prévenu par une notification. `Stock.quantiteMiseDeCote` reste égal à la somme des mises de côté du produit.
 - **Expiration** (décision 18) : après la date limite, la quantité est libérée et la demande passe à `expiree`, sans retour en attente. Le serveur vérifie les échéances chaque minute et avant chaque liste de demandes.
 - **Commande du titulaire** : la mise de côté du client compte comme disponible pour lui (devis compris). Sa commande consomme sa mise de côté : ses demandes sur ce produit passent à `honoree` dans la même transaction, et ce qui restait mis de côté pour lui est libéré s'il en achète moins. Les autres clients et les visiteurs ne peuvent pas acheter les exemplaires mis de côté (RG04).
 - Un produit qui a des demandes n'est plus supprimable (RG05).
@@ -397,3 +400,81 @@ Corps de `POST /api/demandes` : `{ "produitId": "…", "quantiteSouhaitee": 2 }`
 |---|---|---|---|
 | `GET /api/notifications` | client | `200` : ses notifications, de la plus récente à la plus ancienne | |
 | `POST /api/notifications/:id/lue` | client | `200` : `Notification` avec `lue: true` | `404` si ce n'est pas la sienne |
+
+## Réapprovisionnement (EX06, écrans 6, 11 et 12)
+
+Routes réservées au responsable (`401` sans token, `403` pour un client).
+
+### Fournisseurs
+
+`Fournisseur` : `{ "id", "nom", "contact" }` (`contact` facultatif : e-mail, téléphone…).
+
+| Route | Réponse | Erreurs |
+|---|---|---|
+| `GET /api/fournisseurs` | `200` : `Fournisseur[]` par nom | |
+| `POST /api/fournisseurs` | `201` : `Fournisseur` | `400` (`nom` obligatoire, 100 caractères au plus ; `contact` 200 au plus) |
+| `PUT /api/fournisseurs/:id` | `200` : `Fournisseur` | `400`, `404` |
+
+### Commandes fournisseur
+
+Une commande = un fournisseur et un produit (décision 19). `CommandeFournisseur` :
+
+```json
+{
+  "id": "…",
+  "fournisseur": { "id": "…", "nom": "Hachette Pacifique" },
+  "produitId": "…",
+  "reference": "LIV-001",
+  "designation": "L'Île au trésor",
+  "quantiteCommandee": 10,
+  "quantiteRecue": 4,
+  "date": "2026-11-08T20:00:00.000Z",
+  "dateArriveePrevue": "2026-11-20",
+  "statut": "partiellement_recue"
+}
+```
+
+`statut` : `en_cours` → `partiellement_recue` → `recue` ; `dateReceptionComplete` apparaît quand tout est reçu. Restant à recevoir = `quantiteCommandee − quantiteRecue`.
+
+| Route | Réponse | Erreurs |
+|---|---|---|
+| `GET /api/commandes-fournisseur` | `200` : de la plus récente à la plus ancienne, 500 au plus ; filtres facultatifs `statut`, `produitId`, `fournisseurId` | `400` sur un statut inconnu |
+| `POST /api/commandes-fournisseur` | `201` : commande `en_cours` ; corps `{ "fournisseurId", "produitId", "quantiteCommandee", "dateArriveePrevue" }` | `400` (fournisseur inconnu, produit inconnu ou archivé, quantité entière de 1 à 9999, date AAAA-MM-JJ valide et pas passée) |
+| `GET /api/commandes-fournisseur/:id` | `200` : `CommandeFournisseur` | `404` |
+| `GET /api/commandes-fournisseur/:id/receptions` | `200` : `Reception[]`, de la plus récente à la plus ancienne | `404` |
+
+**EX04** : un produit épuisé qui a une commande en cours montre `arriveePrevue` (AAAA-MM-JJ, la date la plus proche) dans `GET /api/produits` et `GET /api/produits/:id`. Un produit qui a une commande fournisseur n'est plus supprimable (RG05).
+
+### Réceptions (RG07, décision 20, diagramme de séquence)
+
+Une réception est **saisie**, puis **validée** : seule la validation fait entrer le stock.
+
+`Reception` : `{ "id", "commandeId", "produitId", "date", "quantiteRecue", "quantiteAbimee", "validee", "dateValidation" }`.
+
+| Route | Réponse | Erreurs |
+|---|---|---|
+| `POST /api/commandes-fournisseur/:id/receptions` | `201` : `Reception` non validée ; corps `{ "quantiteRecue": 4, "quantiteAbimee": 1 }` (`quantiteAbimee` facultatif, 0 par défaut) | `400` (entiers positifs ou nuls, au moins un article), `404`, `409 COMMANDE_DEJA_RECUE`, `409 QUANTITE_SUPERIEURE_AU_RESTANT` (`details.restant`) |
+| `POST /api/receptions/:id/validation` | `200` : `{ "reception", "commande" }` à jour | `404`, `409 RECEPTION_DEJA_VALIDEE`, `409 QUANTITE_SUPERIEURE_AU_RESTANT`, `409 STOCK_MODIFIE` |
+
+- Les articles abîmés à la livraison ne sont **pas comptés comme reçus** : ils restent à recevoir et n'entrent pas en stock (décision 20).
+- La quantité reçue ne dépasse jamais le restant, vérifié à la saisie et de nouveau à la validation (deux réceptions saisies en parallèle ne peuvent pas dépasser la commande).
+- La validation écrit dans **une transaction** : réception validée, commande mise à jour, mouvement `entree` (opérateur `responsable`, avec `receptionId`), puis mises de côté des demandes en attente du produit et notifications (voir [Mises de côté](#mises-de-côté)). Une réception validée deux fois ne crée pas de second mouvement (`409 RECEPTION_DEJA_VALIDEE`) ; si la commande ou le stock a changé pendant la validation, rien n'est écrit (`409 STOCK_MODIFIE`).
+
+### Produits à recommander (RG10)
+
+`GET /api/reapprovisionnement` : produits non archivés dont le stock vendable est ≤ seuil d'alerte (%) × quantité achetée à l'origine, du pourcentage vendu le plus haut au plus bas.
+
+```json
+[{
+  "produitId": "…", "reference": "LIV-001", "designation": "L'Île au trésor",
+  "quantiteVendable": 2, "quantiteAcheteeOrigine": 10, "seuilAlerte": 20,
+  "pourcentageVendu": 80, "quantiteEnCommande": 6
+}]
+```
+
+- `quantiteAcheteeOrigine` : total reçu de la dernière commande fournisseur entièrement reçue ; à défaut, le stock initial (quantité après le premier mouvement du produit). Un produit sans quantité achetée connue (ou nulle) n'est pas évalué.
+- `pourcentageVendu` : part de la quantité achetée à l'origine qui n'est plus vendable, arrondie.
+- `quantiteEnCommande` : restant à recevoir des commandes en cours, pour ne pas commander deux fois.
+- `seuilAlerte` : celui du produit, sinon `seuilAlerteDefaut` des paramètres (20 % au départ).
+
+`PUT /api/produits/:id/seuil-alerte` : corps `{ "seuilAlerte": 30 }` (entier de 0 à 100) ou `{ "seuilAlerte": null }` pour revenir au seuil par défaut. Réponse `200` : `{ "seuilAlerte": 30, "parDefaut": false }`. Erreurs : `400`, `404`.

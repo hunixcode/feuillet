@@ -197,28 +197,37 @@ export function promotionDuJour({ promotions }: Produit, aujourdhui: string): Pr
   return promotions.find((p) => p.debut <= aujourdhui && aujourdhui <= p.fin);
 }
 
-function versCatalogue(produit: Produit, aujourdhui: string, stock: Stock): ProduitCatalogue {
+// EX04 : un produit épuisé montre la date d'arrivée prévue s'il a une commande fournisseur en cours.
+function versCatalogue(produit: Produit, aujourdhui: string, stock: Stock, arriveePrevue?: string): ProduitCatalogue {
   const { historiquePrix: _, promotions: __, ...fiche } = produit;
   const promotion = promotionDuJour(produit, aujourdhui);
+  const disponible = quantiteVendable(stock) > 0;
   return {
     ...fiche,
     prixApplique: prixApplique(fiche.prix, promotion?.remise),
     ...(promotion && { promotion }),
-    disponibilite: quantiteVendable(stock) > 0 ? "disponible" : "epuise",
+    disponibilite: disponible ? "disponible" : "epuise",
+    ...(!disponible && arriveePrevue && { arriveePrevue }),
   };
 }
 
 // shortcut: chaque écriture relit puis remplace le produit entier ; deux modifications simultanées
 // du même produit, la dernière gagne (un seul responsable). Passer à des mises à jour ciblées sinon.
-// shortcut: RG05 ne regarde que les mouvements (les ventes en créent) ; ajouter demandes et commandes fournisseur.
+// Ce que d'autres services ajoutent au catalogue, sans que ProduitService dépende d'eux.
+export interface ExtensionsProduit {
+  // RG05 : autres historiques qui empêchent la suppression (demandes, commandes fournisseur).
+  autresHistoriques?: ((produitId: string) => Promise<boolean>)[];
+  // EX04 : date d'arrivée prévue (AAAA-MM-JJ) des produits qui ont une commande fournisseur en cours.
+  arriveesPrevues?: (produitIds: string[]) => Promise<Map<string, string>>;
+}
+
 export class ProduitService {
   constructor(
     private readonly produits: ProduitRepository,
     private readonly categories: CategorieRepository,
     private readonly stocks: StockRepository,
     private readonly horloge: Horloge = horlogeSysteme,
-    // RG05 : autres historiques qui empêchent la suppression (demandes, commandes fournisseur).
-    private readonly autresHistoriques: ((produitId: string) => Promise<boolean>)[] = [],
+    private readonly extensions: ExtensionsProduit = {},
   ) {}
 
   async lister(requete: unknown): Promise<ProduitCatalogue[]> {
@@ -267,7 +276,7 @@ export class ProduitService {
         "Ce produit a déjà des mouvements de stock : archivez-le plutôt que de le supprimer.",
       );
     }
-    for (const aUnHistorique of this.autresHistoriques) {
+    for (const aUnHistorique of this.extensions.autresHistoriques ?? []) {
       if (await aUnHistorique(id)) {
         throw new ErreurApi(
           409,
@@ -309,8 +318,10 @@ export class ProduitService {
 
   private async versReponses(produits: Produit[]): Promise<ProduitCatalogue[]> {
     const aujourdhui = dateDuJour(this.horloge);
-    const stocks = await this.stocks.trouverPlusieurs(produits.map((p) => p.id));
-    return produits.map((p) => versCatalogue(p, aujourdhui, stocks.get(p.id)!));
+    const ids = produits.map((p) => p.id);
+    const stocks = await this.stocks.trouverPlusieurs(ids);
+    const arrivees = (await this.extensions.arriveesPrevues?.(ids)) ?? new Map<string, string>();
+    return produits.map((p) => versCatalogue(p, aujourdhui, stocks.get(p.id)!, arrivees.get(p.id)));
   }
 
   private async versReponse(produit: Produit): Promise<ProduitCatalogue> {

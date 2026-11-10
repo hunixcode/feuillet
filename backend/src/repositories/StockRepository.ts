@@ -14,4 +14,6 @@ export interface StockRepository {
   enregistrer(produitId: string, avant: Stock, apres: Stock, mouvement?: NouveauMouvement): Promise<void>;
   listerMouvements(filtres: FiltresMouvements): Promise<Mouvement[]>;
   aDesMouvements(produitId: string): Promise<boolean>;
+  // RG10 : quantité après le tout premier mouvement du produit (stock initial) ; undefined sans mouvement.
+  stockInitial(produitId: string): Promise<number | undefined>;
 }
