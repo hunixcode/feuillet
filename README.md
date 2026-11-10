@@ -52,6 +52,28 @@ npm i
 npm run dev
 ```
 
+## Lancer avec Docker
+
+Seul Docker est nécessaire : MongoDB tourne dans un conteneur, en replica set à un nœud (les ventes et les réceptions utilisent des transactions).
+
+```sh
+cp backend/.env.example backend/.env   # puis remplir JWT_SECRET, RESPONSABLE_EMAIL, RESPONSABLE_MOT_DE_PASSE
+docker compose up --build              # MongoDB, API (rechargée à chaque modification de backend/src), front Vite
+docker compose run --rm backend npm run seed   # une fois : compte responsable, catégories, produits de démonstration
+```
+
+- Front : http://localhost:5173 (le proxy `/api` de Vite pointe vers le conteneur `backend`) ; API : http://localhost:3000 ; MongoDB : `localhost:27017`.
+- Ports déjà pris : `PORT_FRONT`, `PORT_API`, `PORT_MONGO`, par exemple `PORT_API=3001 docker compose up`.
+- `MONGODB_URI` de `backend/.env` est remplacée par la base du conteneur ; aucun secret n'est écrit dans les fichiers Docker.
+- `docker compose down` arrête tout ; `docker compose down -v` efface aussi la base.
+
+Image de production (API + front compilé, utilisateur non root, `HEALTHCHECK` sur `/api/health`) :
+
+```sh
+docker build -f backend/Dockerfile -t librairie .
+docker run -p 3000:3000 -e MONGODB_URI=… -e JWT_SECRET=… librairie
+```
+
 ## Déployer
 
 En production, l'API sert aussi le front compilé : une seule application, une seule origine, pas de CORS.
