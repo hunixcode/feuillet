@@ -169,3 +169,14 @@ Fait :
 Reste à faire :
 - HSTS en production : PR #60 (#51)
 - Docker (#53) et déploiement sur Render (#55)
+
+09/11/2026 - Docker : back, front et MongoDB en replica set (#53)
+
+Fait :
+- `backend/Dockerfile` en plusieurs étapes (contexte : racine du dépôt) : dépendances, build du front et du back, image finale `node:22-alpine` avec les seules dépendances de production, utilisateur `node`, `HEALTHCHECK` sur `/api/health` ; l'API y sert le front compilé
+- `docker-compose.yml` de développement : MongoDB 7 en replica set à un nœud initialisé tout seul, API en `tsx watch`, front Vite avec le proxy `/api` vers le conteneur ; rechargement par scrutation des fichiers montés ; ports réglables
+- Seed : `docker compose run --rm backend npm run seed` ; secrets dans `backend/.env`, aucun dans les fichiers Docker ; `.dockerignore`
+- Vérifié depuis un clone propre : `docker compose up`, seed, connexion du responsable, catalogue, correction d'inventaire en transaction, rechargement de l'API ; image de production saine et arrêt propre sur `docker stop`
+
+Reste à faire :
+- Déploiement sur Render (#55)
