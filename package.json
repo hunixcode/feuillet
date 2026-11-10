@@ -1,0 +1,12 @@
+{
+  "name": "librairie",
+  "version": "0.1.0",
+  "description": "Gestionnaire de stock de librairie : scripts de déploiement (front et back)",
+  "private": true,
+  "scripts": {
+    "installer": "npm ci --prefix backend && npm ci --prefix frontend",
+    "build": "npm run build --prefix frontend && npm run build --prefix backend",
+    "start": "npm start --prefix backend",
+    "seed": "npm run seed --prefix backend"
+  }
+}

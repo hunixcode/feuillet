@@ -44,6 +44,7 @@ const ERREURS_CORPS: Record<string, { statut: number; code: string; message: str
 };
 
 export const gererErreurs: ErrorRequestHandler = (erreur, _req, res, _next) => {
+  const requeteId = res.locals.requeteId as string | undefined;
   if (erreur instanceof ErreurApi) {
     res.status(erreur.statut).json({
       code: erreur.code,
@@ -59,9 +60,10 @@ export const gererErreurs: ErrorRequestHandler = (erreur, _req, res, _next) => {
     return;
   }
 
-  console.error(erreur);
+  // La trace reste dans le journal du serveur ; le client ne reçoit que l'identifiant pour la retrouver.
+  console.error(`Erreur ${requeteId ?? ""}`, erreur);
   res.status(500).json({
     code: "ERREUR_SERVEUR",
-    message: "Une erreur interne est survenue. Réessayez plus tard.",
+    message: `Une erreur interne est survenue. Réessayez plus tard.${requeteId ? ` Référence : ${requeteId}` : ""}`,
   });
 };

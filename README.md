@@ -52,6 +52,23 @@ npm i
 npm run dev
 ```
 
+## Déployer
+
+En production, l'API sert aussi le front compilé : une seule application, une seule origine, pas de CORS.
+
+1. Variables d'environnement (voir `backend/.env.example`) : `NODE_ENV=production`, `MONGODB_URI` (MongoDB en replica set, pour les transactions), `JWT_SECRET` (32 caractères au moins), `PORT` (souvent fourni par l'hébergeur). `DOSSIER_FRONT` est facultatif (par défaut `frontend/dist`). Le seed demande aussi `RESPONSABLE_EMAIL` et `RESPONSABLE_MOT_DE_PASSE`.
+2. Construire, depuis la racine du dépôt :
+
+   ```sh
+   npm run installer   # npm ci dans backend/ et frontend/
+   npm run build       # front (frontend/dist) puis back (backend/dist)
+   ```
+
+3. Démarrer : `npm start` (lance `node backend/dist/index.js`).
+4. Données de départ, une seule fois et à la main : `npm run seed` (compte responsable, paramètres, catégories, produits de démonstration).
+
+Au démarrage, toutes les variables sont vérifiées et chaque problème est signalé ; les index MongoDB sont créés. Chaque requête écrit une ligne dans le journal (méthode, chemin sans paramètres, statut, durée, identifiant), jamais le corps ni les en-têtes. Une erreur 500 renvoie seulement un identifiant (`Référence : …`, aussi dans l'en-tête `X-Request-Id`) qui permet de retrouver la trace dans le journal. Sur `SIGTERM`, le serveur n'accepte plus de requêtes, termine celles en cours (10 s au plus) puis ferme la connexion MongoDB.
+
 ## Documentation
 - [`docs/rapport.md`](docs/rapport.md) : choix techniques, spécification, décisions de cadrage, traçabilité — **fait foi en cas de désaccord**
 - [`docs/ecrans.md`](docs/ecrans.md) : description des écrans client et responsable

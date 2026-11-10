@@ -1,5 +1,7 @@
 import express from "express";
 import { gererErreurs, routeIntrouvable } from "./erreurs.js";
+import { servirFront } from "./front.js";
+import { identifierRequete, journaliserRequetes, type Journal } from "./journal.js";
 import { routesAuth } from "./routes/auth.js";
 import { routesCategories } from "./routes/categories.js";
 import { routesProduits } from "./routes/produits.js";
@@ -16,12 +18,28 @@ export interface Dependances {
   categorieService: CategorieService;
   stockService: StockService;
   verifierBase: VerifierBase;
+  // Production : dossier du front compilé, servi sur la même origine que l'API.
+  dossierFront?: string;
+  // Journal d'une ligne par requête ; aucun par défaut (tests).
+  journal?: Journal;
 }
 
-export function createApp({ authService, produitService, categorieService, stockService, verifierBase }: Dependances) {
+export function createApp({
+  authService,
+  produitService,
+  categorieService,
+  stockService,
+  verifierBase,
+  dossierFront,
+  journal,
+}: Dependances) {
   const app = express();
 
   app.disable("x-powered-by");
+  app.use(identifierRequete);
+  if (journal) {
+    app.use(journaliserRequetes(journal));
+  }
   app.use(express.json());
 
   app.use("/api/health", routesSante(verifierBase));
@@ -29,6 +47,9 @@ export function createApp({ authService, produitService, categorieService, stock
   app.use("/api/produits", routesProduits(produitService, authService));
   app.use("/api/categories", routesCategories(categorieService, authService));
   app.use("/api", routesStock(stockService, authService));
+  if (dossierFront) {
+    app.use(servirFront(dossierFront));
+  }
 
   app.use(routeIntrouvable);
   app.use(gererErreurs);
