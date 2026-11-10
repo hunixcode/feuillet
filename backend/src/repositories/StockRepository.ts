@@ -16,4 +16,7 @@ export interface StockRepository {
   aDesMouvements(produitId: string): Promise<boolean>;
   // RG10 : quantité après le tout premier mouvement du produit (stock initial) ; undefined sans mouvement.
   stockInitial(produitId: string): Promise<number | undefined>;
+  // RG08 : variation du stock physique de chaque produit depuis une date (mouvements postérieurs), pour recalculer
+  // un stock passé : stock à la date = stock actuel − variation.
+  variationsDepuis(date: Date): Promise<Map<string, number>>;
 }

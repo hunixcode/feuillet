@@ -3,6 +3,7 @@ import { MemoireCategorieRepository } from "../repositories/MemoireCategorieRepo
 import { MemoireDemandeRepository } from "../repositories/MemoireDemandeRepository.js";
 import { MemoireParametresRepository } from "../repositories/MemoireParametresRepository.js";
 import { MemoireProduitRepository } from "../repositories/MemoireProduitRepository.js";
+import { MemoireRetourRepository } from "../repositories/MemoireRetourRepository.js";
 import {
   MemoireCommandeFournisseurRepository,
   MemoireFournisseurRepository,
@@ -14,7 +15,9 @@ import { CategorieService } from "../services/CategorieService.js";
 import { DemandeService } from "../services/DemandeService.js";
 import { ParametresService } from "../services/ParametresService.js";
 import { ProduitService } from "../services/ProduitService.js";
+import { RapportService } from "../services/RapportService.js";
 import { ReapproService } from "../services/ReapproService.js";
+import { RetourService } from "../services/RetourService.js";
 import { StockService } from "../services/StockService.js";
 import { VenteService } from "../services/VenteService.js";
 
@@ -29,6 +32,7 @@ export function servicesMemoire(horloge?: Horloge) {
   const fournisseurs = new MemoireFournisseurRepository();
   const commandesFournisseur = new MemoireCommandeFournisseurRepository(demandes);
   const seuils = new MemoireSeuilAlerteRepository();
+  const retours = new MemoireRetourRepository(stocks);
   const demandeService = new DemandeService(demandes, notifications, produits, stocks, parametres, horloge);
   const reapproService = new ReapproService(
     fournisseurs,
@@ -40,6 +44,11 @@ export function servicesMemoire(horloge?: Horloge) {
     demandeService,
     horloge,
   );
+  const produitService = new ProduitService(produits, categories, stocks, horloge, {
+    autresHistoriques: [(id) => demandes.aDesDemandes(id), (id) => commandesFournisseur.aDesCommandes(id)],
+    arriveesPrevues: (ids) => reapproService.arriveesPrevues(ids),
+  });
+  const venteService = new VenteService(ventes, produits, stocks, parametres, demandes, horloge);
   return {
     repositories: {
       produits,
@@ -52,16 +61,16 @@ export function servicesMemoire(horloge?: Horloge) {
       fournisseurs,
       commandesFournisseur,
       seuils,
+      retours,
     },
-    produitService: new ProduitService(produits, categories, stocks, horloge, {
-      autresHistoriques: [(id) => demandes.aDesDemandes(id), (id) => commandesFournisseur.aDesCommandes(id)],
-      arriveesPrevues: (ids) => reapproService.arriveesPrevues(ids),
-    }),
+    produitService,
     categorieService: new CategorieService(categories, produits),
     stockService: new StockService(stocks, produits, horloge),
     parametresService: new ParametresService(parametres),
-    venteService: new VenteService(ventes, produits, stocks, parametres, demandes, horloge),
+    venteService,
     demandeService,
     reapproService,
+    retourService: new RetourService(ventes, retours, stocks, parametres, venteService, horloge),
+    rapportService: new RapportService(ventes, retours, produits, stocks, reapproService, produitService, horloge),
   };
 }

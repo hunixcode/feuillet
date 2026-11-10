@@ -60,6 +60,14 @@ export class MemoireStockRepository implements StockRepository {
     return premier && (premier.quantiteApres ?? premier.quantite);
   }
 
+  async variationsDepuis(date: Date): Promise<Map<string, number>> {
+    const variations = new Map<string, number>();
+    for (const m of this.mouvements.filter((m) => m.date.getTime() > date.getTime())) {
+      variations.set(m.produitId, (variations.get(m.produitId) ?? 0) + m.quantite);
+    }
+    return variations;
+  }
+
   async aDesMouvements(produitId: string): Promise<boolean> {
     return this.mouvements.some((m) => m.produitId === produitId);
   }

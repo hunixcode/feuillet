@@ -37,6 +37,9 @@ Toute erreur suit le format de `ApiError` (`frontend/src/types/api.ts`) :
 | 409 | `COMMANDE_DEJA_RECUE` | Réception sur une commande fournisseur déjà entièrement reçue |
 | 409 | `QUANTITE_SUPERIEURE_AU_RESTANT` | Réception supérieure à ce qui reste à recevoir (`details.restant`, RG07) |
 | 409 | `RECEPTION_DEJA_VALIDEE` | Réception déjà validée : aucun mouvement n'est créé (RG07) |
+| 409 | `VENTE_NON_EXPEDIEE` | Retour sur une commande pas encore expédiée |
+| 409 | `DELAI_RETOUR_DEPASSE` | Retour après la date limite (RG09, `details.dateLimiteRetour`) |
+| 409 | `QUANTITE_NON_RETOURNABLE` | Retour supérieur à la quantité vendue non encore retournée (RG07, `details.quantiteRetournable`) |
 | 500 | `ERREUR_SERVEUR` | Erreur inattendue |
 
 ## État de l'API
@@ -216,7 +219,7 @@ Responsable seulement. Un produit jamais compté a un stock vide.
 }
 ```
 
-`type` : `entree`, `vente`, `retour`, `remplacement` ou `ajustement` ; `quantite` : variation du stock physique (négative pour une sortie) ; `operateur` : `responsable`, `client` ou `systeme` ; `quantiteAvant` et `quantiteApres` seulement pour un ajustement ; `venteId` seulement pour une vente (une ligne de vente = un mouvement).
+`type` : `entree`, `vente`, `retour`, `remplacement` ou `ajustement` ; `quantite` : variation du stock physique (négative pour une sortie) ; `operateur` : `responsable`, `client` ou `systeme` ; `quantiteAvant` et `quantiteApres` seulement pour un ajustement ; `venteId` pour une vente (une ligne de vente = un mouvement), `receptionId` pour une réception, `retourId` pour un retour.
 
 | Route | Corps | Réponse | Erreurs |
 |---|---|---|---|
@@ -478,3 +481,77 @@ Une réception est **saisie**, puis **validée** : seule la validation fait entr
 - `seuilAlerte` : celui du produit, sinon `seuilAlerteDefaut` des paramètres (20 % au départ).
 
 `PUT /api/produits/:id/seuil-alerte` : corps `{ "seuilAlerte": 30 }` (entier de 0 à 100) ou `{ "seuilAlerte": null }` pour revenir au seuil par défaut. Réponse `200` : `{ "seuilAlerte": 30, "parDefaut": false }`. Erreurs : `400`, `404`.
+
+## Retours (EX07, écran 9)
+
+Routes réservées au responsable, sous la commande concernée. Les articles rendus arrivent par colis.
+
+### `GET /api/ventes/:id/retours`
+
+`200` : ce qui peut encore être rendu. Erreur : `404`.
+
+```json
+{
+  "venteId": "…",
+  "dateLimiteRetour": "2026-11-22T09:59:59.999Z",
+  "retourPossible": true,
+  "lignes": [{ "produitId": "…", "reference": "LIV-001", "designation": "L'Île au trésor", "quantite": 2, "prixUnitaire": 1800, "quantiteRetournee": 1, "quantiteRetournable": 1 }],
+  "retours": [Retour]
+}
+```
+
+- `dateLimiteRetour` (RG09) : fin du jour (heure de Tahiti) situé `delaiRetourJours` jours après la vente (14 par défaut), ou `delaiRetourCadeauJours` (30) si la vente porte une `occasionCadeau`.
+- `retourPossible` : `false` si le délai est passé ou si la commande n'est pas encore expédiée.
+
+### `POST /api/ventes/:id/retours`
+
+Corps : `{ "produitId": "…", "quantite": 1, "issue": "remboursement", "revendable": true }` ; pour un échange, `"echange": { "lignes": [{ "produitId": "…", "quantite": 1 }] }`. Réponse `201` : `Retour`.
+
+| Issue (RG12) | Article rendu | Stock | Montants |
+|---|---|---|---|
+| `remboursement` | revendable (`revendable`, vrai par défaut) : remis en stock, éventuellement sous cellophane ; sinon défectueux | physique + quantité, ou défectueux + quantité ; mouvement `retour` | `montantRembourse` = prix unitaire figé × quantité, frais d'options non remboursés |
+| `echange` | plastique intact, donc revendable (sinon `400`) : remis en stock | physique + quantité ; mouvement `retour` ; le nouvel article est une commande du même client, expédiée à l'adresse de la commande d'origine, livraison offerte (mouvement `vente`, opérateur `responsable`) | différence avec la commande d'échange (`venteEchangeId`) : `montantRembourse` si elle est en faveur du client, `complementPaye` sinon |
+| `remplacement` | défectueux | défectueux + quantité, un exemplaire neuf sort du stock : physique − quantité ; mouvement `remplacement` | aucun ; sans exemplaire neuf vendable, le retour devient un remboursement (`remplacementImpossible: true`) |
+
+`Retour` : `{ "id", "venteId", "produitId", "reference", "designation", "quantite", "date", "issue", "revendable", "valeur", "montantRembourse", "complementPaye", "venteEchangeId", "remplacementImpossible" }` (`valeur` = prix unitaire figé × quantité). Chaque retour crée un mouvement lié (`retourId`) ; retour et mouvement sont écrits dans une même transaction.
+
+Erreurs : `400 VALIDATION` (article absent de la vente, quantité, issue, échange sans article ou sans plastique intact), `404`, `409 VENTE_NON_EXPEDIEE`, `409 DELAI_RETOUR_DEPASSE` (`details.dateLimiteRetour`), `409 QUANTITE_NON_RETOURNABLE` (`details.quantiteRetournable`, RG07 : retour ≤ quantité vendue non encore retournée), `409 LIGNE_INDISPONIBLE` (article d'échange indisponible : rien n'est enregistré), `409 STOCK_MODIFIE`.
+
+## Rapports (EX08, écrans 6 et 12)
+
+Routes réservées au responsable.
+
+### `GET /api/rapports`
+
+Période : `debut` et `fin` (AAAA-MM-JJ, inclus, 366 jours au plus) ou `semaine` (un jour de la semaine voulue : du lundi 00:00 au dimanche 23:59, heure de Tahiti, décision 21) ; par défaut la semaine en cours. Filtre facultatif `categorie` (identifiant). Erreur : `400` sur une période invalide.
+
+```json
+{
+  "periode": { "debut": "2026-11-09", "fin": "2026-11-15" },
+  "totaux": { "ventesBrutes": 10500, "retours": 1800, "net": 8700, "quantiteVendue": 7, "quantiteRetournee": 1, "quantiteNette": 6 },
+  "statistiques": { "nombreVentes": 2, "panierMoyen": 5250, "nombreRetours": 2 },
+  "produits": [{
+    "produitId": "…", "reference": "LIV-001", "designation": "L'Île au trésor", "categorie": "roman",
+    "quantiteVendue": 4, "montantVentes": 7200, "quantiteRetournee": 1, "montantRetours": 1800,
+    "quantiteNette": 3, "montantNet": 5400, "quantiteRemplacee": 1, "stockRestant": 6, "pourcentageVendu": 30
+  }]
+}
+```
+
+- Ventes brutes : montants TTC des lignes vendues sur la période (frais d'options exclus). Retours : valeur des articles remboursés ou échangés ; un remplacement ne change pas la vente (`quantiteRemplacee`). Une commande d'échange compte comme une vente.
+- `stockRestant` : stock physique à la fin de la période, recalculé depuis les mouvements (RG08).
+- `pourcentageVendu` : quantité nette vendue sur la période en % de la quantité achetée à l'origine (RG10) ; `null` si elle est inconnue.
+- Les articles actifs sans activité apparaissent aussi, pour leur stock. Tri par montant net décroissant.
+- Statistiques globales seulement, aucune par employé (décision 22) ; `panierMoyen` = montant des lignes du filtre / nombre de ventes.
+
+### `GET /api/rapports/export.csv`
+
+Mêmes paramètres ; fichier `rapport-<debut>-<fin>.csv` (séparateur `;`, UTF-8 avec BOM pour Excel) : une ligne par produit, puis les totaux et les statistiques.
+
+## Meilleures ventes (EX10, RG14, écran 2)
+
+`GET /api/meilleures-ventes` : public, la même liste pour tous (connecté ou non). Les 10 produits non archivés les plus vendus sur les 30 derniers jours, en quantités nettes des retours (remboursements et échanges), au format du catalogue avec `quantiteVendue`. Filtre facultatif `categorie`.
+
+```json
+[{ "id": "…", "reference": "LIV-004", "designation": "One Piece, tome 1", "prixApplique": 1100, "disponibilite": "disponible", "quantiteVendue": 6, "…": "…" }]
+```

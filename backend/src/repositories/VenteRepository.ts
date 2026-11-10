@@ -8,6 +8,8 @@ export interface VenteRepository {
   creer(vente: NouvelleVente, changements: ChangementStock[], demandesHonorees?: string[]): Promise<Vente>;
   lister(filtres: FiltresVentes): Promise<Vente[]>;
   trouverParId(id: string): Promise<Vente | null>;
+  // Toutes les ventes datées entre debut et fin inclus, sans limite (rapports).
+  listerPeriode(debut: Date, fin: Date): Promise<Vente[]>;
   // Passe une commande de a_preparer à expediee ; null si elle n'est pas (ou plus) à préparer.
   marquerExpediee(id: string, date: Date): Promise<Vente | null>;
 }

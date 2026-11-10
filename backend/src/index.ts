@@ -8,6 +8,7 @@ import { MongooseDemandeRepository } from "./repositories/MongooseDemandeReposit
 import { MongooseNotificationRepository } from "./repositories/MongooseNotificationRepository.js";
 import { MongooseParametresRepository } from "./repositories/MongooseParametresRepository.js";
 import { MongooseProduitRepository } from "./repositories/MongooseProduitRepository.js";
+import { MongooseRetourRepository } from "./repositories/MongooseRetourRepository.js";
 import {
   MongooseCommandeFournisseurRepository,
   MongooseFournisseurRepository,
@@ -21,7 +22,9 @@ import { CategorieService } from "./services/CategorieService.js";
 import { DemandeService } from "./services/DemandeService.js";
 import { ParametresService } from "./services/ParametresService.js";
 import { ProduitService } from "./services/ProduitService.js";
+import { RapportService } from "./services/RapportService.js";
 import { ReapproService } from "./services/ReapproService.js";
+import { RetourService } from "./services/RetourService.js";
 import { StockService } from "./services/StockService.js";
 import { VenteService } from "./services/VenteService.js";
 
@@ -48,7 +51,10 @@ const categorieService = new CategorieService(categories, produits);
 const stockService = new StockService(stocks, produits);
 const parametres = new MongooseParametresRepository();
 const parametresService = new ParametresService(parametres);
-const venteService = new VenteService(new MongooseVenteRepository(), produits, stocks, parametres, demandes);
+const ventes = new MongooseVenteRepository();
+const venteService = new VenteService(ventes, produits, stocks, parametres, demandes);
+const retours = new MongooseRetourRepository();
+const retourService = new RetourService(ventes, retours, stocks, parametres, venteService);
 const demandeService = new DemandeService(demandes, new MongooseNotificationRepository(), produits, stocks, parametres);
 const reapproService = new ReapproService(
   new MongooseFournisseurRepository(),
@@ -63,6 +69,7 @@ const produitService = new ProduitService(produits, categories, stocks, undefine
   autresHistoriques: [(id) => demandes.aDesDemandes(id), (id) => commandesFournisseur.aDesCommandes(id)],
   arriveesPrevues: (ids) => reapproService.arriveesPrevues(ids),
 });
+const rapportService = new RapportService(ventes, retours, produits, stocks, reapproService, produitService);
 
 const app = createApp({
   authService,
@@ -73,6 +80,8 @@ const app = createApp({
   venteService,
   demandeService,
   reapproService,
+  retourService,
+  rapportService,
   verifierBase: verifierMongo,
 });
 // RG06 : les mises de côté échues sont libérées chaque minute (et avant chaque liste de demandes).

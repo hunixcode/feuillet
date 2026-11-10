@@ -89,6 +89,11 @@ export class MongooseVenteRepository implements VenteRepository {
     return documents.map(versVente);
   }
 
+  async listerPeriode(debut: Date, fin: Date): Promise<Vente[]> {
+    const documents = await VenteModel.find({ date: { $gte: debut, $lte: fin } }).lean<DocumentVente[]>();
+    return documents.map(versVente);
+  }
+
   async trouverParId(id: string): Promise<Vente | null> {
     if (!mongoose.isValidObjectId(id)) {
       return null;

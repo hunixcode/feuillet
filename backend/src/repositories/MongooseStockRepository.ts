@@ -37,6 +37,7 @@ const mouvementSchema = new Schema<NouveauMouvement>(
     quantiteApres: Number,
     venteId: String,
     receptionId: String,
+    retourId: String,
   },
   { versionKey: false },
 );
@@ -100,6 +101,14 @@ export class MongooseStockRepository implements StockRepository {
   async stockInitial(produitId: string): Promise<number | undefined> {
     const premier = await MouvementModel.findOne({ produitId }).sort({ date: 1, _id: 1 }).lean();
     return premier ? (premier.quantiteApres ?? premier.quantite) : undefined;
+  }
+
+  async variationsDepuis(date: Date): Promise<Map<string, number>> {
+    const sommes = await MouvementModel.aggregate<{ _id: string; variation: number }>([
+      { $match: { date: { $gt: date } } },
+      { $group: { _id: "$produitId", variation: { $sum: "$quantite" } } },
+    ]);
+    return new Map(sommes.map((s) => [s._id, s.variation]));
   }
 
   async aDesMouvements(produitId: string): Promise<boolean> {
