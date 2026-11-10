@@ -217,6 +217,8 @@ export class ProduitService {
     private readonly categories: CategorieRepository,
     private readonly stocks: StockRepository,
     private readonly horloge: Horloge = horlogeSysteme,
+    // RG05 : autres historiques qui empêchent la suppression (demandes, commandes fournisseur).
+    private readonly autresHistoriques: ((produitId: string) => Promise<boolean>)[] = [],
   ) {}
 
   async lister(requete: unknown): Promise<ProduitCatalogue[]> {
@@ -264,6 +266,15 @@ export class ProduitService {
         "PRODUIT_AVEC_HISTORIQUE",
         "Ce produit a déjà des mouvements de stock : archivez-le plutôt que de le supprimer.",
       );
+    }
+    for (const aUnHistorique of this.autresHistoriques) {
+      if (await aUnHistorique(id)) {
+        throw new ErreurApi(
+          409,
+          "PRODUIT_AVEC_HISTORIQUE",
+          "Ce produit a déjà des demandes ou des commandes : archivez-le plutôt que de le supprimer.",
+        );
+      }
     }
     if (!(await this.produits.supprimer(id))) {
       throw erreurIntrouvable();

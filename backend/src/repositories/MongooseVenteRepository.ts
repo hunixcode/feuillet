@@ -8,6 +8,7 @@ import {
   type NouvelleVente,
   type Vente,
 } from "../modeles/vente.js";
+import { honorerDemandes } from "./MongooseDemandeRepository.js";
 import { appliquerChangement } from "./MongooseStockRepository.js";
 import type { VenteRepository } from "./VenteRepository.js";
 
@@ -61,10 +62,11 @@ function versVente({ _id, ...vente }: DocumentVente): Vente {
 
 export class MongooseVenteRepository implements VenteRepository {
   // L'identifiant est tiré avant la transaction pour être écrit dans chaque mouvement.
-  async creer(nouvelle: NouvelleVente, changements: ChangementStock[]): Promise<Vente> {
+  async creer(nouvelle: NouvelleVente, changements: ChangementStock[], demandesHonorees: string[] = []): Promise<Vente> {
     const _id = new mongoose.Types.ObjectId();
     const venteId = _id.toString();
     await mongoose.connection.transaction(async (session) => {
+      await honorerDemandes(demandesHonorees, nouvelle.date, session);
       for (const changement of changements) {
         await appliquerChangement(
           { ...changement, ...(changement.mouvement && { mouvement: { ...changement.mouvement, venteId } }) },

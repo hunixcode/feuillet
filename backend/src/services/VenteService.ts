@@ -16,6 +16,7 @@ import {
   type StatutVente,
   type Vente,
 } from "../modeles/vente.js";
+import type { DemandeRepository } from "../repositories/DemandeRepository.js";
 import type { ParametresRepository } from "../repositories/ParametresRepository.js";
 import type { ProduitRepository } from "../repositories/ProduitRepository.js";
 import { StockModifieErreur, type StockRepository } from "../repositories/StockRepository.js";
@@ -130,24 +131,30 @@ function erreurIntrouvable(message = "Vente introuvable."): ErreurApi {
   return new ErreurApi(404, "INTROUVABLE", message);
 }
 
+// Mises de côté du client par produit : quantité totale réservée et demandes concernées.
+type Reservations = Map<string, { quantite: number; demandeIds: string[] }>;
+
 interface Calcul {
   devis: Devis;
   stocks: Map<string, Stock>;
+  reservations: Reservations;
 }
 
-// shortcut: vendre au client titulaire d'une mise de côté ne la consomme pas encore (avec les demandes, EX05).
 export class VenteService {
   constructor(
     private readonly ventes: VenteRepository,
     private readonly produits: ProduitRepository,
     private readonly stocks: StockRepository,
     private readonly parametres: ParametresRepository,
+    private readonly demandes: DemandeRepository,
     private readonly horloge: Horloge = horlogeSysteme,
   ) {}
 
   // Panier : la livraison y est toujours comptée, l'adresse ne sera exigée qu'à la confirmation.
-  async devisEnLigne(corps: unknown): Promise<Devis> {
-    return (await this.calculer(lirePanier(corps, false))).devis;
+  // Un client connecté voit ses mises de côté comptées comme disponibles.
+  async devisEnLigne(corps: unknown, client?: UtilisateurPublic): Promise<Devis> {
+    const titulaire = client?.role === "client" ? versClient(client) : undefined;
+    return (await this.calculer(lirePanier(corps, false), titulaire)).devis;
   }
 
   async commanderEnLigne(client: UtilisateurPublic, corps: unknown): Promise<Vente> {
@@ -189,8 +196,10 @@ export class VenteService {
   }
 
   // RG03 : tout ou rien. Les disponibilités sont relues ici, puis le stock est réécrit seulement s'il n'a pas bougé.
+  // RG06 : vendre au client titulaire consomme sa mise de côté ; ses demandes passent à honoree et ce qui restait
+  // mis de côté pour lui sur ce produit est libéré.
   private async enregistrer(panier: Panier, client: ClientVente): Promise<Vente> {
-    const { devis, stocks } = await this.calculer(panier);
+    const { devis, stocks, reservations } = await this.calculer(panier, client);
     if (devis.lignesIndisponibles.length > 0) {
       throw new ErreurApi(
         409,
@@ -201,12 +210,18 @@ export class VenteService {
     }
     const date = this.horloge.maintenant();
     const { lignesIndisponibles: _, ...montantsEtLignes } = devis;
+    const demandesHonorees = devis.lignes.flatMap(({ produitId }) => reservations.get(produitId)?.demandeIds ?? []);
     const changements: ChangementStock[] = devis.lignes.map(({ produitId, quantite }) => {
       const avant = stocks.get(produitId)!;
+      const reserve = reservations.get(produitId)?.quantite ?? 0;
       return {
         produitId,
         avant,
-        apres: { ...avant, quantitePhysique: avant.quantitePhysique - quantite },
+        apres: {
+          ...avant,
+          quantitePhysique: avant.quantitePhysique - quantite,
+          quantiteMiseDeCote: Math.max(0, avant.quantiteMiseDeCote - reserve),
+        },
         mouvement: {
           produitId,
           date,
@@ -229,6 +244,7 @@ export class VenteService {
           ...montantsEtLignes,
         },
         changements,
+        demandesHonorees,
       );
     } catch (erreur) {
       if (erreur instanceof StockModifieErreur) {
@@ -239,10 +255,13 @@ export class VenteService {
   }
 
   // Un produit inconnu ou archivé n'est pas chiffré ; un produit connu est chiffré même si son stock manque.
-  private async calculer(panier: Panier): Promise<Calcul> {
+  // Pour le client titulaire, sa mise de côté s'ajoute au stock vendable.
+  private async calculer(panier: Panier, client?: ClientVente): Promise<Calcul> {
     const aujourdhui = dateDuJour(this.horloge);
-    const produits = await Promise.all(panier.lignes.map((l) => this.produits.trouverParId(l.produitId)));
-    const stocks = await this.stocks.trouverPlusieurs(panier.lignes.map((l) => l.produitId));
+    const produitIds = panier.lignes.map((l) => l.produitId);
+    const produits = await Promise.all(produitIds.map((id) => this.produits.trouverParId(id)));
+    const stocks = await this.stocks.trouverPlusieurs(produitIds);
+    const reservations: Reservations = client ? await this.reservations(client.id, produitIds) : new Map();
     const lignes: LigneVente[] = [];
     const lignesIndisponibles: LigneIndisponible[] = [];
 
@@ -252,7 +271,8 @@ export class VenteService {
         lignesIndisponibles.push({ produitId, quantite });
         return;
       }
-      if (quantite > quantiteVendable(stocks.get(produitId)!)) {
+      const reserve = reservations.get(produitId)?.quantite ?? 0;
+      if (quantite > quantiteVendable(stocks.get(produitId)!) + reserve) {
         lignesIndisponibles.push({ produitId, quantite });
       }
       const remise = promotionDuJour(produit, aujourdhui)?.remise ?? 0;
@@ -272,7 +292,18 @@ export class VenteService {
     });
 
     const montants = this.montants(lignes, panier, await this.parametres.obtenir());
-    return { devis: { lignes, lignesIndisponibles, ...montants }, stocks };
+    return { devis: { lignes, lignesIndisponibles, ...montants }, stocks, reservations };
+  }
+
+  private async reservations(clientId: string, produitIds: string[]): Promise<Reservations> {
+    const reservations: Reservations = new Map();
+    for (const { id, produitId, miseDeCote } of await this.demandes.misesDeCoteDuClient(clientId, produitIds)) {
+      const actuelle = reservations.get(produitId!) ?? { quantite: 0, demandeIds: [] };
+      actuelle.quantite += miseDeCote?.quantite ?? 0;
+      actuelle.demandeIds.push(id);
+      reservations.set(produitId!, actuelle);
+    }
+    return reservations;
   }
 
   // RG13 : frais fixes des paramètres, ajoutés au total ; toute commande est livrée.

@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { authentifier, exigerRole } from "../middlewares/authentification.js";
+import { authentifier, authentifierSiPresent, exigerRole } from "../middlewares/authentification.js";
 import type { UtilisateurPublic } from "../modeles/utilisateur.js";
 import type { AuthService } from "../services/AuthService.js";
 import type { VenteService } from "../services/VenteService.js";
@@ -8,13 +8,14 @@ function utilisateur(res: Response): UtilisateurPublic {
   return res.locals.utilisateur as UtilisateurPublic;
 }
 
-// Commandes en ligne du client ; le devis est public pour chiffrer le panier d'un visiteur.
+// Commandes en ligne du client ; le devis est public pour chiffrer le panier d'un visiteur, et compte
+// les mises de côté du client s'il est connecté.
 export function routesCommandes(ventes: VenteService, auth: AuthService): Router {
   const router = Router();
   const estClient = [authentifier(auth), exigerRole("client")];
 
-  router.post("/devis", async (req, res) => {
-    res.json(await ventes.devisEnLigne(req.body));
+  router.post("/devis", authentifierSiPresent(auth), async (req, res) => {
+    res.json(await ventes.devisEnLigne(req.body, res.locals.utilisateur as UtilisateurPublic | undefined));
   });
 
   router.post("/", ...estClient, async (req, res) => {
