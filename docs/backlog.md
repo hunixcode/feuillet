@@ -187,3 +187,17 @@ Fait :
 Reste à faire :
 - Création des mises de côté à la réception d'une commande fournisseur (#40)
 - Front : brancher « Mes demandes », la demande depuis la fiche produit et l'écran 10 (#42, #44)
+
+09/11/2026 - Back : fournisseurs, commandes et réceptions (EX06, #40)
+
+Fait :
+- Fournisseurs (nom, contact) ; commandes fournisseur d'un fournisseur et d'un produit avec date d'arrivée prévue, statuts `en_cours`, `partiellement_recue`, `recue`
+- Réceptions saisies puis validées : quantité ≤ restant (RG07), abîmés non comptés comme reçus (décision 20), validation unique sans second mouvement
+- Validation dans une transaction comme le diagramme de séquence : mouvement `entree`, commande à jour, mises de côté des demandes en attente et notifications
+- Produits à recommander (RG10) avec la quantité achetée à l'origine, le pourcentage vendu et ce qui est déjà en commande ; seuil d'alerte par produit, sinon celui des paramètres
+- Date d'arrivée prévue d'un produit épuisé dans le catalogue (EX04, `arriveePrevue` du front) ; RG05 : un produit commandé n'est plus supprimable
+- Seed : deux fournisseurs et deux commandes en cours de démonstration
+- Contrat dans `docs/api.md` ; 240 tests backend
+
+Reste à faire :
+- Front : écran 11 (fournisseurs, commandes, réceptions), alertes du tableau de bord et de l'écran 12 (#45, #46)
