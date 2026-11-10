@@ -25,6 +25,9 @@ Toute erreur suit le format de `ApiError` (`frontend/src/types/api.ts`) :
 | 409 | `PROMOTION_EN_CONFLIT` | Promotion qui chevauche une autre promotion du même produit |
 | 409 | `CATEGORIE_DEJA_EXISTANTE` | Catégorie au nom déjà pris (`details.champs.libelle`) |
 | 409 | `CATEGORIE_UTILISEE` | Suppression d'une catégorie encore utilisée par un produit |
+| 409 | `PRODUIT_AVEC_HISTORIQUE` | Suppression d'un produit qui a des mouvements de stock (RG05) |
+| 409 | `STOCK_INSUFFISANT` | Sortie de stock supérieure à la quantité disponible, ou compte inférieur au mis de côté |
+| 409 | `STOCK_MODIFIE` | Le stock a changé pendant l'opération |
 | 500 | `ERREUR_SERVEUR` | Erreur inattendue |
 
 ## État de l'API
@@ -109,7 +112,7 @@ Lecture publique ; création, modification et suppression réservées au **respo
 }
 ```
 
-`prixApplique` et `promotion` sont calculés, jamais envoyés par le client : `promotion` est la promotion du jour (absente s'il n'y en a pas) et `prixApplique` = arrondi(prix × (100 − remise) / 100) (RG11). Le jour est celui de Tahiti.
+`prixApplique`, `promotion` et `disponibilite` sont calculés, jamais envoyés par le client : `promotion` est la promotion du jour (absente s'il n'y en a pas), `prixApplique` = arrondi(prix × (100 − remise) / 100) (RG11), le jour étant celui de Tahiti ; `disponibilite` vaut `"disponible"` s'il reste au moins un exemplaire vendable, sinon `"epuise"` (RG04).
 
 | Champ | Règle |
 |---|---|
@@ -166,6 +169,53 @@ Les promotions sont conservées quand la fiche est modifiée.
 
 ### `DELETE /api/produits/:id`
 
-Réponse `204` sans corps. Erreur : `404 INTROUVABLE`.
+Supprime un produit sans historique (RG05) ; un produit qui a des mouvements de stock s'archive (`PUT` avec `archive: true`).
 
-Pas encore implémenté : suppression limitée aux produits sans historique (RG05) et disponibilité (attendue par les types du front), qui dépendent du stock.
+Réponse `204` sans corps. Erreurs : `404 INTROUVABLE`, `409 PRODUIT_AVEC_HISTORIQUE`.
+
+## Stock (EX02, EX04, écran 8)
+
+Responsable seulement. Un produit jamais compté a un stock vide.
+
+`EtatStock` :
+
+```json
+{
+  "produitId": "…",
+  "quantitePhysique": 12,
+  "quantiteMiseDeCote": 2,
+  "quantiteDefectueuse": 1,
+  "quantiteVendable": 10
+}
+```
+
+`quantiteVendable` = physique − mis de côté, jamais négatif (RG04) ; le défectueux est compté à part et n'est jamais vendable.
+
+`Mouvement` (journal, jamais modifié) :
+
+```json
+{
+  "id": "…",
+  "produitId": "…",
+  "date": "2026-10-22T20:00:00.000Z",
+  "type": "ajustement",
+  "quantite": -2,
+  "motif": "Comptage annuel",
+  "operateur": "responsable",
+  "quantiteAvant": 12,
+  "quantiteApres": 10
+}
+```
+
+`type` : `entree`, `vente`, `retour`, `remplacement` ou `ajustement` ; `quantite` : variation du stock physique (négative pour une sortie) ; `operateur` : `responsable`, `client` ou `systeme` ; `quantiteAvant` et `quantiteApres` seulement pour un ajustement.
+
+| Route | Corps | Réponse | Erreurs |
+|---|---|---|---|
+| `GET /api/stock` | mêmes filtres que `GET /api/produits` (`q`, `type`, `categorie`, `archive`) | `200` : `EtatStock[]` avec `reference` et `designation` | `400` |
+| `GET /api/produits/:id/stock` | | `200` : `EtatStock` | `404` |
+| `GET /api/mouvements` | filtres facultatifs `produit` (identifiant) et `type` | `200` : `Mouvement[]`, du plus récent au plus ancien, 500 au plus | `400` |
+| `POST /api/produits/:id/stock/inventaire` | `{ "quantiteComptee": 10, "motif": "Comptage annuel" }` | `200` : `EtatStock` ; ajustement avec l'avant et l'après (EX02) | `400`, `404`, `409 STOCK_INSUFFISANT` si le compte est inférieur au mis de côté |
+| `POST /api/produits/:id/stock/defectueux` | `{ "quantite": 2, "motif": "Couverture déchirée" }` | `200` : `EtatStock` ; physique → défectueux, ajustement | `400`, `404`, `409 STOCK_INSUFFISANT` au-delà du vendable |
+| `POST /api/produits/:id/stock/defectueux/sortie` | `{ "quantite": 2, "motif": "Renvoi fournisseur" }` | `200` : `EtatStock` ; renvoi ou destruction, pas de mouvement (le physique ne change pas) | `400`, `404`, `409 STOCK_INSUFFISANT` au-delà du défectueux |
+
+Une écriture faite pendant qu'une autre modifiait le même stock est refusée (`409 STOCK_MODIFIE`) : recharger et recommencer. Le stock et son mouvement sont enregistrés ensemble dans une transaction MongoDB.

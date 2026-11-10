@@ -108,6 +108,18 @@ describe("MongooseProduitRepository", () => {
     await expect(repository.utiliseCategorie("scolaire")).resolves.toBe(false);
   });
 
+  it("lit un produit enregistré avant l'historique des prix et les promotions", async () => {
+    const { historiquePrix: _h, promotions: _p, ...ancien } = livre;
+    const { insertedId } = await ProduitModel.collection.insertOne({ ...ancien });
+
+    await expect(repository.trouverParId(insertedId.toString())).resolves.toEqual({
+      ...ancien,
+      id: insertedId.toString(),
+      historiquePrix: [],
+      promotions: [],
+    });
+  });
+
   it("supprime un produit", async () => {
     const cree = await repository.creer(livre);
 

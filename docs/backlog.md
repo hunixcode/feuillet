@@ -137,6 +137,24 @@ Reste à faire :
 - Afficher « disponible » ou « épuisé » quand le backend enverra la disponibilité (dépend du stock)
 - Meilleures ventes (RG14) en haut de la page quand la route existera
 
+22/10/2026 - Back : stock et mouvements (EX02, EX04)
+
+Fait :
+- Stock par produit (physique, mis de côté, défectueux) et journal des mouvements (date, type, quantité, motif, opérateur ; avant et après pour un ajustement)
+- Correction d'inventaire, article abîmé (ajustement vers le stock défectueux, décision 9), sortie du stock défectueux ; jamais sous le mis de côté (RG04)
+- `GET /api/stock`, `GET /api/produits/:id/stock`, `GET /api/mouvements` pour l'écran 8 ; contrat dans `docs/api.md`
+- `disponibilite` (« disponible » ou « épuisé ») dans chaque produit du catalogue ; suppression refusée pour un produit qui a des mouvements (RG05, 409 `PRODUIT_AVEC_HISTORIQUE`)
+- Stock et mouvement écrits ensemble dans une transaction MongoDB, avec refus si le stock a changé entre-temps (409 `STOCK_MODIFIE`)
+- Seed : stock de départ des produits de démonstration (DEMO-LIV-006 épuisé)
+- Lecture des anciens produits sans historique des prix ni promotions (correctif séparé)
+- 136 tests backend ; le build n'embarque plus les repositories en mémoire
+
+Reste à faire :
+- RG05 : compter aussi les demandes et les commandes fournisseur quand elles existeront
+- Mis de côté : alimenté par les demandes (EX05)
+- Seuil d'alerte et quantité achetée à l'origine : avec le réapprovisionnement (EX06)
+- Front : écran 8 et affichage de la disponibilité
+
 21/10/2026 - Noah (front A) : fiche produit (écran 3)
 
 Fait :
@@ -192,3 +210,29 @@ Reste à faire, quand le backend aura les routes des demandes :
 - Envoyer la demande et afficher les erreurs du serveur sous chaque champ
 - Liste des demandes avec quantité, date, statut, et la date limite de retrait d'un article mis de côté
 - Annuler une demande en attente ; notifications de réapprovisionnement
+
+29/10/2026 - Noah (front A) : page Panier (écran 4, issue #37)
+
+Fait :
+- Panier partagé entre les pages (contexts/PanierContext et usePanier), gardé dans le navigateur (localStorage) ; un panier enregistré abîmé est ignoré
+- Disponibilité (EX04) envoyée par l'API : « Disponible » ou « Épuisé » sur les cartes du catalogue et sur la fiche produit
+- Fiche produit : quantité et « Ajouter au panier » actifs si l'article est disponible ; s'il est épuisé, bouton grisé et « Demander ce livre »
+- Compteur d'articles sur le lien Panier de l'en-tête
+- Page /panier de la maquette V2 : articles rechargés depuis l'API à l'ouverture (prix et disponibilité à jour), quantité modifiable, retrait, article épuisé ou retiré du catalogue signalé, panier vide
+- Options : cadeau avec occasion (Noël, anniversaire, fête), emballage cadeau, adresse de livraison ; pas de retrait en magasin (vente uniquement en ligne)
+- Total, TVA et frais affichés « calculés par la librairie » et bouton « Confirmer la commande » grisé, en attendant la route des ventes du back ; aucun calcul de prix dans le front
+- Visiteur : « Se connecter pour commander » ramène au panier après la connexion
+- Composants communs ChoixQuantite (fiche et panier) et LignePanier
+- Backlog réparé après la fusion de main : marqueurs de conflit retirés et entrée « fiche produit (écran 3) » remise
+- 240 tests (heure de Tahiti et UTC), le build et le lint passent
+
+Reste à faire, quand le back aura la route des ventes :
+- Afficher le vrai total, la TVA et les frais ; confirmer la commande (tout ou rien, RG03) ; signaler les lignes refusées ; page « Commande confirmée »
+
+08/11/2026 - Noah (front A) : vraies couvertures des livres (issue #47)
+
+Fait :
+- Composant Couverture : la vraie couverture est chargée depuis Open Library avec l'ISBN du livre, par-dessus la couverture dessinée
+- Sans ISBN, ou si Open Library n'a pas d'image, la couverture dessinée reste affichée (aussi pendant le chargement)
+- Les images ne sont chargées qu'en arrivant à l'écran (loading="lazy")
+- 244 tests, le build et le lint passent

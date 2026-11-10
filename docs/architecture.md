@@ -41,13 +41,13 @@ Le diagramme de séquence suit les noms de services de `rapport.md` (`ReapproSer
 └── docs/          Rapport, écrans et diagrammes
 ```
 
-Le backend expose pour l'instant `GET /api/health`, l'authentification (EX09) et le CRUD des produits (EX01) ; le contrat est dans [`api.md`](./api.md). La logique métier vit dans `backend/` et reste testable **sans interface** :
+Le backend expose pour l'instant `GET /api/health`, l'authentification (EX09), le catalogue (EX01, EX11) et le stock (EX02, EX04) ; le contrat est dans [`api.md`](./api.md). La logique métier vit dans `backend/` et reste testable **sans interface** :
 
 ```
 backend/src/
 ├── app.ts            createApp(dependances) : routes + gestion d'erreurs
 ├── index.ts          lecture de l'environnement, connexion MongoDB, démarrage
-├── seed.ts           compte responsable, catégories de départ et produits de démonstration (DEMO-…, produitsDemo.ts)
+├── seed.ts           compte responsable, catégories de départ, produits de démonstration et leur stock (DEMO-…, produitsDemo.ts)
 ├── erreurs.ts        ErreurApi et format d'erreur commun { code, message, details? }
 ├── horloge.ts        horloge injectable (EQ02)
 ├── modeles/          types du domaine et énumérations
@@ -57,6 +57,6 @@ backend/src/
 └── routes/           routeurs Express
 ```
 
-Les services reçoivent leurs dépendances (repository, horloge, secret) par constructeur : les tests unitaires utilisent le repository en mémoire, les tests d'API passent par supertest et les tests de persistance par une base MongoDB en mémoire.
+Les services reçoivent leurs dépendances (repository, horloge, secret) par constructeur : les tests unitaires utilisent le repository en mémoire (`tests/servicesMemoire.ts` les assemble), les tests d'API passent par supertest et les tests de persistance par une base MongoDB en mémoire (un replica set pour ceux qui utilisent une transaction).
 
 Les employés au comptoir n'ont pas de compte ni d'espace applicatif propre ; leurs opérations passent par l'espace responsable.

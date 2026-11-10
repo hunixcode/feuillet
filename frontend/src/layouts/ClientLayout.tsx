@@ -1,11 +1,33 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/useAuth'
+import { usePanier } from '../contexts/usePanier'
 
 const liens = [
   { to: '/catalogue', label: 'Catalogue' },
   { to: '/demandes', label: 'Mes demandes' },
-  { to: '/panier', label: 'Panier' },
 ]
+
+function LienPanier() {
+  const { nombreArticles } = usePanier()
+
+  return (
+    <li>
+      <NavLink to="/panier">
+        Panier
+        {nombreArticles > 0 && (
+          <>
+            <span className="compteur" aria-hidden="true">
+              {nombreArticles}
+            </span>
+            <span className="visuellement-cache">
+              {`, ${nombreArticles} ${nombreArticles > 1 ? 'articles' : 'article'}`}
+            </span>
+          </>
+        )}
+      </NavLink>
+    </li>
+  )
+}
 
 function MenuCompte() {
   const { utilisateur, chargement, deconnexion } = useAuth()
@@ -61,6 +83,7 @@ function ClientLayout() {
                 <NavLink to={lien.to}>{lien.label}</NavLink>
               </li>
             ))}
+            <LienPanier />
             <MenuCompte />
           </ul>
         </nav>

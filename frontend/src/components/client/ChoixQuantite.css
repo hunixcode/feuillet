@@ -1,0 +1,28 @@
+.quantite {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--ligne);
+  border-radius: var(--rayon-pilule);
+}
+
+.quantite button {
+  width: 42px;
+  height: 44px;
+  border: 0;
+  background: none;
+  font-size: 1.125rem;
+  cursor: pointer;
+}
+
+.quantite button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.quantite input {
+  width: 36px;
+  border: 0;
+  background: none;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}

@@ -5,10 +5,12 @@ import { verifierMongo } from "./baseDeDonnees.js";
 import { lireVariable } from "./config.js";
 import { MongooseCategorieRepository } from "./repositories/MongooseCategorieRepository.js";
 import { MongooseProduitRepository } from "./repositories/MongooseProduitRepository.js";
+import { MongooseStockRepository } from "./repositories/MongooseStockRepository.js";
 import { MongooseUtilisateurRepository } from "./repositories/MongooseUtilisateurRepository.js";
 import { AuthService } from "./services/AuthService.js";
 import { CategorieService } from "./services/CategorieService.js";
 import { ProduitService } from "./services/ProduitService.js";
+import { StockService } from "./services/StockService.js";
 
 const port = Number(process.env.PORT ?? 3000);
 const mongoUri = lireVariable("MONGODB_URI");
@@ -25,9 +27,11 @@ const authService = new AuthService(new MongooseUtilisateurRepository(), { secre
 
 const produits = new MongooseProduitRepository();
 const categories = new MongooseCategorieRepository();
-const produitService = new ProduitService(produits, categories);
+const stocks = new MongooseStockRepository();
+const produitService = new ProduitService(produits, categories, stocks);
 const categorieService = new CategorieService(categories, produits);
+const stockService = new StockService(stocks, produits);
 
-createApp({ authService, produitService, categorieService, verifierBase: verifierMongo }).listen(port, () => {
+createApp({ authService, produitService, categorieService, stockService, verifierBase: verifierMongo }).listen(port, () => {
   console.log(`API → http://localhost:${port}`);
 });
