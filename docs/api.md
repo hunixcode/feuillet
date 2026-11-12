@@ -27,7 +27,9 @@ Toute erreur suit le format de `ApiError` (`frontend/src/types/api.ts`) :
 | 409 | `CATEGORIE_UTILISEE` | Suppression d'une catégorie encore utilisée par un produit |
 | 409 | `PRODUIT_AVEC_HISTORIQUE` | Suppression d'un produit qui a des mouvements de stock (RG05) |
 | 409 | `STOCK_INSUFFISANT` | Sortie de stock supérieure à la quantité disponible, ou compte inférieur au mis de côté |
-| 409 | `STOCK_MODIFIE` | Le stock a changé pendant l'opération |
+| 409 | `STOCK_MODIFIE` | Le stock a changé pendant l'opération (correction de stock ou vente) |
+| 409 | `LIGNE_INDISPONIBLE` | Vente refusée : un article n'est plus disponible dans la quantité demandée (`details.lignes`) |
+| 409 | `COMMANDE_DEJA_EXPEDIEE` | Commande déjà expédiée |
 | 500 | `ERREUR_SERVEUR` | Erreur inattendue |
 
 ## État de l'API
@@ -207,7 +209,7 @@ Responsable seulement. Un produit jamais compté a un stock vide.
 }
 ```
 
-`type` : `entree`, `vente`, `retour`, `remplacement` ou `ajustement` ; `quantite` : variation du stock physique (négative pour une sortie) ; `operateur` : `responsable`, `client` ou `systeme` ; `quantiteAvant` et `quantiteApres` seulement pour un ajustement.
+`type` : `entree`, `vente`, `retour`, `remplacement` ou `ajustement` ; `quantite` : variation du stock physique (négative pour une sortie) ; `operateur` : `responsable`, `client` ou `systeme` ; `quantiteAvant` et `quantiteApres` seulement pour un ajustement ; `venteId` seulement pour une vente (une ligne de vente = un mouvement).
 
 | Route | Corps | Réponse | Erreurs |
 |---|---|---|---|
@@ -219,3 +221,117 @@ Responsable seulement. Un produit jamais compté a un stock vide.
 | `POST /api/produits/:id/stock/defectueux/sortie` | `{ "quantite": 2, "motif": "Renvoi fournisseur" }` | `200` : `EtatStock` ; renvoi ou destruction, pas de mouvement (le physique ne change pas) | `400`, `404`, `409 STOCK_INSUFFISANT` au-delà du défectueux |
 
 Une écriture faite pendant qu'une autre modifiait le même stock est refusée (`409 STOCK_MODIFIE`) : recharger et recommencer. Le stock et son mouvement sont enregistrés ensemble dans une transaction MongoDB.
+
+## Paramètres (écran 13)
+
+Responsable seulement. Un seul jeu de paramètres pour la librairie ; le seed crée les valeurs de départ sans écraser celles déjà réglées.
+
+`Parametres` :
+
+```json
+{
+  "dureeMiseDeCoteJours": 7,
+  "delaiRetourJours": 14,
+  "delaiRetourCadeauJours": 30,
+  "fraisEmballage": 300,
+  "fraisLivraison": 800,
+  "seuilAlerteDefaut": 20
+}
+```
+
+Durées en jours (RG06, RG09), frais en XPF (RG13), seuil d'alerte en % de la quantité achetée à l'origine (RG10). Chaque valeur est un entier strictement positif ; le seuil va de 1 à 100.
+
+| Route | Corps | Réponse | Erreurs |
+|---|---|---|---|
+| `GET /api/parametres` | | `200` : `Parametres` | |
+| `PUT /api/parametres` | `Parametres` complet | `200` : `Parametres` enregistrés | `400 VALIDATION` (`details.champs` par valeur) |
+
+## Ventes (EX03, écrans 4 et 9)
+
+Tous les montants sont calculés par le back, en XPF entiers ; le front affiche ce qu'il reçoit et n'envoie jamais de prix.
+
+### Panier envoyé
+
+```json
+{
+  "lignes": [{ "produitId": "…", "quantite": 2 }],
+  "occasionCadeau": "noel",
+  "emballageCadeau": true,
+  "adresseLivraison": "BP 12, Papeete"
+}
+```
+
+| Champ | Règle |
+|---|---|
+| `lignes` | De 1 à 100 lignes ; `produitId` obligatoire, `quantite` entier ≥ 1. Deux lignes du même produit sont regroupées (999 au plus par produit) |
+| `occasionCadeau` | Facultatif : `noel`, `anniversaire` ou `fete` ; une vente avec occasion est un cadeau (délai de retour allongé, RG09) |
+| `emballageCadeau` | Booléen, `false` par défaut ; ajoute les frais d'emballage des paramètres |
+| `adresseLivraison` | 300 caractères au plus. La librairie vend uniquement en ligne : toute commande est livrée, l'adresse est exigée à la confirmation et les frais de livraison sont toujours comptés |
+
+### Calcul
+
+Pour chaque ligne, au jour de Tahiti : `prixUnitaire` = prix appliqué avec la promotion du jour (RG11), `remise` (0 sans promotion), `tauxTva`, `montant` = `prixUnitaire × quantite`, `montantTva` = arrondi(`montant × tauxTva / (100 + tauxTva)`) (TVA incluse). Puis :
+
+- `sousTotal` = somme des montants des lignes ; `montantTva` = somme des TVA des lignes
+- `fraisEmballage`, `fraisLivraison` : frais fixes des paramètres, ou 0 ; `frais` = leur somme (RG13, frais hors TVA)
+- `total` = `sousTotal + frais`
+
+`Devis` (réponse d'un calcul, rien n'est enregistré ni réservé, RG03) :
+
+```json
+{
+  "lignes": [
+    {
+      "produitId": "…",
+      "quantite": 2,
+      "reference": "LIV-001",
+      "designation": "L'Île au trésor",
+      "prixUnitaire": 1530,
+      "remise": 15,
+      "tauxTva": 5,
+      "montant": 3060,
+      "montantTva": 146
+    }
+  ],
+  "lignesIndisponibles": [{ "produitId": "…", "quantite": 6 }],
+  "sousTotal": 3060,
+  "fraisEmballage": 300,
+  "fraisLivraison": 800,
+  "frais": 1100,
+  "montantTva": 146,
+  "total": 4160
+}
+```
+
+`lignesIndisponibles` : lignes qui seraient refusées à la confirmation, avec la quantité demandée : produit inconnu ou archivé (absent de `lignes`, non chiffré), ou quantité supérieure au stock vendable (chiffrée dans `lignes`). Le stock exact n'est pas donné au client.
+
+`Vente` : les champs du devis sans `lignesIndisponibles`, avec `id`, `date`, `statut` (`a_preparer` ou `expediee`), les options, `client` (`{ "id", "nom", "email" }`, figé à la vente) et `dateExpedition` quand la commande est expédiée. Les lignes gardent prix, remise, TVA, référence et désignation du jour de la vente (RG02) : elles ne changent pas si le catalogue change.
+
+### Validation (RG03)
+
+Tout ou rien : les disponibilités sont revérifiées à la confirmation sur le stock vendable (RG04). Si une ligne n'est pas disponible, rien n'est enregistré et la réponse est :
+
+```json
+{ "code": "LIGNE_INDISPONIBLE", "message": "…", "details": { "lignes": [{ "produitId": "…", "quantite": 6 }] } }
+```
+
+Sinon la vente et la sortie de stock de chaque ligne (un mouvement `vente` par ligne, opérateur `client`) sont écrites dans une même transaction ; si le stock a changé entre-temps, rien n'est écrit (`409 STOCK_MODIFIE`, recharger le panier et recommencer). Un produit vendu a des mouvements et n'est donc plus supprimable (RG05).
+
+### Commandes (client)
+
+| Route | Accès | Réponse | Erreurs |
+|---|---|---|---|
+| `POST /api/commandes/devis` | public (panier sans compte) | `200` : `Devis` en ligne | `400 VALIDATION` |
+| `POST /api/commandes` | client | `201` : `Vente` au statut `a_preparer` | `400` (dont `adresseLivraison`), `409 LIGNE_INDISPONIBLE`, `409 STOCK_MODIFIE` |
+| `GET /api/commandes` | client | `200` : ses commandes, de la plus récente à la plus ancienne | |
+| `GET /api/commandes/:id` | client | `200` : `Vente` | `404` si la commande n'est pas la sienne |
+
+Le responsable n'a pas accès à ces routes de commande (`403`), sauf au devis public.
+
+### Suivi des commandes (responsable)
+
+| Route | Réponse | Erreurs |
+|---|---|---|
+| `GET /api/ventes` | `200` : `Vente[]`, de la plus récente à la plus ancienne, 500 au plus ; filtre facultatif `statut` | `400` sur un statut inconnu |
+| `GET /api/ventes/:id` | `200` : `Vente` | `404` |
+| `POST /api/ventes/:id/expedition` | `200` : `Vente` passée de `a_preparer` à `expediee` (confiée au transporteur) | `404`, `409 COMMANDE_DEJA_EXPEDIEE` |

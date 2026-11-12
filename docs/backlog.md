@@ -155,3 +155,21 @@ Reste à faire :
 - Seuil d'alerte et quantité achetée à l'origine : avec le réapprovisionnement (EX06)
 - Front : écran 8 et affichage de la disponibilité
 
+
+08/11/2026 - Back : paramètres et ventes (EX03, issue #38)
+
+Fait :
+- Paramètres (écran 13) : `GET` et `PUT /api/parametres` (responsable), entiers strictement positifs, seuil d'alerte ≤ 100 % ; valeurs de départ créées par le seed sans écraser celles réglées
+- `VenteService` : panier et commande en ligne du client connecté
+- Devis sans enregistrement (`POST /api/commandes/devis` public) : prix du jour, remise, TVA incluse par ligne, frais d'emballage et de livraison des paramètres, total ; lignes indisponibles signalées
+- Validation tout ou rien (RG03) : 409 `LIGNE_INDISPONIBLE` avec les lignes en cause ; vente et sortie de stock dans une même transaction, un mouvement `vente` par ligne lié à la vente, 409 `STOCK_MODIFIE` si le stock a changé entre-temps
+- Livraison et adresse obligatoires, commande `a_preparer` puis `expediee` ; mes commandes (client), liste filtrée par statut et détail des commandes (responsable)
+- Lignes à prix figés (RG02) ; un produit vendu n'est plus supprimable (RG05, par ses mouvements)
+- Seed : 7 commandes de démonstration d'un client fictif sur les 30 derniers jours (EQ03), expédiées sauf la plus récente
+- Décision d'équipe consignée dans `rapport.md` : commande toujours livrée
+- 10/11/2026 : vente au comptoir retirée, la librairie vend uniquement en ligne (pas de magasin ni de retrait sur place)
+- 168 tests backend (service, API, persistance avec transaction) ; seed et API vérifiés de bout en bout sur une base temporaire
+
+Reste à faire :
+- Vendre au client titulaire d'une mise de côté doit la consommer (avec les demandes, #39)
+- Front : brancher le panier (#37) et la page Ventes et retours sur ces routes
