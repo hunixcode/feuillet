@@ -60,11 +60,10 @@ class Retour {
 }
 class Vente {
   -date
-  -canal : CanalVente
   -statut : StatutVente
   -occasionCadeau [0..1]
   -emballageCadeau : boolean
-  -adresseLivraison [0..1]
+  -adresseLivraison
   -frais
   -total
 }
@@ -140,7 +139,7 @@ LigneVente "1..*" -right-* "1" Vente
 Retour "*" -down- "1" LigneVente : concerne
 Retour "*" -down- "0..1" Vente : échange
 
-Vente "*" -right- "0..1" Utilisateur : "  client  "
+Vente "*" -right- "1" Utilisateur : "  client  "
 Demande "*" -down- "1" Utilisateur
 Notification "*" -down- "1" Utilisateur
 Produit "0..1" -- "*" Demande
@@ -149,7 +148,7 @@ Produit "1" -down- "*" Notification
 legend bottom left
   Énumérations : Role = client | responsable
   Operateur = responsable | client | systeme · TypeMouvement = entree | vente | retour | remplacement | ajustement
-  CanalVente = en_ligne | comptoir · StatutVente = a_preparer | remise · OccasionCadeau = noel | anniversaire | fete
+  StatutVente = a_preparer | expediee · OccasionCadeau = noel | anniversaire | fete
   IssueRetour = remboursement | echange | remplacement · StatutCommande = en_cours | partiellement_recue | recue
   StatutDemande = en_attente | mise_de_cote | honoree | expiree | annulee
 

@@ -132,7 +132,7 @@ describe('routes de l espace responsable', () => {
   it.each([
     ['/admin/catalogue', 'Catalogue et prix'],
     ['/admin/stock', 'Stock et mouvements'],
-    ['/admin/ventes', 'Ventes et retours au comptoir'],
+    ['/admin/ventes', 'Ventes et retours'],
     ['/admin/demandes', 'Demandes et mises de côté'],
     ['/admin/commandes', 'Fournisseurs, commandes et réceptions'],
     ['/admin/rapports', 'Réapprovisionnement et rapports'],
