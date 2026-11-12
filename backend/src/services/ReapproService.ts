@@ -302,8 +302,7 @@ export class ReapproService {
     ]);
     const resultat: ProduitARecommander[] = [];
     for (const produit of produits) {
-      const quantiteAcheteeOrigine =
-        (await this.commandes.derniereRecue(produit.id))?.quantiteRecue ?? (await this.stocks.stockInitial(produit.id)) ?? 0;
+      const quantiteAcheteeOrigine = await this.quantiteAcheteeOrigine(produit.id);
       if (quantiteAcheteeOrigine <= 0) {
         continue;
       }
@@ -326,6 +325,13 @@ export class ReapproService {
       });
     }
     return resultat.sort((a, b) => b.pourcentageVendu - a.pourcentageVendu || a.designation.localeCompare(b.designation, "fr"));
+  }
+
+  // RG10 : total reçu de la dernière commande fournisseur reçue, à défaut le stock initial ; 0 si inconnue.
+  async quantiteAcheteeOrigine(produitId: string): Promise<number> {
+    return (
+      (await this.commandes.derniereRecue(produitId))?.quantiteRecue ?? (await this.stocks.stockInitial(produitId)) ?? 0
+    );
   }
 
   // EX04 : date d'arrivée prévue la plus proche des commandes en cours, par produit.

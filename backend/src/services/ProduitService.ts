@@ -234,6 +234,12 @@ export class ProduitService {
     return this.versReponses(await this.produits.lister(lireFiltres(requete)));
   }
 
+  // Fiches du catalogue de ces produits ; les produits inconnus ou archivés sont ignorés (meilleures ventes).
+  async catalogueDe(ids: string[]): Promise<ProduitCatalogue[]> {
+    const produits = await Promise.all(ids.map((id) => this.produits.trouverParId(id)));
+    return this.versReponses(produits.filter((p): p is Produit => p !== null && !p.archive));
+  }
+
   async obtenir(id: string): Promise<ProduitCatalogue> {
     return this.versReponse(await this.trouver(id));
   }

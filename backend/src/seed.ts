@@ -26,6 +26,7 @@ import {
   MongooseSeuilAlerteRepository,
   ReceptionModel,
 } from "./repositories/MongooseReapproRepository.js";
+import { RetourModel } from "./repositories/MongooseRetourRepository.js";
 import { MongooseStockRepository, MouvementModel, StockModel } from "./repositories/MongooseStockRepository.js";
 import { UtilisateurModel } from "./repositories/MongooseUtilisateurRepository.js";
 import { MongooseVenteRepository, VenteModel } from "./repositories/MongooseVenteRepository.js";
@@ -97,6 +98,7 @@ const idsAnciens = (await ProduitModel.find(anciens, { _id: 1 }).lean()).map((p)
 await StockModel.deleteMany({ _id: { $in: idsAnciens } });
 await MouvementModel.deleteMany({ produitId: { $in: idsAnciens } });
 await VenteModel.deleteMany({ "lignes.produitId": { $in: idsAnciens } });
+await RetourModel.deleteMany({ produitId: { $in: idsAnciens } });
 await DemandeModel.deleteMany({ produitId: { $in: idsAnciens } });
 await NotificationModel.deleteMany({ produitId: { $in: idsAnciens } });
 await ReceptionModel.deleteMany({ produitId: { $in: idsAnciens } });

@@ -1,5 +1,5 @@
 import { ErreurApi } from "../erreurs.js";
-import { dateDuJour, horlogeSysteme, type Horloge } from "../horloge.js";
+import { ajouterJours, dateDuJour, finDuJour, horlogeSysteme, type Horloge } from "../horloge.js";
 import {
   STATUTS_DEMANDE,
   type ClientDemande,
@@ -75,9 +75,7 @@ function lireStatut(requete: unknown): StatutDemande | undefined {
 
 // RG06 : la mise de côté court jusqu'à la fin du jour (heure de Tahiti) situé `jours` jours après aujourd'hui.
 export function dateLimiteMiseDeCote(horloge: Horloge, jours: number): Date {
-  const jour = new Date(`${dateDuJour(horloge)}T00:00:00Z`);
-  jour.setUTCDate(jour.getUTCDate() + jours);
-  return new Date(`${jour.toISOString().slice(0, 10)}T23:59:59.999-10:00`);
+  return finDuJour(ajouterJours(dateDuJour(horloge), jours));
 }
 
 function formaterDate(date: Date): string {

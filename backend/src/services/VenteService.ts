@@ -161,6 +161,16 @@ export class VenteService {
     return this.enregistrer(lirePanier(corps, true), versClient(client));
   }
 
+  // RG12 : article remis en échange d'un retour. C'est une nouvelle commande du même client, expédiée à l'adresse
+  // de la commande d'origine, livraison offerte ; le responsable l'enregistre en traitant le retour.
+  async commanderEchange(origine: Vente, corps: unknown): Promise<Vente> {
+    const panier = {
+      ...lirePanier(corps, false),
+      ...(origine.adresseLivraison && { adresseLivraison: origine.adresseLivraison }),
+    };
+    return this.enregistrer(panier, origine.client, true);
+  }
+
   mesCommandes(client: UtilisateurPublic): Promise<Vente[]> {
     return this.ventes.lister({ clientId: client.id });
   }
@@ -198,8 +208,8 @@ export class VenteService {
   // RG03 : tout ou rien. Les disponibilités sont relues ici, puis le stock est réécrit seulement s'il n'a pas bougé.
   // RG06 : vendre au client titulaire consomme sa mise de côté ; ses demandes passent à honoree et ce qui restait
   // mis de côté pour lui sur ce produit est libéré.
-  private async enregistrer(panier: Panier, client: ClientVente): Promise<Vente> {
-    const { devis, stocks, reservations } = await this.calculer(panier, client);
+  private async enregistrer(panier: Panier, client: ClientVente, echange = false): Promise<Vente> {
+    const { devis, stocks, reservations } = await this.calculer(panier, client, echange);
     if (devis.lignesIndisponibles.length > 0) {
       throw new ErreurApi(
         409,
@@ -227,8 +237,8 @@ export class VenteService {
           date,
           type: "vente",
           quantite: -quantite,
-          motif: "Vente en ligne",
-          operateur: "client",
+          motif: echange ? "Échange d'un retour" : "Vente en ligne",
+          operateur: echange ? "responsable" : "client",
         },
       };
     });
@@ -256,7 +266,7 @@ export class VenteService {
 
   // Un produit inconnu ou archivé n'est pas chiffré ; un produit connu est chiffré même si son stock manque.
   // Pour le client titulaire, sa mise de côté s'ajoute au stock vendable.
-  private async calculer(panier: Panier, client?: ClientVente): Promise<Calcul> {
+  private async calculer(panier: Panier, client?: ClientVente, livraisonOfferte = false): Promise<Calcul> {
     const aujourdhui = dateDuJour(this.horloge);
     const produitIds = panier.lignes.map((l) => l.produitId);
     const produits = await Promise.all(produitIds.map((id) => this.produits.trouverParId(id)));
@@ -291,7 +301,7 @@ export class VenteService {
       });
     });
 
-    const montants = this.montants(lignes, panier, await this.parametres.obtenir());
+    const montants = this.montants(lignes, panier, await this.parametres.obtenir(), livraisonOfferte);
     return { devis: { lignes, lignesIndisponibles, ...montants }, stocks, reservations };
   }
 
@@ -306,11 +316,11 @@ export class VenteService {
     return reservations;
   }
 
-  // RG13 : frais fixes des paramètres, ajoutés au total ; toute commande est livrée.
-  private montants(lignes: LigneVente[], panier: Panier, parametres: Parametres): Montants {
+  // RG13 : frais fixes des paramètres, ajoutés au total ; toute commande est livrée, l'échange sans frais de livraison.
+  private montants(lignes: LigneVente[], panier: Panier, parametres: Parametres, livraisonOfferte: boolean): Montants {
     const sousTotal = lignes.reduce((somme, l) => somme + l.montant, 0);
     const fraisEmballage = panier.emballageCadeau ? parametres.fraisEmballage : 0;
-    const fraisLivraison = parametres.fraisLivraison;
+    const fraisLivraison = livraisonOfferte ? 0 : parametres.fraisLivraison;
     const frais = fraisEmballage + fraisLivraison;
     return {
       sousTotal,

@@ -41,6 +41,12 @@ export class MemoireVenteRepository implements VenteRepository {
       .map((v) => structuredClone(v));
   }
 
+  async listerPeriode(debut: Date, fin: Date): Promise<Vente[]> {
+    return [...this.ventes.values()]
+      .filter((v) => v.date.getTime() >= debut.getTime() && v.date.getTime() <= fin.getTime())
+      .map((v) => structuredClone(v));
+  }
+
   async trouverParId(id: string): Promise<Vente | null> {
     const vente = this.ventes.get(id);
     return vente ? structuredClone(vente) : null;

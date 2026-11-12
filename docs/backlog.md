@@ -201,3 +201,16 @@ Fait :
 
 Reste à faire :
 - Front : écran 11 (fournisseurs, commandes, réceptions), alertes du tableau de bord et de l'écran 12 (#45, #46)
+
+09/11/2026 - Back : retours, rapports et meilleures ventes (EX07, EX08, EX10, #41)
+
+Fait :
+- Retours par colis sur une ligne d'une commande expédiée : délai de 14 jours, 30 pour un cadeau avec occasion, jusqu'à la fin du jour à Tahiti (RG09) ; quantité encore retournable (RG07) ; détail d'une commande avec les quantités rendues et la date limite (écran 9)
+- Issues (RG12) : remboursement au prix figé sans les frais, article revendable remis en stock ou défectueux ; échange (plastique intact, nouvel article commandé pour le même client et expédié à la même adresse, livraison offerte, différence réglée ou remboursée) ; remplacement d'un défectueux par un neuf, remboursement s'il n'y en a plus
+- Un mouvement `retour` ou `remplacement` par retour, écrit avec le retour dans une transaction
+- Rapports (RG08) : ventes brutes, retours, net, quantités, stock restant recalculé depuis les mouvements, pourcentage vendu de la quantité achetée, statistiques globales sans statistique par employé ; semaine du lundi au dimanche ou période libre, filtre par catégorie ; export CSV
+- Meilleures ventes (RG14) : 10 produits, nets des retours, sur 30 jours, route publique, filtre par catégorie (EX10)
+- Contrat dans `docs/api.md` ; 272 tests backend
+
+Reste à faire :
+- Front : retours de l'écran 9, rapports de l'écran 12, meilleures ventes de l'accueil (#42, #43, #46)
