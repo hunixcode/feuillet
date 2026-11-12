@@ -6,6 +6,7 @@ import { ErreurApi } from "./erreurs.js";
 import { dateDuJour, horlogeSysteme, type Horloge } from "./horloge.js";
 import { CATEGORIES_DEPART, CLIENT_DEMO, JOURS_INVENTAIRE_DEMO, PRODUITS_DEMO, VENTES_DEMO } from "./produitsDemo.js";
 import { MongooseCategorieRepository } from "./repositories/MongooseCategorieRepository.js";
+import { DemandeModel, MongooseDemandeRepository, NotificationModel } from "./repositories/MongooseDemandeRepository.js";
 import { MongooseParametresRepository } from "./repositories/MongooseParametresRepository.js";
 import { MongooseProduitRepository, ProduitModel } from "./repositories/MongooseProduitRepository.js";
 import { MongooseStockRepository, MouvementModel, StockModel } from "./repositories/MongooseStockRepository.js";
@@ -77,6 +78,8 @@ const idsAnciens = (await ProduitModel.find(anciens, { _id: 1 }).lean()).map((p)
 await StockModel.deleteMany({ _id: { $in: idsAnciens } });
 await MouvementModel.deleteMany({ produitId: { $in: idsAnciens } });
 await VenteModel.deleteMany({ "lignes.produitId": { $in: idsAnciens } });
+await DemandeModel.deleteMany({ produitId: { $in: idsAnciens } });
+await NotificationModel.deleteMany({ produitId: { $in: idsAnciens } });
 await ProduitModel.deleteMany(anciens);
 const idsDemo = new Map<string, string>();
 for (const { promotion, stock, ...fiche } of PRODUITS_DEMO) {
@@ -94,7 +97,14 @@ console.log(`${PRODUITS_DEMO.length} produits de démonstration prêts`);
 const ventesRepository = new MongooseVenteRepository();
 const client = { id: clientDemo!._id.toString(), nom: clientDemo!.nom, email: clientDemo!.email, role: "client" as const };
 for (const { jours, lignes, ...options } of VENTES_DEMO) {
-  const ventes = new VenteService(ventesRepository, produitRepository, stockRepository, parametresRepository, ilYa(jours));
+  const ventes = new VenteService(
+    ventesRepository,
+    produitRepository,
+    stockRepository,
+    parametresRepository,
+    new MongooseDemandeRepository(),
+    ilYa(jours),
+  );
   const commande = await ventes.commanderEnLigne(client, {
     ...options,
     lignes: lignes.map(([reference, quantite]) => ({ produitId: idsDemo.get(reference), quantite })),

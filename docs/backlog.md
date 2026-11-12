@@ -173,3 +173,17 @@ Fait :
 Reste à faire :
 - Vendre au client titulaire d'une mise de côté doit la consommer (avec les demandes, #39)
 - Front : brancher le panier (#37) et la page Ventes et retours sur ces routes
+
+09/11/2026 - Back : demandes, mises de côté et notifications (EX05, #39)
+
+Fait :
+- Demandes d'un client sur un produit épuisé ou sur un livre absent du catalogue (titre, auteur et ISBN facultatifs) ; suivi, annulation d'une demande en attente ; liste de toutes les demandes avec filtre par statut pour le responsable ; rattachement d'une demande hors catalogue au produit créé (RG06)
+- Mises de côté par ordre d'arrivée tant qu'il reste du stock vendable, avec l'échéance des paramètres (fin du jour à Tahiti) et une notification par client et par produit ; prêtes pour la réception des commandes fournisseur (#40)
+- Expiration à l'échéance : quantité libérée, demande `expiree` sans remise en attente (décision 18) ; vérifiée chaque minute et avant chaque liste
+- Commande du client titulaire : sa mise de côté compte comme disponible (devis compris) et sa commande la consomme, demande `honoree` dans la même transaction
+- Notifications lues et marquées comme lues par le client ; RG05 : un produit demandé n'est plus supprimable
+- Contrat dans `docs/api.md`, aligné sur `frontend/src/types/demande.ts` ; 211 tests backend
+
+Reste à faire :
+- Création des mises de côté à la réception d'une commande fournisseur (#40)
+- Front : brancher « Mes demandes », la demande depuis la fiche produit et l'écran 10 (#42, #44)

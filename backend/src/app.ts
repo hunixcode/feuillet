@@ -2,6 +2,7 @@ import express from "express";
 import { gererErreurs, routeIntrouvable } from "./erreurs.js";
 import { routesAuth } from "./routes/auth.js";
 import { routesCategories } from "./routes/categories.js";
+import { routesDemandes, routesNotifications } from "./routes/demandes.js";
 import { routesParametres } from "./routes/parametres.js";
 import { routesProduits } from "./routes/produits.js";
 import { routesSante, type VerifierBase } from "./routes/sante.js";
@@ -9,6 +10,7 @@ import { routesStock } from "./routes/stock.js";
 import { routesCommandes, routesVentes } from "./routes/ventes.js";
 import type { AuthService } from "./services/AuthService.js";
 import type { CategorieService } from "./services/CategorieService.js";
+import type { DemandeService } from "./services/DemandeService.js";
 import type { ParametresService } from "./services/ParametresService.js";
 import type { ProduitService } from "./services/ProduitService.js";
 import type { StockService } from "./services/StockService.js";
@@ -21,6 +23,7 @@ export interface Dependances {
   stockService: StockService;
   parametresService: ParametresService;
   venteService: VenteService;
+  demandeService: DemandeService;
   verifierBase: VerifierBase;
 }
 
@@ -31,6 +34,7 @@ export function createApp({
   stockService,
   parametresService,
   venteService,
+  demandeService,
   verifierBase,
 }: Dependances) {
   const app = express();
@@ -45,6 +49,8 @@ export function createApp({
   app.use("/api/parametres", routesParametres(parametresService, authService));
   app.use("/api/commandes", routesCommandes(venteService, authService));
   app.use("/api/ventes", routesVentes(venteService, authService));
+  app.use("/api/demandes", routesDemandes(demandeService, authService));
+  app.use("/api/notifications", routesNotifications(demandeService, authService));
   app.use("/api", routesStock(stockService, authService));
 
   app.use(routeIntrouvable);

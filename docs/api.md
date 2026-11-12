@@ -25,11 +25,15 @@ Toute erreur suit le format de `ApiError` (`frontend/src/types/api.ts`) :
 | 409 | `PROMOTION_EN_CONFLIT` | Promotion qui chevauche une autre promotion du même produit |
 | 409 | `CATEGORIE_DEJA_EXISTANTE` | Catégorie au nom déjà pris (`details.champs.libelle`) |
 | 409 | `CATEGORIE_UTILISEE` | Suppression d'une catégorie encore utilisée par un produit |
-| 409 | `PRODUIT_AVEC_HISTORIQUE` | Suppression d'un produit qui a des mouvements de stock (RG05) |
+| 409 | `PRODUIT_AVEC_HISTORIQUE` | Suppression d'un produit qui a des mouvements de stock ou des demandes (RG05) |
 | 409 | `STOCK_INSUFFISANT` | Sortie de stock supérieure à la quantité disponible, ou compte inférieur au mis de côté |
 | 409 | `STOCK_MODIFIE` | Le stock a changé pendant l'opération (correction de stock ou vente) |
 | 409 | `LIGNE_INDISPONIBLE` | Vente refusée : un article n'est plus disponible dans la quantité demandée (`details.lignes`) |
 | 409 | `COMMANDE_DEJA_EXPEDIEE` | Commande déjà expédiée |
+| 409 | `PRODUIT_DISPONIBLE` | Demande sur un article qui a du stock vendable : l'ajouter au panier |
+| 409 | `DEMANDE_EN_COURS` | Le client a déjà une demande en attente ou mise de côté pour ce produit |
+| 409 | `DEMANDE_NON_ANNULABLE` | Annulation d'une demande qui n'est plus en attente |
+| 409 | `DEMANDE_NON_RATTACHABLE` | Rattachement d'une demande déjà liée à un produit ou plus en attente |
 | 500 | `ERREUR_SERVEUR` | Erreur inattendue |
 
 ## État de l'API
@@ -315,13 +319,13 @@ Tout ou rien : les disponibilités sont revérifiées à la confirmation sur le 
 { "code": "LIGNE_INDISPONIBLE", "message": "…", "details": { "lignes": [{ "produitId": "…", "quantite": 6 }] } }
 ```
 
-Sinon la vente et la sortie de stock de chaque ligne (un mouvement `vente` par ligne, opérateur `client`) sont écrites dans une même transaction ; si le stock a changé entre-temps, rien n'est écrit (`409 STOCK_MODIFIE`, recharger le panier et recommencer). Un produit vendu a des mouvements et n'est donc plus supprimable (RG05).
+Sinon la vente et la sortie de stock de chaque ligne (un mouvement `vente` par ligne, opérateur `client`) sont écrites dans une même transaction ; si le stock a changé entre-temps, rien n'est écrit (`409 STOCK_MODIFIE`, recharger le panier et recommencer). Un produit vendu a des mouvements et n'est donc plus supprimable (RG05). Vendre au client titulaire d'une mise de côté la consomme (voir [Mises de côté](#mises-de-côté)).
 
 ### Commandes (client)
 
 | Route | Accès | Réponse | Erreurs |
 |---|---|---|---|
-| `POST /api/commandes/devis` | public (panier sans compte) | `200` : `Devis` en ligne | `400 VALIDATION` |
+| `POST /api/commandes/devis` | public (panier sans compte) ; avec le token d'un client, ses mises de côté comptent comme disponibles (un token invalide est ignoré) | `200` : `Devis` en ligne | `400 VALIDATION` |
 | `POST /api/commandes` | client | `201` : `Vente` au statut `a_preparer` | `400` (dont `adresseLivraison`), `409 LIGNE_INDISPONIBLE`, `409 STOCK_MODIFIE` |
 | `GET /api/commandes` | client | `200` : ses commandes, de la plus récente à la plus ancienne | |
 | `GET /api/commandes/:id` | client | `200` : `Vente` | `404` si la commande n'est pas la sienne |
@@ -335,3 +339,61 @@ Le responsable n'a pas accès à ces routes de commande (`403`), sauf au devis p
 | `GET /api/ventes` | `200` : `Vente[]`, de la plus récente à la plus ancienne, 500 au plus ; filtre facultatif `statut` | `400` sur un statut inconnu |
 | `GET /api/ventes/:id` | `200` : `Vente` | `404` |
 | `POST /api/ventes/:id/expedition` | `200` : `Vente` passée de `a_preparer` à `expediee` (confiée au transporteur) | `404`, `409 COMMANDE_DEJA_EXPEDIEE` |
+
+## Demandes et notifications (EX05, écrans 3, 5 et 10)
+
+Une demande n'est pas une vente (RG06). Elle vise soit un produit **épuisé** du catalogue (`produitId`), soit un livre **absent du catalogue** (`titre`, `auteur` et `isbn` facultatifs).
+
+`Demande` (type `Demande` de `frontend/src/types/demande.ts`) :
+
+```json
+{
+  "id": "…",
+  "client": { "id": "…", "nom": "Marie", "email": "marie@example.pf" },
+  "produitId": "…",
+  "titre": "L'Île au trésor",
+  "auteur": "R. L. Stevenson",
+  "isbn": "978-2-07-061234-5",
+  "quantiteSouhaitee": 2,
+  "date": "2026-11-08T20:00:00.000Z",
+  "statut": "mise_de_cote",
+  "miseDeCote": { "quantite": 2, "dateLimite": "2026-11-16T09:59:59.999Z" }
+}
+```
+
+- `titre` est toujours rempli : la désignation du produit, ou le titre saisi pour un livre hors catalogue. `produitId` est absent tant qu'une demande hors catalogue n'est pas rattachée.
+- `statut` : `en_attente` → `mise_de_cote` → `honoree` ; `mise_de_cote` → `expiree` ; `en_attente` → `annulee` (par le client). `dateFin` donne la date du passage à `honoree`, `expiree` ou `annulee`.
+- `miseDeCote` (statut `mise_de_cote`) : quantité réservée, éventuellement inférieure à la quantité souhaitée, et date limite pour la commander : fin du jour (heure de Tahiti) situé `dureeMiseDeCoteJours` jours après l'arrivée (7 par défaut, écran 13).
+
+| Route | Accès | Réponse | Erreurs |
+|---|---|---|---|
+| `POST /api/demandes` | client | `201` : `Demande` en attente | `400 VALIDATION`, `404` produit inconnu ou archivé, `409 PRODUIT_DISPONIBLE`, `409 DEMANDE_EN_COURS` |
+| `GET /api/demandes` | client, responsable | `200` : le client reçoit ses demandes, le responsable toutes (filtre facultatif `statut`), de la plus récente à la plus ancienne, 500 au plus | `400` sur un statut inconnu |
+| `POST /api/demandes/:id/annulation` | client | `200` : `Demande` passée à `annulee` | `404` si ce n'est pas la sienne, `409 DEMANDE_NON_ANNULABLE` si elle n'est plus en attente |
+| `POST /api/demandes/:id/rattachement` | responsable | `200` : `Demande` hors catalogue rattachée au produit `{ "produitId": "…" }` créé pour elle (RG06) | `400` produit absent ou archivé, `404`, `409 DEMANDE_NON_RATTACHABLE` |
+
+Corps de `POST /api/demandes` : `{ "produitId": "…", "quantiteSouhaitee": 2 }` ou `{ "titre": "…", "auteur": "…", "isbn": "…", "quantiteSouhaitee": 1 }`.
+
+| Champ | Règle |
+|---|---|
+| `quantiteSouhaitee` | Entier de 1 à 99 |
+| `produitId` | Produit du catalogue non archivé, sans stock vendable (sinon `409 PRODUIT_DISPONIBLE`) ; une seule demande en cours (en attente ou mise de côté) par client et par produit (`409 DEMANDE_EN_COURS`). `titre`, `auteur` et `isbn` viennent alors de la fiche produit |
+| `titre` | Obligatoire sans `produitId`, 200 caractères au plus |
+| `auteur` | Facultatif, 100 caractères au plus |
+| `isbn` | Facultatif : 10 ou 13 chiffres, tirets et espaces acceptés |
+
+### Mises de côté
+
+- **Création** : à l'arrivée d'un produit (réception d'une commande fournisseur, EX06), ses demandes en attente sont mises de côté par ordre d'arrivée tant qu'il reste du stock vendable, et chaque client est prévenu par une notification. `Stock.quantiteMiseDeCote` reste égal à la somme des mises de côté du produit.
+- **Expiration** (décision 18) : après la date limite, la quantité est libérée et la demande passe à `expiree`, sans retour en attente. Le serveur vérifie les échéances chaque minute et avant chaque liste de demandes.
+- **Commande du titulaire** : la mise de côté du client compte comme disponible pour lui (devis compris). Sa commande consomme sa mise de côté : ses demandes sur ce produit passent à `honoree` dans la même transaction, et ce qui restait mis de côté pour lui est libéré s'il en achète moins. Les autres clients et les visiteurs ne peuvent pas acheter les exemplaires mis de côté (RG04).
+- Un produit qui a des demandes n'est plus supprimable (RG05).
+
+### Notifications
+
+`Notification` : `{ "id", "clientId", "produitId", "type": "reapprovisionnement", "date", "message", "lue" }`. Un client n'est prévenu qu'une fois par produit et par type (index unique). Exemple de `message` : « L'Île au trésor » est arrivé : 2 exemplaires mis de côté pour vous jusqu'au 15/11/2026.
+
+| Route | Accès | Réponse | Erreurs |
+|---|---|---|---|
+| `GET /api/notifications` | client | `200` : ses notifications, de la plus récente à la plus ancienne | |
+| `POST /api/notifications/:id/lue` | client | `200` : `Notification` avec `lue: true` | `404` si ce n'est pas la sienne |

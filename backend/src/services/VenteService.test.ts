@@ -247,7 +247,7 @@ describe("VenteService", () => {
   });
 
   it("refuse la vente si le stock a changé entre la vérification et l'écriture, sans rien écrire", async () => {
-    const { stocks, produits, parametres } = services.repositories;
+    const { stocks, produits, parametres, demandes } = services.repositories;
     class VentesConcurrentes extends MemoireVenteRepository {
       override async creer(vente: NouvelleVente, changements: ChangementStock[]): Promise<Vente> {
         const avant = await stocks.trouver(livre);
@@ -256,7 +256,7 @@ describe("VenteService", () => {
       }
     }
     const ventes = new VentesConcurrentes(stocks);
-    const service = new VenteService(ventes, produits, stocks, parametres, horloge);
+    const service = new VenteService(ventes, produits, stocks, parametres, demandes, horloge);
 
     const erreur = await erreurDe(service.commanderEnLigne(client, panier([[cahier, 1], [livre, 1]], livraison)));
 
@@ -289,5 +289,96 @@ describe("VenteService", () => {
     expect((await services.venteService.mesCommandes(client)).map((v) => v.id)).toEqual([sienne.id]);
     await expect(services.venteService.maCommande(client, sienne.id)).resolves.toMatchObject({ id: sienne.id });
     expect((await erreurDe(services.venteService.maCommande(client, autreCommande.id))).statut).toBe(404);
+  });
+
+  describe("mise de côté du client titulaire (RG06)", () => {
+    let demandeId: string;
+
+    // Livre épuisé, demandé par Marie, puis 2 exemplaires reçus et mis de côté pour elle.
+    beforeEach(async () => {
+      await services.stockService.corrigerInventaire(livre, { quantiteComptee: 0, motif: "Comptage" });
+      ({ id: demandeId } = await services.demandeService.creer(client, { produitId: livre, quantiteSouhaitee: 2 }));
+      const { stocks, demandes } = services.repositories;
+      const avant = await stocks.trouver(livre);
+      const plan = await services.demandeService.planifierMisesDeCote(livre, { ...avant, quantitePhysique: 2 });
+      await demandes.mettreDeCote({ produitId: livre, avant, apres: plan.stockApres }, plan);
+    });
+
+    it("ne vend pas la mise de côté à un autre client ni à un visiteur", async () => {
+      const { motDePasseHash: _, ...teva } = await utilisateurs.creer({
+        nom: "Teva",
+        email: "teva@example.pf",
+        motDePasseHash: "x",
+        role: "client",
+      });
+      expect((await erreurDe(services.venteService.commanderEnLigne(teva, panier([[livre, 1]], livraison)))).code).toBe(
+        "LIGNE_INDISPONIBLE",
+      );
+      await expect(services.venteService.devisEnLigne(panier([[livre, 1]]))).resolves.toMatchObject({
+        lignesIndisponibles: [{ produitId: livre, quantite: 1 }],
+      });
+    });
+
+    it("compte la mise de côté comme disponible dans le devis du client connecté", async () => {
+      await expect(services.venteService.devisEnLigne(panier([[livre, 2]]), client)).resolves.toMatchObject({
+        lignesIndisponibles: [],
+      });
+      await expect(services.venteService.devisEnLigne(panier([[livre, 3]]), client)).resolves.toMatchObject({
+        lignesIndisponibles: [{ produitId: livre, quantite: 3 }],
+      });
+    });
+
+    it("consomme la mise de côté à la commande en ligne et passe la demande à honoree", async () => {
+      await services.venteService.commanderEnLigne(client, panier([[livre, 2]], { adresseLivraison: "Papeete" }));
+
+      await expect(services.repositories.stocks.trouver(livre)).resolves.toEqual({
+        quantitePhysique: 0,
+        quantiteMiseDeCote: 0,
+        quantiteDefectueuse: 0,
+      });
+      await expect(services.repositories.demandes.trouverParId(demandeId)).resolves.toMatchObject({
+        statut: "honoree",
+        dateFin: horloge.date,
+      });
+    });
+
+    it("libère le reste de la mise de côté quand le client en achète moins", async () => {
+      await services.venteService.commanderEnLigne(client, panier([[livre, 1]], livraison));
+
+      await expect(services.repositories.stocks.trouver(livre)).resolves.toEqual({
+        quantitePhysique: 1,
+        quantiteMiseDeCote: 0,
+        quantiteDefectueuse: 0,
+      });
+      await expect(services.repositories.demandes.trouverParId(demandeId)).resolves.toMatchObject({ statut: "honoree" });
+      await expect(services.venteService.devisEnLigne(panier([[livre, 1]]))).resolves.toMatchObject({ lignesIndisponibles: [] });
+    });
+
+    it("ne touche pas à la mise de côté quand le client achète un autre produit", async () => {
+      await services.venteService.commanderEnLigne(client, panier([[cahier, 1]], livraison));
+
+      await expect(services.repositories.demandes.trouverParId(demandeId)).resolves.toMatchObject({
+        statut: "mise_de_cote",
+      });
+    });
+
+    it("n'enregistre rien si la mise de côté a expiré entre le calcul et l'écriture", async () => {
+      const { stocks, produits, parametres, demandes } = services.repositories;
+      class ExpirationConcurrente extends MemoireVenteRepository {
+        override async creer(vente: NouvelleVente, changements: ChangementStock[], honorees?: string[]): Promise<Vente> {
+          horloge.date = new Date("2026-12-31T20:00:00Z");
+          await services.demandeService.expirerEcheances();
+          return super.creer(vente, changements, honorees);
+        }
+      }
+      const ventes = new ExpirationConcurrente(stocks, demandes);
+      const service = new VenteService(ventes, produits, stocks, parametres, demandes, horloge);
+
+      const erreur = await erreurDe(service.commanderEnLigne(client, panier([[livre, 2]], livraison)));
+
+      expect(erreur).toMatchObject({ statut: 409, code: "STOCK_MODIFIE" });
+      await expect(stocks.trouver(livre)).resolves.toMatchObject({ quantitePhysique: 2, quantiteMiseDeCote: 0 });
+      await expect(ventes.lister({})).resolves.toEqual([]);
+    });
   });
 });
