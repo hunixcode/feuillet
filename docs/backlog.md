@@ -295,3 +295,20 @@ Fait :
 
 Reste à faire :
 - Front : retours de l'écran 9, rapports de l'écran 12, meilleures ventes de l'accueil (#42, #43, #46)
+
+11/11/2026 - Noah (front A) : panier branché sur les commandes (issue #42, partie 1)
+
+Fait :
+- main récupérée dans dev-front (routes du back #38 à #41)
+- types/vente.ts aligné sur le back : Devis, Montants, lignes avec montant et TVA, client, statut expédiée
+- services/commandeService : devis (POST /api/commandes/devis), commande (POST /api/commandes) et détail d'une commande
+- Panier : sous-total, emballage, livraison, total et TVA affichés tels que renvoyés par le devis du back, recalculés à chaque changement (quantité, emballage, occasion) ; montant de chaque ligne ; aucun calcul de prix dans le front (RG11, RG13)
+- Lignes que la librairie ne peut plus servir signalées grâce au devis
+- « Confirmer la commande » actif pour un client : panier vidé puis page de la commande ouverte ; refus LIGNE_INDISPONIBLE (rien n'est enregistré, lignes signalées, RG03), STOCK_MODIFIE et adresse manquante (message sous le champ) expliqués
+- Page /commandes/:id (client connecté) : « Commande confirmée » après la commande, articles à prix figés, remise, adresse, options et montants
+- 324 tests (heure de Tahiti et UTC), le build et le lint passent
+
+Reste à faire (#42) :
+- Liste « Mes commandes » avec le statut
+- Demandes depuis la fiche produit et la page Mes demandes : envoi, suivi, annulation, notifications
+- Date d'arrivée prévue sur la fiche, meilleures ventes sur le catalogue

@@ -109,6 +109,22 @@
   margin-top: 16px;
 }
 
+.recap-erreur {
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.recap .recap-erreur .common-button {
+  width: auto;
+  margin-top: 0;
+}
+
+.recap .recap-refus {
+  margin-top: 16px;
+}
+
 @media (max-width: 880px) {
   .panier-grille {
     grid-template-columns: minmax(0, 1fr);

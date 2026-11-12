@@ -91,6 +91,11 @@ describe('routes de l espace client', () => {
     expect(await screen.findByRole('heading', { name: 'Connexion' })).toBeInTheDocument()
   })
 
+  it('envoie vers la connexion un visiteur qui ouvre une commande', async () => {
+    afficher('/commandes/v-1')
+    expect(await screen.findByRole('heading', { name: 'Connexion' })).toBeInTheDocument()
+  })
+
   it('affiche le menu de l espace client', async () => {
     afficher('/catalogue')
     const menu = await screen.findByRole('navigation', { name: 'Menu principal' })

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import LignePanier from '../../components/client/LignePanier.tsx'
 import Button from '../../components/common/Button.tsx'
 import ErrorMessage from '../../components/common/ErrorMessage.tsx'
@@ -8,14 +8,23 @@ import Loader from '../../components/common/Loader.tsx'
 import Select from '../../components/common/Select.tsx'
 import { useAuth } from '../../contexts/useAuth'
 import { usePanier } from '../../contexts/usePanier'
+import { calculerDevis, lignesRefusees, passerCommande } from '../../services/commandeService'
 import { obtenirProduits } from '../../services/produitService'
 import type { Produit } from '../../types/produit'
-import { messageErreur } from '../../utils/erreurs'
+import type { CommandePayload, Devis, LigneCommande, OccasionCadeau } from '../../types/vente'
+import { erreursDesChamps, messageErreur, stockModifie } from '../../utils/erreurs'
+import { formatXPF } from '../../utils/format'
 import './PanierPage.css'
+
+const LIGNES_REFUSEES =
+  "Rien n'a été enregistré : certains articles ne sont plus disponibles dans la quantité demandée. Corrigez votre panier puis confirmez à nouveau."
+const STOCK_CHANGE =
+  "Le stock a changé pendant votre commande. Rien n'a été enregistré : vérifiez votre panier et confirmez à nouveau."
 
 function PanierPage() {
   const { utilisateur, chargement: sessionEnCours } = useAuth()
-  const { lignes, nombreArticles, changerQuantite, retirer } = usePanier()
+  const { lignes, nombreArticles, changerQuantite, retirer, vider } = usePanier()
+  const navigate = useNavigate()
 
   const [produits, setProduits] = useState<Record<string, Produit | null>>({})
   const [erreur, setErreur] = useState<{ cle: string; message: string } | null>(null)
@@ -24,6 +33,12 @@ function PanierPage() {
   const [occasion, setOccasion] = useState('')
   const [emballage, setEmballage] = useState(false)
   const [adresse, setAdresse] = useState('')
+  const [devis, setDevis] = useState<{ cle: string; valeur: Devis } | null>(null)
+  const [erreurDevis, setErreurDevis] = useState<{ cle: string; message: string } | null>(null)
+  const [essaiDevis, setEssaiDevis] = useState(0)
+  const [envoi, setEnvoi] = useState(false)
+  const [refus, setRefus] = useState<{ message: string; lignes: LigneCommande[] } | null>(null)
+  const [erreurAdresse, setErreurAdresse] = useState('')
 
   const manquants = lignes
     .map((ligne) => ligne.produitId)
@@ -32,6 +47,18 @@ function PanierPage() {
   const cle = `${manquants}|${essai}`
   const enErreur = erreur?.cle === cle
   const chargement = manquants !== '' && !enErreur
+
+  const occasionCadeau = cadeau && occasion ? (occasion as OccasionCadeau) : undefined
+  const panier: CommandePayload = {
+    lignes,
+    emballageCadeau: emballage,
+    ...(occasionCadeau ? { occasionCadeau } : {}),
+  }
+  const requeteDevis = JSON.stringify(panier)
+  const cleDevis = `${requeteDevis}|${essaiDevis}`
+  const devisAJour = devis?.cle === cleDevis ? devis.valeur : null
+  const devisEnErreur = erreurDevis?.cle === cleDevis
+  const calculEnCours = lignes.length > 0 && !devisAJour && !devisEnErreur
 
   useEffect(() => {
     if (manquants === '') {
@@ -54,10 +81,82 @@ function PanierPage() {
     }
   }, [manquants, cle])
 
-  const aDesProblemes = lignes.some((ligne) => {
-    const produit = produits[ligne.produitId]
-    return produit === null || produit?.disponibilite === 'epuise'
-  })
+  useEffect(() => {
+    const demande: CommandePayload = JSON.parse(requeteDevis)
+    if (demande.lignes.length === 0) {
+      return
+    }
+    let actif = true
+    calculerDevis(demande)
+      .then((valeur) => {
+        if (actif) {
+          setDevis({ cle: cleDevis, valeur })
+        }
+      })
+      .catch((raison: unknown) => {
+        if (actif) {
+          setErreurDevis({ cle: cleDevis, message: messageErreur(raison) })
+        }
+      })
+    return () => {
+      actif = false
+    }
+  }, [requeteDevis, cleDevis])
+
+  const indisponibles = new Set(
+    [...(devisAJour?.lignesIndisponibles ?? []), ...(refus?.lignes ?? [])].map(
+      (ligne) => ligne.produitId,
+    ),
+  )
+
+  const aDesProblemes =
+    indisponibles.size > 0 ||
+    lignes.some((ligne) => {
+      const produit = produits[ligne.produitId]
+      return produit === null || produit?.disponibilite === 'epuise'
+    })
+
+  function modifierQuantite(produitId: string, quantite: number) {
+    setRefus(null)
+    changerQuantite(produitId, quantite)
+  }
+
+  function retirerLigne(produitId: string) {
+    setRefus(null)
+    retirer(produitId)
+  }
+
+  async function confirmer() {
+    setRefus(null)
+    setErreurAdresse('')
+    setEnvoi(true)
+    try {
+      const vente = await passerCommande({ ...panier, adresseLivraison: adresse.trim() })
+      vider()
+      navigate(`/commandes/${vente.id}`, { state: { confirmee: true } })
+    } catch (raison) {
+      const refusees = lignesRefusees(raison)
+      const champs = erreursDesChamps(raison)
+      if (refusees.length > 0) {
+        setRefus({ message: LIGNES_REFUSEES, lignes: refusees })
+        setEssaiDevis((actuel) => actuel + 1)
+      } else if (stockModifie(raison)) {
+        setRefus({ message: STOCK_CHANGE, lignes: [] })
+        setEssaiDevis((actuel) => actuel + 1)
+      } else if (champs.adresseLivraison) {
+        setErreurAdresse(champs.adresseLivraison)
+      } else {
+        setRefus({ message: messageErreur(raison), lignes: [] })
+      }
+    } finally {
+      setEnvoi(false)
+    }
+  }
+
+  function montant(choix: (valeur: Devis) => number) {
+    const valeur = devisAJour ?? devis?.valeur
+    return valeur ? formatXPF(choix(valeur)) : 'Calcul…'
+  }
 
   function action() {
     if (sessionEnCours) {
@@ -78,14 +177,9 @@ function PanierPage() {
       return <p className="aide">Connectez-vous avec un compte client pour commander.</p>
     }
     return (
-      <>
-        <Button disabled aria-describedby="commande-bientot">
-          Confirmer la commande
-        </Button>
-        <p className="aide" id="commande-bientot">
-          La confirmation des commandes sera bientôt disponible.
-        </p>
-      </>
+      <Button onClick={confirmer} loading={envoi} disabled={aDesProblemes || !devisAJour}>
+        Confirmer la commande
+      </Button>
     )
   }
 
@@ -118,6 +212,8 @@ function PanierPage() {
       )
     }
 
+    const valeur = devisAJour ?? devis?.valeur
+
     return (
       <div className="panier-grille">
         <div>
@@ -127,8 +223,10 @@ function PanierPage() {
                 key={ligne.produitId}
                 produit={produits[ligne.produitId] ?? null}
                 quantite={ligne.quantite}
-                onQuantite={(quantite) => changerQuantite(ligne.produitId, quantite)}
-                onRetirer={() => retirer(ligne.produitId)}
+                montant={valeur?.lignes.find((l) => l.produitId === ligne.produitId)?.montant}
+                indisponible={indisponibles.has(ligne.produitId)}
+                onQuantite={(quantite) => modifierQuantite(ligne.produitId, quantite)}
+                onRetirer={() => retirerLigne(ligne.produitId)}
               />
             ))}
           </ul>
@@ -167,7 +265,7 @@ function PanierPage() {
                 />
                 <span>
                   Emballage cadeau
-                  <small>Frais calculés par la librairie.</small>
+                  <small>Les frais s'affichent dans le récapitulatif.</small>
                 </span>
               </label>
             </fieldset>
@@ -179,30 +277,44 @@ function PanierPage() {
                 name="adresse"
                 autoComplete="street-address"
                 value={adresse}
-                onChange={(evenement) => setAdresse(evenement.target.value)}
+                error={erreurAdresse}
+                onChange={(evenement) => {
+                  setAdresse(evenement.target.value)
+                  setErreurAdresse('')
+                }}
               />
-              <p className="aide">Livraison à domicile uniquement. Frais calculés par la librairie.</p>
+              <p className="aide">Livraison à domicile uniquement.</p>
             </fieldset>
           </form>
         </div>
 
         <aside className="recap" aria-labelledby="titre-recap">
           <h2 id="titre-recap">Récapitulatif</h2>
-          <dl>
-            <dt>Articles</dt>
-            <dd>{nombreArticles}</dd>
-            <dt>Emballage cadeau</dt>
-            <dd>{emballage ? 'Oui' : 'Aucun'}</dd>
-            <dt>Livraison</dt>
-            <dd>À domicile</dd>
-            <dt className="total">Total TTC</dt>
-            <dd className="total">Calculé par la librairie</dd>
-            <dt>dont TVA</dt>
-            <dd>Calculée par la librairie</dd>
-          </dl>
+          {devisEnErreur ? (
+            <div className="recap-erreur">
+              <ErrorMessage>{erreurDevis?.message ?? ''}</ErrorMessage>
+              <Button variant="secondary" onClick={() => setEssaiDevis(essaiDevis + 1)}>
+                Recalculer
+              </Button>
+            </div>
+          ) : (
+            <dl aria-busy={calculEnCours || undefined}>
+              <dt>{`Articles (${nombreArticles})`}</dt>
+              <dd>{montant((d) => d.sousTotal)}</dd>
+              <dt>Emballage cadeau</dt>
+              <dd>{emballage ? montant((d) => d.fraisEmballage) : 'Aucun'}</dd>
+              <dt>Livraison à domicile</dt>
+              <dd>{montant((d) => d.fraisLivraison)}</dd>
+              <dt className="total">Total TTC</dt>
+              <dd className="total">{montant((d) => d.total)}</dd>
+              <dt>dont TVA</dt>
+              <dd>{montant((d) => d.montantTva)}</dd>
+            </dl>
+          )}
           {action()}
-          {aDesProblemes && (
-            <p className="aide">Retirez les articles signalés pour pouvoir commander.</p>
+          {refus && <ErrorMessage className="recap-refus">{refus.message}</ErrorMessage>}
+          {aDesProblemes && !refus && (
+            <p className="aide">Corrigez les articles signalés pour pouvoir commander.</p>
           )}
           <p className="aide">
             Le panier ne réserve pas les articles : leur disponibilité est vérifiée quand vous
