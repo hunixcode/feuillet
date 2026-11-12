@@ -23,3 +23,13 @@ export function formatDate(iso: string): string {
     ...(jourSeul ? { timeZone: 'UTC' } : {}),
   }).format(new Date(iso))
 }
+
+const dateHeureFormatter = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'short',
+  timeStyle: 'short',
+  timeZone: 'Pacific/Tahiti',
+})
+
+export function formatDateHeure(iso: string): string {
+  return dateHeureFormatter.format(new Date(iso))
+}

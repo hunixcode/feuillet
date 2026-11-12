@@ -295,9 +295,9 @@ function CatalogueAdminPage() {
                       </td>
                       <td
                         className={
-                          produit.quantiteVendable === undefined && !produit.disponibilite
+                          !produit.disponibilite
                             ? 'catalogue-disponibilite catalogue-disponibilite--inconnue'
-                            : produit.quantiteVendable === 0 || produit.disponibilite === 'epuise'
+                            : produit.disponibilite === 'epuise'
                               ? 'catalogue-disponibilite catalogue-disponibilite--epuise'
                               : 'catalogue-disponibilite'
                         }

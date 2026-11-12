@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDate, formatXPF } from './format'
+import { formatDate, formatDateHeure, formatXPF } from './format'
 
 describe('formatXPF', () => {
   it.each([
@@ -63,5 +63,15 @@ describe('formatDate', () => {
   it('rejette une date vide ou invalide', () => {
     expect(() => formatDate('')).toThrow(RangeError)
     expect(() => formatDate('pas-une-date')).toThrow(RangeError)
+  })
+})
+
+describe('formatDateHeure', () => {
+  it('formate la date et l heure de Tahiti', () => {
+    expect(formatDateHeure('2026-10-22T20:00:00.000Z')).toBe('22/10/2026 10:00')
+  })
+
+  it('garde le jour de Tahiti quand il est déjà le lendemain en UTC', () => {
+    expect(formatDateHeure('2026-10-23T05:30:00.000Z')).toBe('22/10/2026 19:30')
   })
 })
