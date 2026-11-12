@@ -60,6 +60,13 @@
   white-space: pre-line;
 }
 
+.commande-retour {
+  display: block;
+  margin-top: 16px;
+  font-size: 0.9375rem;
+  text-align: center;
+}
+
 .commande .aide {
   margin-top: 8px;
   color: var(--gris);

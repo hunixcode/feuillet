@@ -312,3 +312,15 @@ Reste à faire (#42) :
 - Liste « Mes commandes » avec le statut
 - Demandes depuis la fiche produit et la page Mes demandes : envoi, suivi, annulation, notifications
 - Date d'arrivée prévue sur la fiche, meilleures ventes sur le catalogue
+
+11/11/2026 - Noah (front A) : Mes commandes (issue #42, partie 2)
+
+Fait :
+- Page /commandes (client connecté) : liste des commandes de la plus récente à la plus ancienne (GET /api/commandes), avec la date, le nombre d'articles, le total renvoyé par le back et le statut (à préparer, expédiée le …) ; clic vers le détail
+- Lien « Mes commandes » dans le menu du site et lien « Voir toutes mes commandes » sur le détail d'une commande
+- Message quand il n'y a aucune commande, erreur avec bouton Réessayer
+- 330 tests (heure de Tahiti et UTC), le build et le lint passent
+
+Reste à faire (#42) :
+- Demandes depuis la fiche produit et la page Mes demandes : envoi, suivi, annulation, notifications
+- Date d'arrivée prévue sur la fiche, meilleures ventes sur le catalogue

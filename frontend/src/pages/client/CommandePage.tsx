@@ -165,6 +165,9 @@ function CommandePage() {
           <Link className="common-button common-button--secondary" to="/catalogue">
             Continuer mes achats
           </Link>
+          <Link className="commande-retour" to="/commandes">
+            Voir toutes mes commandes
+          </Link>
         </aside>
       </div>
     </div>

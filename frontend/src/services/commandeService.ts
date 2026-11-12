@@ -9,6 +9,10 @@ export function passerCommande(panier: CommandePayload): Promise<Vente> {
   return post<Vente>('/commandes', panier)
 }
 
+export function listerCommandes(): Promise<Vente[]> {
+  return get<Vente[]>('/commandes')
+}
+
 export function obtenirCommande(id: string): Promise<Vente> {
   return get<Vente>(`/commandes/${encodeURIComponent(id)}`)
 }

@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiRequestError } from './api'
-import { calculerDevis, lignesRefusees, obtenirCommande, passerCommande } from './commandeService'
+import {
+  calculerDevis,
+  lignesRefusees,
+  listerCommandes,
+  obtenirCommande,
+  passerCommande,
+} from './commandeService'
 
 function reponse(corps: unknown, status = 200) {
   return new Response(JSON.stringify(corps), { status })
@@ -44,6 +50,17 @@ describe('service des commandes', () => {
       ...panier,
       adresseLivraison: 'BP 12, Papeete',
     })
+  })
+
+  it('liste les commandes du client', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(reponse([]))
+
+    await expect(listerCommandes()).resolves.toEqual([])
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/commandes',
+      expect.objectContaining({ method: 'GET' }),
+    )
   })
 
   it('demande une commande par son identifiant', async () => {
