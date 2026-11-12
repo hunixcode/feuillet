@@ -110,11 +110,7 @@ function PanierPage() {
   )
 
   const aDesProblemes =
-    indisponibles.size > 0 ||
-    lignes.some((ligne) => {
-      const produit = produits[ligne.produitId]
-      return produit === null || produit?.disponibilite === 'epuise'
-    })
+    indisponibles.size > 0 || lignes.some((ligne) => produits[ligne.produitId] === null)
 
   function modifierQuantite(produitId: string, quantite: number) {
     setRefus(null)

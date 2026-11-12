@@ -33,3 +33,12 @@ const dateHeureFormatter = new Intl.DateTimeFormat('fr-FR', {
 export function formatDateHeure(iso: string): string {
   return dateHeureFormatter.format(new Date(iso))
 }
+
+const jourTahitiFormatter = new Intl.DateTimeFormat('fr-FR', {
+  dateStyle: 'long',
+  timeZone: 'Pacific/Tahiti',
+})
+
+export function formatJourTahiti(iso: string): string {
+  return jourTahitiFormatter.format(new Date(iso))
+}

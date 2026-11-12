@@ -45,11 +45,11 @@ export default function LignePanier({
     )
   }
 
-  const epuise = produit.disponibilite === 'epuise'
+  const epuise = indisponible && produit.disponibilite === 'epuise'
   const sousTitre = produit.auteur ?? produit.marque
 
   return (
-    <li className={epuise || indisponible ? 'ligne-probleme' : undefined}>
+    <li className={indisponible ? 'ligne-probleme' : undefined}>
       <div className="vignette">
         <Couverture produit={produit} />
       </div>

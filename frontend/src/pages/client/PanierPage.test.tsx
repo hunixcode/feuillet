@@ -262,13 +262,24 @@ describe('page Panier', () => {
 
   it('signale un article devenu épuisé', async () => {
     remplirPanier([{ produitId: 'p-1', quantite: 1 }])
-    simulerApi([{ ...ile, disponibilite: 'epuise' }])
+    simulerApi([{ ...ile, disponibilite: 'epuise' }], {
+      indisponibles: [{ produitId: 'p-1', quantite: 1 }],
+    })
     afficher()
 
     expect(
       await screen.findByText('Cet article est épuisé : retirez-le pour pouvoir commander.'),
     ).toBeInTheDocument()
     expect(screen.getByText('Corrigez les articles signalés pour pouvoir commander.')).toBeInTheDocument()
+  })
+
+  it('laisse commander un article épuisé que la librairie a mis de côté pour le client', async () => {
+    remplirPanier([{ produitId: 'p-1', quantite: 1 }])
+    simulerApi([{ ...ile, disponibilite: 'epuise' }])
+    afficher({ utilisateur: client })
+
+    expect(await boutonConfirmer()).toBeEnabled()
+    expect(screen.queryByText(/Cet article est épuisé/)).not.toBeInTheDocument()
   })
 
   it('signale une quantité que la librairie ne peut plus servir', async () => {

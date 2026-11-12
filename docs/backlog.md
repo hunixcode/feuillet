@@ -324,3 +324,18 @@ Fait :
 Reste à faire (#42) :
 - Demandes depuis la fiche produit et la page Mes demandes : envoi, suivi, annulation, notifications
 - Date d'arrivée prévue sur la fiche, meilleures ventes sur le catalogue
+
+11/11/2026 - Noah (front A) : demandes et notifications (issue #42, partie 3)
+
+Fait :
+- services/demandeService : envoi, liste et annulation des demandes, notifications et lecture (routes du back #39)
+- Fiche produit d'un article épuisé : le client le demande directement avec la quantité souhaitée (POST /api/demandes) ; visiteur invité à se connecter ; DEMANDE_EN_COURS et PRODUIT_DISPONIBLE expliqués ; date de retour prévue affichée quand une commande fournisseur est en cours (arriveePrevue, EX04)
+- Page Mes demandes : suivi de chaque demande (quantité, date, statut en attente, mise de côté, honorée, expirée ou annulée avec sa date), date limite d'une mise de côté, annulation d'une demande en attente, ajout au panier des exemplaires mis de côté
+- Notifications de réapprovisionnement en haut de la page, masquées une fois lues
+- Formulaire pour un livre absent du catalogue branché : erreurs du back sous chaque champ, confirmation et ajout immédiat au suivi ; « bientôt disponible » retiré
+- Panier : un article épuisé mis de côté pour le client n'est plus bloqué, seules les lignes refusées par le devis du back sont signalées
+- formatJourTahiti : dates de demande et de mise de côté affichées au jour de Tahiti
+- 341 tests (heure de Tahiti et UTC), le build et le lint passent
+
+Reste à faire (#42) :
+- Meilleures ventes (RG14) en haut du catalogue
