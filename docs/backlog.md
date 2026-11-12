@@ -156,6 +156,7 @@ Reste à faire :
 - Front : écran 8 et affichage de la disponibilité
 
 
+
 08/11/2026 - Sécurité des dépendances (issue #52)
 
 Fait :
@@ -166,3 +167,63 @@ Fait :
 
 Reste à faire :
 - Activer les alertes et les mises à jour de sécurité Dependabot dans les réglages du dépôt (Settings, Code security), qui ne se configurent pas par fichier
+
+08/11/2026 - Back : paramètres et ventes (EX03, issue #38)
+
+Fait :
+- Paramètres (écran 13) : `GET` et `PUT /api/parametres` (responsable), entiers strictement positifs, seuil d'alerte ≤ 100 % ; valeurs de départ créées par le seed sans écraser celles réglées
+- `VenteService` : panier et commande en ligne du client connecté
+- Devis sans enregistrement (`POST /api/commandes/devis` public) : prix du jour, remise, TVA incluse par ligne, frais d'emballage et de livraison des paramètres, total ; lignes indisponibles signalées
+- Validation tout ou rien (RG03) : 409 `LIGNE_INDISPONIBLE` avec les lignes en cause ; vente et sortie de stock dans une même transaction, un mouvement `vente` par ligne lié à la vente, 409 `STOCK_MODIFIE` si le stock a changé entre-temps
+- Livraison et adresse obligatoires, commande `a_preparer` puis `expediee` ; mes commandes (client), liste filtrée par statut et détail des commandes (responsable)
+- Lignes à prix figés (RG02) ; un produit vendu n'est plus supprimable (RG05, par ses mouvements)
+- Seed : 7 commandes de démonstration d'un client fictif sur les 30 derniers jours (EQ03), expédiées sauf la plus récente
+- Décision d'équipe consignée dans `rapport.md` : commande toujours livrée
+- 10/11/2026 : vente au comptoir retirée, la librairie vend uniquement en ligne (pas de magasin ni de retrait sur place)
+- 168 tests backend (service, API, persistance avec transaction) ; seed et API vérifiés de bout en bout sur une base temporaire
+
+Reste à faire :
+- Vendre au client titulaire d'une mise de côté doit la consommer (avec les demandes, #39)
+- Front : brancher le panier (#37) et la page Ventes et retours sur ces routes
+
+09/11/2026 - Back : demandes, mises de côté et notifications (EX05, #39)
+
+Fait :
+- Demandes d'un client sur un produit épuisé ou sur un livre absent du catalogue (titre, auteur et ISBN facultatifs) ; suivi, annulation d'une demande en attente ; liste de toutes les demandes avec filtre par statut pour le responsable ; rattachement d'une demande hors catalogue au produit créé (RG06)
+- Mises de côté par ordre d'arrivée tant qu'il reste du stock vendable, avec l'échéance des paramètres (fin du jour à Tahiti) et une notification par client et par produit ; prêtes pour la réception des commandes fournisseur (#40)
+- Expiration à l'échéance : quantité libérée, demande `expiree` sans remise en attente (décision 18) ; vérifiée chaque minute et avant chaque liste
+- Commande du client titulaire : sa mise de côté compte comme disponible (devis compris) et sa commande la consomme, demande `honoree` dans la même transaction
+- Notifications lues et marquées comme lues par le client ; RG05 : un produit demandé n'est plus supprimable
+- Contrat dans `docs/api.md`, aligné sur `frontend/src/types/demande.ts` ; 211 tests backend
+
+Reste à faire :
+- Création des mises de côté à la réception d'une commande fournisseur (#40)
+- Front : brancher « Mes demandes », la demande depuis la fiche produit et l'écran 10 (#42, #44)
+
+09/11/2026 - Back : fournisseurs, commandes et réceptions (EX06, #40)
+
+Fait :
+- Fournisseurs (nom, contact) ; commandes fournisseur d'un fournisseur et d'un produit avec date d'arrivée prévue, statuts `en_cours`, `partiellement_recue`, `recue`
+- Réceptions saisies puis validées : quantité ≤ restant (RG07), abîmés non comptés comme reçus (décision 20), validation unique sans second mouvement
+- Validation dans une transaction comme le diagramme de séquence : mouvement `entree`, commande à jour, mises de côté des demandes en attente et notifications
+- Produits à recommander (RG10) avec la quantité achetée à l'origine, le pourcentage vendu et ce qui est déjà en commande ; seuil d'alerte par produit, sinon celui des paramètres
+- Date d'arrivée prévue d'un produit épuisé dans le catalogue (EX04, `arriveePrevue` du front) ; RG05 : un produit commandé n'est plus supprimable
+- Seed : deux fournisseurs et deux commandes en cours de démonstration
+- Contrat dans `docs/api.md` ; 240 tests backend
+
+Reste à faire :
+- Front : écran 11 (fournisseurs, commandes, réceptions), alertes du tableau de bord et de l'écran 12 (#45, #46)
+
+09/11/2026 - Back : retours, rapports et meilleures ventes (EX07, EX08, EX10, #41)
+
+Fait :
+- Retours par colis sur une ligne d'une commande expédiée : délai de 14 jours, 30 pour un cadeau avec occasion, jusqu'à la fin du jour à Tahiti (RG09) ; quantité encore retournable (RG07) ; détail d'une commande avec les quantités rendues et la date limite (écran 9)
+- Issues (RG12) : remboursement au prix figé sans les frais, article revendable remis en stock ou défectueux ; échange (plastique intact, nouvel article commandé pour le même client et expédié à la même adresse, livraison offerte, différence réglée ou remboursée) ; remplacement d'un défectueux par un neuf, remboursement s'il n'y en a plus
+- Un mouvement `retour` ou `remplacement` par retour, écrit avec le retour dans une transaction
+- Rapports (RG08) : ventes brutes, retours, net, quantités, stock restant recalculé depuis les mouvements, pourcentage vendu de la quantité achetée, statistiques globales sans statistique par employé ; semaine du lundi au dimanche ou période libre, filtre par catégorie ; export CSV
+- Meilleures ventes (RG14) : 10 produits, nets des retours, sur 30 jours, route publique, filtre par catégorie (EX10)
+- Contrat dans `docs/api.md` ; 272 tests backend
+
+Reste à faire :
+- Front : retours de l'écran 9, rapports de l'écran 12, meilleures ventes de l'accueil (#42, #43, #46)
+

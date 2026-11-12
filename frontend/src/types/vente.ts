@@ -24,14 +24,11 @@ export interface LigneVente extends LigneCommande {
   tauxTva: number
 }
 
-export type CanalVente = 'en_ligne' | 'comptoir'
-
-export type StatutVente = 'a_preparer' | 'remise'
+export type StatutVente = 'a_preparer' | 'expediee'
 
 export interface Vente extends OptionsVente {
   id: string
   date: string
-  canal: CanalVente
   statut: StatutVente
   lignes: LigneVente[]
   frais: number

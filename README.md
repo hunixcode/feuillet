@@ -21,7 +21,8 @@ réapprovisionnement), Projet de Génie Logiciel, à rendre <b>fin novembre</b>.
 - Réapprovisionnement : plusieurs fournisseurs, alertes en pourcentage de la quantité achetée, commandes, réceptions partielles
 - Retours (14 jours, 1 mois pour un cadeau) : remboursement, échange, remplacement d'un défectueux
 - Rapports hebdomadaires avec statistiques et export CSV, sans statistique par employé
-- Comptes client et responsable ; deux espaces dans l'application, les employés au comptoir n'ont pas de compte ni de session individuelle
+- Librairie uniquement en ligne : pas de magasin ni de vente au comptoir, toute commande est livrée
+- Comptes client et responsable ; deux espaces dans l'application
 
 Le détail (exigences EX01–EX11, règles RG01–RG15, décisions de cadrage issues des réponses de l'enseignant) est dans [`docs/rapport.md`](docs/rapport.md).
 
