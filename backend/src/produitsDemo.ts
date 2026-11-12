@@ -41,5 +41,16 @@ export const VENTES_DEMO = [
   { jours: 1, lignes: [["DEMO-PAP-001", 3], ["DEMO-PAP-002", 1]], adresseLivraison: "BP 8, 98728 Moorea" },
 ] as const;
 
+// Fournisseurs de démonstration (EX06) et commandes en cours : arrivée prévue dans `jours` jours (EX04).
+export const FOURNISSEURS_DEMO = [
+  { nom: "Hachette Pacifique (démo)", contact: "commandes@hachette-pacifique.example" },
+  { nom: "Archipel Diffusion (démo)", contact: "40 50 60 70" },
+];
+
+export const COMMANDES_FOURNISSEUR_DEMO = [
+  { fournisseur: 0, reference: "DEMO-LIV-006", quantiteCommandee: 6, jours: 10 },
+  { fournisseur: 1, reference: "DEMO-LIV-005", quantiteCommandee: 10, jours: 5 },
+] as const;
+
 // Le stock de départ est compté avant la première vente de démonstration.
 export const JOURS_INVENTAIRE_DEMO = 30;

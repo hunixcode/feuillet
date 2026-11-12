@@ -18,7 +18,7 @@ export function quantiteVendable({ quantitePhysique, quantiteMiseDeCote }: Stock
 }
 
 // quantite : variation du stock physique (négative pour une sortie). Un ajustement garde l'avant et l'après ;
-// le mouvement d'une ligne de vente garde la vente.
+// le mouvement d'une ligne de vente garde la vente, celui d'une réception garde la réception.
 export interface Mouvement {
   id: string;
   produitId: string;
@@ -30,6 +30,7 @@ export interface Mouvement {
   quantiteAvant?: number;
   quantiteApres?: number;
   venteId?: string;
+  receptionId?: string;
 }
 
 export type NouveauMouvement = Omit<Mouvement, "id">;
