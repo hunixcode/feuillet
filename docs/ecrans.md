@@ -1,6 +1,6 @@
 # Description des écrans
 
-L'application comporte deux espaces : le client et le responsable. Les employés ne possèdent pas de compte et n'ouvrent pas de session dans l'application. Les opérations effectuées au comptoir sont enregistrées dans l'espace du responsable, sans classement des ventes par employé.
+L'application comporte deux espaces : le client et le responsable. La librairie vend uniquement en ligne : il n'y a ni magasin, ni vente au comptoir, ni retrait sur place. Toute commande est livrée.
 
 Les règles citées (RGxx) et les décisions de cadrage sont définies dans [`rapport.md`](./rapport.md). Les prix sont des entiers en XPF, TTC.
 
@@ -34,7 +34,7 @@ C'est la première page de l'application.
 ### 4. Panier et commande
 
 - **But :** vérifier les articles et les options avant de confirmer l'achat.
-- **Contenu :** articles, quantités, prix unitaires remisés, TVA incluse et total en XPF ; options : cadeau (occasion : Noël, anniversaire, fête), emballage cadeau, livraison (adresse) ou retrait en magasin, avec leurs frais.
+- **Contenu :** articles, quantités, prix unitaires remisés, TVA incluse et total en XPF ; options : cadeau (occasion : Noël, anniversaire, fête), emballage cadeau, livraison à une adresse (obligatoire), avec leurs frais.
 - **Actions :** modifier les quantités, retirer un article, choisir les options, confirmer la commande.
 - **Affichage :** préciser que la présence d'un article dans le panier ne le réserve pas (RG03). Afficher le total, la TVA incluse et les frais d'options avant confirmation. Si un article n'est plus disponible au moment de confirmer, rien n'est enregistré : indiquer les lignes en cause et laisser le client corriger son panier.
 
@@ -43,7 +43,7 @@ C'est la première page de l'application.
 - **But :** demander un livre indisponible et suivre ses demandes.
 - **Contenu :** formulaire pour un livre absent du catalogue (titre, auteur, ISBN facultatif, quantité) ; liste des demandes avec l'article, la quantité, la date et le statut (en attente, mis de côté, honorée, expirée, annulée) ; notifications de réapprovisionnement.
 - **Actions :** envoyer une demande, consulter le suivi, annuler une demande en attente.
-- **Affichage :** distinguer une demande d'une vente. Lorsqu'un article est mis de côté, afficher la quantité et la date limite de retrait.
+- **Affichage :** distinguer une demande d'une vente. Lorsqu'un article est mis de côté, afficher la quantité et la date limite pour le commander.
 
 Une demande sur un article épuisé du catalogue se fait depuis sa fiche produit (écran 3).
 
@@ -54,7 +54,7 @@ Une demande sur un article épuisé du catalogue se fait depuis sa fiche produit
 - **But :** voir les informations importantes dès l'ouverture de l'espace responsable.
 - **Contenu :** alertes de stock bas (RG10), commandes fournisseurs en cours et arrivées prévues, mises de côté qui arrivent à échéance, quelques statistiques globales.
 - **Actions :** ouvrir la liste des produits concernés, consulter une commande ou accéder aux rapports.
-- **Affichage :** statistiques globales, sans indiquer quel employé a vendu quoi.
+- **Affichage :** statistiques globales uniquement, aucune statistique par employé.
 
 ### 7. Catalogue et prix
 
@@ -70,12 +70,12 @@ Une demande sur un article épuisé du catalogue se fait depuis sa fiche produit
 - **Actions :** rechercher un article, consulter ses mouvements, enregistrer une correction d'inventaire (quantité avant et après le comptage), déclarer un article abîmé (passage en stock défectueux) ou sortir du stock défectueux (renvoi, destruction).
 - **Affichage :** différencier les articles vendables des défectueux ; un livre défectueux n'apparaît jamais comme disponible. L'opérateur est `responsable`, `client` ou `systeme`, jamais un employé.
 
-### 9. Ventes et retours au comptoir
+### 9. Ventes et retours
 
-- **But :** enregistrer et consulter les opérations faites en magasin.
-- **Contenu :** recherche d'articles et panier de vente avec les mêmes options que l'écran 4, client facultatif ; liste et détail des ventes (en ligne et comptoir) ; pour une vente, articles et quantités déjà retournés.
-- **Actions :** enregistrer une vente (y compris le retrait d'une commande en ligne ou d'une mise de côté), marquer une commande en ligne comme remise, enregistrer un retour avec son issue : remboursement, échange (plastique intact) ou remplacement d'un défectueux par un neuf (RG12).
-- **Affichage :** prix figés, remises et TVA de la vente en XPF. Afficher la date limite de retour (14 jours, ou 1 mois pour un cadeau, RG09), la quantité encore retournable et le montant remboursé. Pour un article revendable rendu ouvert, indiquer qu'il peut être remis en rayon sous cellophane.
+- **But :** suivre les commandes des clients jusqu'à leur expédition et traiter les retours reçus par colis.
+- **Contenu :** liste et détail des commandes avec client, adresse de livraison et statut (à préparer, expédiée) ; pour une commande, articles et quantités déjà retournés.
+- **Actions :** filtrer par statut, marquer une commande comme expédiée, enregistrer un retour avec son issue : remboursement, échange (plastique intact, le nouvel article est expédié à l'adresse de la commande) ou remplacement d'un défectueux par un neuf (RG12).
+- **Affichage :** prix figés, remises et TVA de la commande en XPF. Afficher la date limite de retour (14 jours, ou 1 mois pour un cadeau, RG09), la quantité encore retournable et le montant remboursé. Pour un article revendable rendu ouvert, indiquer qu'il peut être remis en vente sous cellophane.
 
 ### 10. Demandes et mises de côté
 
@@ -109,4 +109,4 @@ Une demande sur un article épuisé du catalogue se fait depuis sa fiche produit
 
 - Emprunt de livres (consigne de l'enseignant)
 - Paiement réel (simulé)
-- Suivi de livraison (la commande passe simplement à « remise »)
+- Suivi de livraison (la commande passe simplement à « expédiée »)

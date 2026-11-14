@@ -137,7 +137,7 @@ describe('client API', () => {
       new Response(JSON.stringify(errorBody), { status: 409 }),
     )
 
-    await expect(post('/ventes', { lignes: [] })).rejects.toMatchObject({
+    await expect(post('/commandes', { lignes: [] })).rejects.toMatchObject({
       name: 'ApiRequestError',
       code: 'LIGNE_INDISPONIBLE',
       message: errorBody.message,
