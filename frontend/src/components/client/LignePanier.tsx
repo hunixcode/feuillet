@@ -8,11 +8,20 @@ import './LignePanier.css'
 interface LignePanierProps {
   produit: Produit | null
   quantite: number
+  montant?: number
+  indisponible?: boolean
   onQuantite: (quantite: number) => void
   onRetirer: () => void
 }
 
-export default function LignePanier({ produit, quantite, onQuantite, onRetirer }: LignePanierProps) {
+export default function LignePanier({
+  produit,
+  quantite,
+  montant,
+  indisponible = false,
+  onQuantite,
+  onRetirer,
+}: LignePanierProps) {
   if (!produit) {
     return (
       <li className="ligne-probleme">
@@ -36,11 +45,11 @@ export default function LignePanier({ produit, quantite, onQuantite, onRetirer }
     )
   }
 
-  const epuise = produit.disponibilite === 'epuise'
+  const epuise = indisponible && produit.disponibilite === 'epuise'
   const sousTitre = produit.auteur ?? produit.marque
 
   return (
-    <li className={epuise ? 'ligne-probleme' : undefined}>
+    <li className={indisponible ? 'ligne-probleme' : undefined}>
       <div className="vignette">
         <Couverture produit={produit} />
       </div>
@@ -56,6 +65,11 @@ export default function LignePanier({ produit, quantite, onQuantite, onRetirer }
         {epuise && (
           <p className="ligne-message">Cet article est épuisé : retirez-le pour pouvoir commander.</p>
         )}
+        {!epuise && indisponible && (
+          <p className="ligne-message">
+            Cette quantité n'est plus disponible : réduisez-la ou retirez l'article.
+          </p>
+        )}
       </div>
       <ChoixQuantite
         valeur={quantite}
@@ -63,6 +77,7 @@ export default function LignePanier({ produit, quantite, onQuantite, onRetirer }
         libelle={`Quantité de ${produit.designation}`}
       />
       <div className="ligne-prix">
+        {montant !== undefined && <span className="ligne-montant">{formatXPF(montant)}</span>}
         <button
           type="button"
           className="lien-action"

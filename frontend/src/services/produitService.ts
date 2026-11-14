@@ -1,4 +1,4 @@
-import type { Produit } from '../types/produit'
+import type { Produit, ProduitDetail } from '../types/produit'
 import { ApiRequestError, get } from './api'
 
 export interface FiltresProduits {
@@ -24,8 +24,8 @@ export function listerProduits(filtres: FiltresProduits = {}): Promise<Produit[]
   return get<Produit[]>(texte ? `/produits?${texte}` : '/produits')
 }
 
-export function obtenirProduit(id: string): Promise<Produit> {
-  return get<Produit>(`/produits/${encodeURIComponent(id)}`)
+export function obtenirProduit(id: string): Promise<ProduitDetail> {
+  return get<ProduitDetail>(`/produits/${encodeURIComponent(id)}`)
 }
 
 export async function obtenirProduits(ids: string[]): Promise<Record<string, Produit | null>> {

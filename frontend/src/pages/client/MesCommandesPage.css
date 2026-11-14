@@ -1,0 +1,78 @@
+.mes-commandes {
+  max-width: 880px;
+  margin: 48px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mes-commandes li {
+  border-bottom: 1px solid var(--ligne-douce);
+}
+
+.mes-commandes li:first-child {
+  border-top: 1px solid var(--ligne-douce);
+}
+
+.mes-commandes a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.mes-commandes a:hover .mes-commandes-titre {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.mes-commandes-infos,
+.mes-commandes-fin {
+  display: grid;
+  gap: 4px;
+}
+
+.mes-commandes-fin {
+  justify-items: end;
+  text-align: right;
+}
+
+.mes-commandes-titre {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.mes-commandes-detail {
+  color: var(--gris);
+  font-size: 0.875rem;
+}
+
+.mes-commandes-total {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.mes-commandes-statut {
+  color: var(--laiton-fonce);
+  font-size: 0.875rem;
+}
+
+.mes-commandes-statut.expediee {
+  color: var(--gris);
+}
+
+@media (max-width: 560px) {
+  .mes-commandes a {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .mes-commandes-fin {
+    justify-items: start;
+    text-align: left;
+  }
+}

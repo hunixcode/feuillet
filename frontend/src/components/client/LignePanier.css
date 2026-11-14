@@ -57,7 +57,14 @@
 .ligne-prix {
   display: grid;
   justify-items: end;
+  gap: 6px;
   min-width: 72px;
+}
+
+.ligne-montant {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .lien-action {

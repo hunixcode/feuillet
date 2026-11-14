@@ -4,6 +4,7 @@ import { usePanier } from '../contexts/usePanier'
 
 const liens = [
   { to: '/catalogue', label: 'Catalogue' },
+  { to: '/commandes', label: 'Mes commandes' },
   { to: '/demandes', label: 'Mes demandes' },
 ]
 

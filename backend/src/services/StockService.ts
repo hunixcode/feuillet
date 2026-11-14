@@ -98,7 +98,7 @@ export class StockService {
     });
   }
 
-  // Article abîmé en magasin : ajustement du stock physique vers le stock défectueux (décision 9 du rapport).
+  // Article abîmé en stock : ajustement du stock physique vers le stock défectueux (décision 9 du rapport).
   async declarerDefectueux(produitId: string, corps: unknown): Promise<EtatStock> {
     const { quantite, motif } = lireQuantite(corps, "quantite", 1);
     return this.modifier(produitId, (avant) => {

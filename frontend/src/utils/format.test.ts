@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDate, formatDateHeure, formatJour, formatJourCourt, formatXPF, jourIso } from './format'
+import { formatDate, formatDateHeure, formatJour, formatJourCourt, formatJourTahiti, formatXPF, jourIso } from './format'
 
 describe('formatXPF', () => {
   it.each([
@@ -99,5 +99,11 @@ describe('formatJourCourt', () => {
 describe('jourIso', () => {
   it('donne le jour de Tahiti au format AAAA-MM-JJ', () => {
     expect(jourIso(new Date('2026-11-10T05:00:00.000Z'))).toBe('2026-11-09')
+  })
+})
+
+describe('formatJourTahiti', () => {
+  it('donne le jour de Tahiti d une fin de journée déjà au lendemain en UTC', () => {
+    expect(formatJourTahiti('2026-11-16T09:59:59.999Z')).toBe('15 novembre 2026')
   })
 })

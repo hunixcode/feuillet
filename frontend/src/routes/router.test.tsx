@@ -91,10 +91,18 @@ describe('routes de l espace client', () => {
     expect(await screen.findByRole('heading', { name: 'Connexion' })).toBeInTheDocument()
   })
 
+  it.each(['/commandes', '/commandes/v-1'])(
+    'envoie vers la connexion un visiteur qui ouvre %s',
+    async (adresse) => {
+      afficher(adresse)
+      expect(await screen.findByRole('heading', { name: 'Connexion' })).toBeInTheDocument()
+    },
+  )
+
   it('affiche le menu de l espace client', async () => {
     afficher('/catalogue')
     const menu = await screen.findByRole('navigation', { name: 'Menu principal' })
-    for (const nom of ['Catalogue', 'Mes demandes', 'Panier', 'Connexion']) {
+    for (const nom of ['Catalogue', 'Mes commandes', 'Mes demandes', 'Panier', 'Connexion']) {
       expect(within(menu).getByRole('link', { name: nom })).toBeInTheDocument()
     }
   })
@@ -132,7 +140,7 @@ describe('routes de l espace responsable', () => {
   it.each([
     ['/admin/catalogue', 'Catalogue et prix'],
     ['/admin/stock', 'Stock et mouvements'],
-    ['/admin/ventes', 'Ventes et retours au comptoir'],
+    ['/admin/ventes', 'Ventes et retours'],
     ['/admin/demandes', 'Demandes et mises de côté'],
     ['/admin/commandes', 'Fournisseurs, commandes et réceptions'],
     ['/admin/rapports', 'Réapprovisionnement et rapports'],

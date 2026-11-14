@@ -4,18 +4,104 @@ import ChoixQuantite from '../../components/client/ChoixQuantite.tsx'
 import Couverture from '../../components/client/Couverture.tsx'
 import Button from '../../components/common/Button.tsx'
 import ErrorMessage from '../../components/common/ErrorMessage.tsx'
+import { useAuth } from '../../contexts/useAuth'
 import { usePanier } from '../../contexts/usePanier'
 import { ApiRequestError } from '../../services/api'
 import { listerCategories } from '../../services/categorieService'
+import { envoyerDemande } from '../../services/demandeService'
 import { obtenirProduit } from '../../services/produitService'
 import type { Categorie } from '../../types/categorie'
-import type { Produit } from '../../types/produit'
+import type { ProduitDetail } from '../../types/produit'
 import { messageErreur } from '../../utils/erreurs'
 import { formatDate, formatXPF } from '../../utils/format'
 import NotFoundPage from '../NotFoundPage.tsx'
 import './ProduitPage.css'
 
-function Achat({ produit }: { produit: Produit }) {
+function messageDemande(raison: unknown): string {
+  if (raison instanceof ApiRequestError && raison.code === 'DEMANDE_EN_COURS') {
+    return 'Vous avez déjà une demande en cours pour cet article.'
+  }
+  if (raison instanceof ApiRequestError && raison.code === 'PRODUIT_DISPONIBLE') {
+    return "Cet article est de nouveau disponible : rechargez la page pour l'ajouter au panier."
+  }
+  return messageErreur(raison)
+}
+
+function DemandeEpuise({ produit }: { produit: ProduitDetail }) {
+  const { utilisateur, chargement } = useAuth()
+  const [quantite, setQuantite] = useState(1)
+  const [envoi, setEnvoi] = useState(false)
+  const [envoyee, setEnvoyee] = useState(false)
+  const [erreur, setErreur] = useState('')
+
+  async function demander() {
+    setEnvoi(true)
+    setErreur('')
+    try {
+      await envoyerDemande({ produitId: produit.id, quantiteSouhaitee: quantite })
+      setEnvoyee(true)
+    } catch (raison) {
+      setErreur(messageDemande(raison))
+    } finally {
+      setEnvoi(false)
+    }
+  }
+
+  function action() {
+    if (chargement) {
+      return null
+    }
+    if (!utilisateur) {
+      return (
+        <div className="achat-ligne">
+          <Link
+            className="common-button common-button--primary"
+            to="/connexion"
+            state={{ depuis: `/produits/${produit.id}` }}
+          >
+            Se connecter pour demander ce livre
+          </Link>
+        </div>
+      )
+    }
+    if (utilisateur.role !== 'client') {
+      return <p className="aide">Connectez-vous avec un compte client pour demander ce livre.</p>
+    }
+    if (envoyee) {
+      return (
+        <p className="aide" role="status">
+          Demande enregistrée : nous vous prévenons dès qu'un exemplaire est mis de côté pour
+          vous. <Link to="/demandes">Suivre mes demandes</Link>
+        </p>
+      )
+    }
+    return (
+      <>
+        <div className="achat-ligne">
+          <ChoixQuantite valeur={quantite} onChange={setQuantite} libelle="Quantité souhaitée" />
+          <Button onClick={demander} loading={envoi}>
+            Demander ce livre
+          </Button>
+        </div>
+        {erreur && <ErrorMessage>{erreur}</ErrorMessage>}
+      </>
+    )
+  }
+
+  return (
+    <>
+      {action()}
+      <p className="aide">
+        {produit.arriveePrevue
+          ? `Retour en rayon prévu le ${formatDate(produit.arriveePrevue)}. `
+          : ''}
+        Une demande ne vous engage pas à acheter : l'article vous est mis de côté dès son arrivée.
+      </p>
+    </>
+  )
+}
+
+function Achat({ produit }: { produit: ProduitDetail }) {
   const { ajouter } = usePanier()
   const [quantite, setQuantite] = useState(1)
   const [ajoute, setAjoute] = useState(false)
@@ -29,20 +115,7 @@ function Achat({ produit }: { produit: Produit }) {
         </p>
       )}
       {epuise ? (
-        <>
-          <div className="achat-ligne">
-            <Button disabled>Ajouter au panier</Button>
-            <Link
-              className="common-button common-button--secondary"
-              to={`/demandes?titre=${encodeURIComponent(produit.designation)}`}
-            >
-              Demander ce livre
-            </Link>
-          </div>
-          <p className="aide">
-            Cet article est épuisé. Demandez-le : nous vous prévenons dès son retour en rayon.
-          </p>
-        </>
+        <DemandeEpuise produit={produit} />
       ) : (
         <>
           <div className="achat-ligne">
@@ -73,7 +146,7 @@ function Achat({ produit }: { produit: Produit }) {
 
 interface Resultat {
   cle: string
-  produit: Produit | null
+  produit: ProduitDetail | null
   introuvable: boolean
   erreur: string
 }

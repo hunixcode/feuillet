@@ -3,8 +3,12 @@ import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Categorie } from '../../types/categorie'
 import type { Produit } from '../../types/produit'
+import type { Utilisateur } from '../../types/utilisateur'
 import { PanierProvider } from '../../contexts/PanierContext.tsx'
+import { AuthContext, type AuthContextValue } from '../../contexts/useAuth'
 import ProduitPage from './ProduitPage.tsx'
+
+const client: Utilisateur = { id: 'u-1', nom: 'Tiare', email: 'tiare@exemple.pf', role: 'client' }
 
 const ecume: Produit = {
   id: 'p-1',
@@ -68,21 +72,32 @@ function simulerApi(produit: Produit) {
   })
 }
 
-function afficher(id: string) {
+function afficher(id: string, utilisateur: Utilisateur | null = null) {
+  const session: AuthContextValue = {
+    utilisateur,
+    chargement: false,
+    connexion: () => Promise.reject(new Error('non utilisé')),
+    inscription: () => Promise.reject(new Error('non utilisé')),
+    deconnexion: () => {},
+  }
   const router = createMemoryRouter(
     [
       { path: '/produits/:id', element: <ProduitPage /> },
       { path: '/catalogue', element: <h1>Catalogue</h1> },
       { path: '/panier', element: <h1>Panier</h1> },
       { path: '/demandes', element: <h1>Mes demandes</h1> },
+      { path: '/connexion', element: <h1>Connexion</h1> },
     ],
     { initialEntries: [`/produits/${id}`] },
   )
   render(
-    <PanierProvider>
-      <RouterProvider router={router} />
-    </PanierProvider>,
+    <AuthContext value={session}>
+      <PanierProvider>
+        <RouterProvider router={router} />
+      </PanierProvider>
+    </AuthContext>,
   )
+  return router
 }
 
 function panierEnregistre() {
@@ -152,18 +167,72 @@ describe('fiche produit', () => {
     expect(panierEnregistre()).toEqual([{ produitId: 'p-1', quantite: 2 }])
   })
 
-  it('grise l ajout d un article épuisé et propose de le demander', async () => {
+  it('invite un visiteur à se connecter pour demander un article épuisé', async () => {
     simulerApi({ ...ecume, disponibilite: 'epuise' })
-    afficher('p-1')
+    const router = afficher('p-1')
 
     expect(await screen.findByText('Épuisé')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Ajouter au panier' })).toBeDisabled()
-    expect(screen.queryByLabelText('Quantité')).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Demander ce livre' })).toHaveAttribute(
-      'href',
-      `/demandes?titre=${encodeURIComponent('L\'Écume des jours')}`,
-    )
+    expect(screen.queryByRole('button', { name: 'Ajouter au panier' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('link', { name: 'Se connecter pour demander ce livre' }))
+
+    expect(await screen.findByRole('heading', { name: 'Connexion' })).toBeInTheDocument()
+    expect(router.state.location.state).toEqual({ depuis: '/produits/p-1' })
     expect(panierEnregistre()).toEqual([])
+  })
+
+  it('envoie la demande d un client sur un article épuisé', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (entree, init) => {
+      if (String(entree).startsWith('/api/categories')) {
+        return reponse(categories)
+      }
+      if (String(entree) === '/api/demandes') {
+        return new Response(JSON.stringify({ id: 'd-1', ...JSON.parse(String(init?.body)) }), {
+          status: 201,
+        })
+      }
+      return reponse({ ...ecume, disponibilite: 'epuise' })
+    })
+    afficher('p-1', client)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Ajouter un exemplaire' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Demander ce livre' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent(/Demande enregistrée/)
+    expect(screen.getByRole('link', { name: 'Suivre mes demandes' })).toHaveAttribute(
+      'href',
+      '/demandes',
+    )
+    const envoi = fetchMock.mock.calls.find(([entree]) => String(entree) === '/api/demandes')
+    expect(JSON.parse(String(envoi?.[1]?.body))).toEqual({ produitId: 'p-1', quantiteSouhaitee: 2 })
+  })
+
+  it('prévient le client qui a déjà une demande en cours sur cet article', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (entree) => {
+      if (String(entree).startsWith('/api/categories')) {
+        return reponse(categories)
+      }
+      if (String(entree) === '/api/demandes') {
+        return new Response(
+          JSON.stringify({ code: 'DEMANDE_EN_COURS', message: 'Demande déjà en cours.' }),
+          { status: 409 },
+        )
+      }
+      return reponse({ ...ecume, disponibilite: 'epuise' })
+    })
+    afficher('p-1', client)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Demander ce livre' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Vous avez déjà une demande en cours pour cet article.',
+    )
+  })
+
+  it('affiche la date de retour prévue d un article épuisé', async () => {
+    simulerApi({ ...ecume, disponibilite: 'epuise', arriveePrevue: '2026-11-20' } as Produit)
+    afficher('p-1', client)
+
+    expect(await screen.findByText(/Retour en rayon prévu le 20 novembre 2026\./)).toBeInTheDocument()
   })
 
   it('affiche le prix sans promotion', async () => {

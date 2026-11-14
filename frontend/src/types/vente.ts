@@ -18,24 +18,44 @@ export interface CommandePayload extends OptionsVente {
 }
 
 export interface LigneVente extends LigneCommande {
+  reference: string
   designation: string
   prixUnitaire: number
   remise: number
   tauxTva: number
+  montant: number
+  montantTva: number
 }
 
-export type CanalVente = 'en_ligne' | 'comptoir'
+export interface Montants {
+  sousTotal: number
+  fraisEmballage: number
+  fraisLivraison: number
+  frais: number
+  montantTva: number
+  total: number
+}
 
-export type StatutVente = 'a_preparer' | 'remise'
+export interface Devis extends Montants {
+  lignes: LigneVente[]
+  lignesIndisponibles: LigneCommande[]
+}
 
-export interface Vente extends OptionsVente {
+export type StatutVente = 'a_preparer' | 'expediee'
+
+export interface ClientVente {
+  id: string
+  nom: string
+  email: string
+}
+
+export interface Vente extends OptionsVente, Montants {
   id: string
   date: string
-  canal: CanalVente
   statut: StatutVente
+  client: ClientVente
   lignes: LigneVente[]
-  frais: number
-  total: number
+  dateExpedition?: string
 }
 
 export interface LigneIndisponibleError extends ApiError {
