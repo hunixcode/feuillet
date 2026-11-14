@@ -1,5 +1,6 @@
 import express from "express";
 import { gererErreurs, routeIntrouvable } from "./erreurs.js";
+import { creerLimiteurs, LIMITES_PAR_DEFAUT, type LimitesRequetes } from "./limitesRequetes.js";
 import { routesAuth } from "./routes/auth.js";
 import { routesCategories } from "./routes/categories.js";
 import { routesDemandes, routesNotifications } from "./routes/demandes.js";
@@ -33,6 +34,10 @@ export interface Dependances {
   retourService: RetourService;
   rapportService: RapportService;
   verifierBase: VerifierBase;
+  /** Limites de requêtes ; valeurs basses dans les tests. */
+  limites?: LimitesRequetes;
+  /** Réglage `trust proxy` d'Express : `1` derrière le proxy de Render, sinon toutes les requêtes ont la même IP. */
+  confianceProxy?: boolean | number | string;
 }
 
 export function createApp({
@@ -47,11 +52,21 @@ export function createApp({
   retourService,
   rapportService,
   verifierBase,
+  limites = LIMITES_PAR_DEFAUT,
+  confianceProxy = false,
 }: Dependances) {
   const app = express();
+  const limiteurs = creerLimiteurs(limites);
 
   app.disable("x-powered-by");
+  app.set("trust proxy", confianceProxy);
   app.use(express.json());
+
+  app.post("/api/auth/connexion", limiteurs.connexion);
+  app.post("/api/auth/inscription", limiteurs.inscription);
+  app.get(["/api/produits", "/api/produits/*chemin"], limiteurs.publique);
+  app.post("/api/commandes/devis", limiteurs.publique);
+  app.get("/api/meilleures-ventes", limiteurs.publique);
 
   app.use("/api/health", routesSante(verifierBase));
   app.use("/api/auth", routesAuth(authService));

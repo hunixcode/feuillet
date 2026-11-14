@@ -2,7 +2,7 @@ import "dotenv/config";
 import mongoose from "mongoose";
 import { createApp } from "./app.js";
 import { verifierMongo } from "./baseDeDonnees.js";
-import { lireVariable } from "./config.js";
+import { lireConfianceProxy, lireVariable } from "./config.js";
 import { MongooseCategorieRepository } from "./repositories/MongooseCategorieRepository.js";
 import { MongooseDemandeRepository } from "./repositories/MongooseDemandeRepository.js";
 import { MongooseNotificationRepository } from "./repositories/MongooseNotificationRepository.js";
@@ -83,6 +83,7 @@ const app = createApp({
   retourService,
   rapportService,
   verifierBase: verifierMongo,
+  confianceProxy: lireConfianceProxy(process.env.TRUST_PROXY),
 });
 // RG06 : les mises de côté échues sont libérées chaque minute (et avant chaque liste de demandes).
 const MINUTE = 60_000;

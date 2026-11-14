@@ -40,7 +40,20 @@ Toute erreur suit le format de `ApiError` (`frontend/src/types/api.ts`) :
 | 409 | `VENTE_NON_EXPEDIEE` | Retour sur une commande pas encore expédiée |
 | 409 | `DELAI_RETOUR_DEPASSE` | Retour après la date limite (RG09, `details.dateLimiteRetour`) |
 | 409 | `QUANTITE_NON_RETOURNABLE` | Retour supérieur à la quantité vendue non encore retournée (RG07, `details.quantiteRetournable`) |
+| 429 | `TROP_DE_REQUETES` | Trop de requêtes en peu de temps (voir [Limites de requêtes](#limites-de-requêtes)) ; l'en-tête `Retry-After` donne l'attente en secondes |
 | 500 | `ERREUR_SERVEUR` | Erreur inattendue |
+
+## Limites de requêtes
+
+Au-delà de la limite, l'API répond `429 TROP_DE_REQUETES` au format commun, avec `Retry-After` (secondes à attendre) et les en-têtes `RateLimit-Policy` et `RateLimit`. Le front affiche le message reçu.
+
+| Route | Limite | Compté par |
+|---|---|---|
+| `POST /api/auth/connexion` | 10 essais échoués par tranche de 15 minutes (une connexion réussie ne compte pas) | IP et e-mail (casse et espaces ignorés) ; même réponse que l'e-mail existe ou non |
+| `POST /api/auth/inscription` | 5 comptes créés par heure (une inscription refusée ne compte pas) | IP |
+| `GET /api/produits`, `GET /api/produits/...`, `GET /api/meilleures-ventes`, `POST /api/commandes/devis` | 120 requêtes par minute, compteur partagé | IP |
+
+Les compteurs sont en mémoire : ils repartent de zéro au redémarrage et ne valent que pour une seule instance du serveur (à revoir avec Redis ou la base si l'API tourne un jour sur plusieurs instances). Derrière le proxy de Render, `TRUST_PROXY=1` est nécessaire pour lire l'IP réelle du client (`X-Forwarded-For`) ; sans proxy, laisser la variable vide, sinon un client pourrait choisir son IP.
 
 ## État de l'API
 
@@ -78,13 +91,13 @@ Réponse `201` : `AuthResultat`
 }
 ```
 
-Erreurs : `400 VALIDATION`, `409 EMAIL_DEJA_UTILISE`.
+Erreurs : `400 VALIDATION`, `409 EMAIL_DEJA_UTILISE`, `429 TROP_DE_REQUETES`.
 
 ### `POST /api/auth/connexion`
 
 Corps : `{ "email": "…", "motDePasse": "…" }`. Même route pour le client et le responsable ; le front dirige vers l'espace correspondant à `utilisateur.role`.
 
-Réponse `200` : `AuthResultat`. Erreurs : `400 VALIDATION`, `401 IDENTIFIANTS_INVALIDES`.
+Réponse `200` : `AuthResultat`. Erreurs : `400 VALIDATION`, `401 IDENTIFIANTS_INVALIDES`, `429 TROP_DE_REQUETES`.
 
 ### `GET /api/auth/moi`
 
