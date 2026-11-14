@@ -51,7 +51,7 @@ Au-delà de la limite, l'API répond `429 TROP_DE_REQUETES` au format commun, av
 |---|---|---|
 | `POST /api/auth/connexion` | 10 essais échoués par tranche de 15 minutes (une connexion réussie ne compte pas) | IP et e-mail (casse et espaces ignorés) ; même réponse que l'e-mail existe ou non |
 | `POST /api/auth/inscription` | 5 comptes créés par heure (une inscription refusée ne compte pas) | IP |
-| `GET /api/produits`, `GET /api/produits/...`, `POST /api/commandes/devis` | 120 requêtes par minute, compteur partagé | IP |
+| `GET /api/produits`, `GET /api/produits/...`, `GET /api/meilleures-ventes`, `POST /api/commandes/devis` | 120 requêtes par minute, compteur partagé | IP |
 
 Les compteurs sont en mémoire : ils repartent de zéro au redémarrage et ne valent que pour une seule instance du serveur (à revoir avec Redis ou la base si l'API tourne un jour sur plusieurs instances). Derrière le proxy de Render, `TRUST_PROXY=1` est nécessaire pour lire l'IP réelle du client (`X-Forwarded-For`) ; sans proxy, laisser la variable vide, sinon un client pourrait choisir son IP.
 

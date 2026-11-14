@@ -147,6 +147,14 @@ describe("limites de requêtes", () => {
       await request(app).get("/api/produits").expect(429);
     });
 
+    it("compte aussi les meilleures ventes avec le catalogue", async () => {
+      const app = creerApp(limites);
+
+      await request(app).get("/api/meilleures-ventes").expect(200);
+      await request(app).get("/api/produits").expect(200);
+      await request(app).get("/api/meilleures-ventes").expect(429);
+    });
+
     it("ne limite pas les autres routes", async () => {
       const app = creerApp(limites);
 

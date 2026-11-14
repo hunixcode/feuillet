@@ -66,6 +66,7 @@ export function createApp({
   app.post("/api/auth/inscription", limiteurs.inscription);
   app.get(["/api/produits", "/api/produits/*chemin"], limiteurs.publique);
   app.post("/api/commandes/devis", limiteurs.publique);
+  app.get("/api/meilleures-ventes", limiteurs.publique);
 
   app.use("/api/health", routesSante(verifierBase));
   app.use("/api/auth", routesAuth(authService));
