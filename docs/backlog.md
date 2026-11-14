@@ -164,6 +164,7 @@ Fait :
 - Workflows backend et frontend : étape `npm audit --omit=dev --audit-level=high`, la CI échoue sur une vulnérabilité haute ou critique d'une dépendance de production
 - `.github/dependabot.yml` : mises à jour hebdomadaires (lundi, heure de Tahiti) de `backend/`, `frontend/` et des actions GitHub, mineures regroupées
 - README : marche à suivre quand une alerte arrive
+- 13/11/2026 : la nouvelle étape de CI a bloqué la PR sur une faille haute de mongoose publiée entre-temps ; `npm audit fix` (mongoose 9.11.1 vers 9.12.1, mongodb 7.7.0 vers 7.8.0), 272 tests et build passent
 
 Reste à faire :
 - Activer les alertes et les mises à jour de sécurité Dependabot dans les réglages du dépôt (Settings, Code security), qui ne se configurent pas par fichier
