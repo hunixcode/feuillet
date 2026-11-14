@@ -9,6 +9,7 @@ import JournalMouvements from '../../components/responsable/JournalMouvements.ts
 import TableauStock from '../../components/responsable/TableauStock.tsx'
 import { LIBELLES_TYPE } from '../../components/responsable/libelles'
 import { listerCategories } from '../../services/categorieService'
+import { listerProduitsAReapprovisionner } from '../../services/reapproService'
 import { listerMouvements, listerStock, type FiltresMouvements } from '../../services/stockService'
 import type { Categorie } from '../../types/categorie'
 import type { TypeProduit } from '../../types/produit'
@@ -16,7 +17,7 @@ import type { LigneStock, Mouvement } from '../../types/stock'
 import { messageErreur } from '../../utils/erreurs'
 import './StockPage.css'
 
-type FiltreEtat = 'tous' | 'epuises' | 'defectueux'
+type FiltreEtat = 'tous' | 'sous-seuil' | 'epuises' | 'defectueux'
 
 function StockPage() {
   const [recherche, setRecherche] = useState('')
@@ -25,6 +26,7 @@ function StockPage() {
   const [filtreEtat, setFiltreEtat] = useState<FiltreEtat>('tous')
   const [lignes, setLignes] = useState<LigneStock[] | null>(null)
   const [articles, setArticles] = useState<LigneStock[]>([])
+  const [sousSeuil, setSousSeuil] = useState<string[]>([])
   const [categories, setCategories] = useState<Categorie[]>([])
   const [mouvements, setMouvements] = useState<Mouvement[] | null>(null)
   const [filtresJournal, setFiltresJournal] = useState<FiltresMouvements>({})
@@ -91,6 +93,24 @@ function StockPage() {
 
   useEffect(() => {
     let actif = true
+    listerProduitsAReapprovisionner()
+      .then((liste) => {
+        if (actif) {
+          setSousSeuil(liste.map((produit) => produit.produitId))
+        }
+      })
+      .catch((probleme: unknown) => {
+        if (actif) {
+          setErreur(messageErreur(probleme))
+        }
+      })
+    return () => {
+      actif = false
+    }
+  }, [version])
+
+  useEffect(() => {
+    let actif = true
     listerMouvements(filtresJournal)
       .then((liste) => {
         if (actif) {
@@ -108,6 +128,9 @@ function StockPage() {
   }, [filtresJournal, version])
 
   const lignesAffichees = lignes?.filter((ligne) => {
+    if (filtreEtat === 'sous-seuil') {
+      return sousSeuil.includes(ligne.produitId)
+    }
     if (filtreEtat === 'epuises') {
       return ligne.quantiteVendable === 0
     }
@@ -176,6 +199,7 @@ function StockPage() {
             onChange={(evenement) => setFiltreEtat(evenement.target.value as FiltreEtat)}
           >
             <option value="tous">Tous les articles</option>
+            <option value="sous-seuil">Sous le seuil d’alerte</option>
             <option value="epuises">Épuisés</option>
             <option value="defectueux">Avec des défectueux</option>
           </Select>

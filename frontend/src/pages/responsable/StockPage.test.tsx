@@ -63,6 +63,9 @@ function reponseParDefaut({ url }: Requete): Response {
   if (url.startsWith('/api/mouvements')) {
     return json([vente])
   }
+  if (url.startsWith('/api/reapprovisionnement')) {
+    return json([])
+  }
   return json([ile, casino, carnet])
 }
 
@@ -147,6 +150,34 @@ describe('page stock du responsable', () => {
     expect(tableauStock().getByRole('button', { name: 'Casino Royale' })).toBeInTheDocument()
     expect(tableauStock().queryByRole('button', { name: "L'Île au trésor" })).not.toBeInTheDocument()
     expect(tableauStock().queryByRole('button', { name: 'Carnet ligné A5' })).not.toBeInTheDocument()
+  })
+
+  it('n affiche que les articles sous leur seuil d alerte selon le serveur', async () => {
+    const requetes = simulerApi(({ url }) =>
+      url.startsWith('/api/reapprovisionnement')
+        ? json([
+            {
+              produitId: 'p-2',
+              reference: 'LIV-002',
+              designation: 'Casino Royale',
+              quantiteVendable: 0,
+              quantiteAcheteeOrigine: 8,
+              seuilAlerte: 20,
+              pourcentageVendu: 100,
+              quantiteEnCommande: 0,
+            },
+          ])
+        : undefined,
+    )
+    render(<StockPage />)
+    await tableauStock().findByRole('button', { name: "L'Île au trésor" })
+
+    fireEvent.change(screen.getByLabelText('État'), { target: { value: 'sous-seuil' } })
+
+    expect(tableauStock().getByRole('button', { name: 'Casino Royale' })).toBeInTheDocument()
+    expect(tableauStock().queryByRole('button', { name: "L'Île au trésor" })).not.toBeInTheDocument()
+    expect(tableauStock().queryByRole('button', { name: 'Carnet ligné A5' })).not.toBeInTheDocument()
+    expect(requetes.some(({ url }) => url === '/api/reapprovisionnement')).toBe(true)
   })
 
   it('n affiche que les articles avec des défectueux', async () => {

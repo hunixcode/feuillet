@@ -135,6 +135,17 @@ describe('TableauVentesProduits', () => {
     expect(screen.getAllByRole('row')).toHaveLength(3)
   })
 
+  it('explique les colonnes au survol', () => {
+    render(<TableauVentesProduits produits={[ile]} evolutions={evolutions} onSelection={vi.fn()} />)
+
+    expect(screen.getByText('Tendance', { selector: '.info-terme' })).toHaveAccessibleDescription(
+      /Petite courbe des exemplaires vendus nets/,
+    )
+    expect(screen.getByText('Net', { selector: '.info-terme' })).toHaveAccessibleDescription(
+      'Vendus moins retournés : les exemplaires vraiment partis.',
+    )
+  })
+
   it('garde un tableau simple sans évolutions', () => {
     render(<TableauVentesProduits produits={[ile]} />)
 

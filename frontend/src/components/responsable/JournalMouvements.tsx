@@ -7,6 +7,7 @@ import {
   LIBELLES_OPERATEUR,
   libelleQuantiteMouvement,
 } from './libelles'
+import EnteteInfo from './EnteteInfo.tsx'
 
 interface JournalMouvementsProps {
   mouvements: Mouvement[]
@@ -58,12 +59,32 @@ function JournalMouvements({ mouvements, articles, filtres, onFiltres }: Journal
           <table className="stock-tableau">
             <thead>
               <tr>
-                <th scope="col">Date</th>
-                <th scope="col">Article</th>
-                <th scope="col">Type</th>
-                <th scope="col" className="stock-nombre">Quantité</th>
-                <th scope="col">Motif</th>
-                <th scope="col">Opérateur</th>
+                <EnteteInfo
+                  libelle="Date"
+                  info="Jour et heure du mouvement, à l’heure de Tahiti."
+                />
+                <EnteteInfo
+                  libelle="Article"
+                  info="Article dont le stock a changé."
+                />
+                <EnteteInfo
+                  libelle="Type"
+                  info="Entrée : réception fournisseur. Vente : commande d’un client. Retour : article rendu. Remplacement : défectueux échangé contre un neuf. Ajustement : correction d’inventaire ou article déclaré abîmé."
+                />
+                <EnteteInfo
+                  libelle="Quantité"
+                  info="Exemplaires ajoutés (+) ou retirés (−) du stock. Pour une correction d’inventaire : la quantité avant → après le comptage."
+                  className="stock-nombre"
+                  aDroite
+                />
+                <EnteteInfo
+                  libelle="Motif"
+                  info="Raison du mouvement, par exemple la commande ou la réception concernée."
+                />
+                <EnteteInfo
+                  libelle="Opérateur"
+                  info="Qui a provoqué le mouvement : le responsable, un client (commande en ligne) ou le système (opération automatique, sans intervention de personne)."
+                />
               </tr>
             </thead>
             <tbody>

@@ -1,6 +1,7 @@
 import type { LigneRapport } from '../../types/rapport'
 import { formatXPF } from '../../utils/format'
 import type { PointVentes } from './CourbeVentes.tsx'
+import EnteteInfo from './EnteteInfo.tsx'
 
 interface TableauVentesProduitsProps {
   produits: LigneRapport[]
@@ -48,12 +49,40 @@ function TableauVentesProduits({
       <table className="ventes-produits">
         <thead>
           <tr>
-            <th scope="col">Article</th>
-            {avecCourbe && <th scope="col">Tendance</th>}
-            <th scope="col" className="ventes-produits-nombre">Vendus</th>
-            <th scope="col" className="ventes-produits-nombre">Retournés</th>
-            <th scope="col" className="ventes-produits-nombre">Net</th>
-            <th scope="col" className="ventes-produits-montant">Montant net</th>
+            <EnteteInfo
+              libelle="Article"
+              info="Désignation et référence de l’article. Cliquez sur son nom pour afficher sa courbe dans l’évolution au-dessus."
+            />
+            {avecCourbe && (
+              <EnteteInfo
+                libelle="Tendance"
+                info="Petite courbe des exemplaires vendus nets chaque jour de la semaine. Cliquez dessus pour l’agrandir."
+              />
+            )}
+            <EnteteInfo
+              libelle="Vendus"
+              info="Exemplaires vendus sur la période, avant les retours."
+              className="ventes-produits-nombre"
+              aDroite
+            />
+            <EnteteInfo
+              libelle="Retournés"
+              info="Exemplaires rapportés par les clients sur la période."
+              className="ventes-produits-nombre"
+              aDroite
+            />
+            <EnteteInfo
+              libelle="Net"
+              info="Vendus moins retournés : les exemplaires vraiment partis."
+              className="ventes-produits-nombre"
+              aDroite
+            />
+            <EnteteInfo
+              libelle="Montant net"
+              info="Montant des ventes moins celui des retours. La barre compare l’article au meilleur de la période."
+              className="ventes-produits-montant"
+              aDroite
+            />
           </tr>
         </thead>
         <tbody>

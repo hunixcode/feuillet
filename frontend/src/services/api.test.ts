@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { api, ApiRequestError, delete as deleteRequest, get, post, put } from './api'
+import { api, ApiRequestError, delete as deleteRequest, get, post, put, telecharger } from './api'
 
 describe('client API', () => {
   beforeEach(() => {
@@ -307,5 +307,48 @@ describe('client API', () => {
     expect(error).toBeInstanceOf(ApiRequestError)
     expect(error).toMatchObject({ name: 'ApiRequestError', code: 'INVALIDE' })
     expect(error).toBeInstanceOf(Error)
+  })
+})
+
+describe('telecharger', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    vi.restoreAllMocks()
+  })
+
+  it('récupère un fichier avec le token et le nom donné par le serveur', async () => {
+    localStorage.setItem('token', 'jeton')
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('a;b', {
+        headers: { 'Content-Disposition': 'attachment; filename="rapport-2026-11-02-2026-11-08.csv"' },
+      }),
+    )
+
+    const fichier = await telecharger('/rapports/export.csv', 'rapport.csv')
+
+    const [url, options] = fetchMock.mock.calls[0]
+    expect(url).toBe('/api/rapports/export.csv')
+    expect(new Headers(options?.headers).get('Authorization')).toBe('Bearer jeton')
+    expect(fichier.nom).toBe('rapport-2026-11-02-2026-11-08.csv')
+    expect(await fichier.contenu.text()).toBe('a;b')
+  })
+
+  it('garde le nom par défaut sans en-tête de fichier', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('a;b'))
+
+    const fichier = await telecharger('/rapports/export.csv', 'rapport.csv')
+
+    expect(fichier.nom).toBe('rapport.csv')
+  })
+
+  it('transmet l erreur du serveur', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ code: 'VALIDATION', message: 'Période invalide.' }), { status: 400 }),
+    )
+
+    await expect(telecharger('/rapports/export.csv', 'rapport.csv')).rejects.toMatchObject({
+      code: 'VALIDATION',
+      message: 'Période invalide.',
+    })
   })
 })

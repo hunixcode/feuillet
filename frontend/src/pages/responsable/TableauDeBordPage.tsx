@@ -4,6 +4,7 @@ import ErrorMessage from '../../components/common/ErrorMessage.tsx'
 import Loader from '../../components/common/Loader.tsx'
 import type { PointVentes } from '../../components/responsable/CourbeVentes.tsx'
 import GraphiqueVentes from '../../components/responsable/GraphiqueVentes.tsx'
+import InfoBulle from '../../components/responsable/InfoBulle.tsx'
 import SuiviVentes from '../../components/responsable/SuiviVentes.tsx'
 import TableauVentesProduits from '../../components/responsable/TableauVentesProduits.tsx'
 import { listerCategories } from '../../services/categorieService'
@@ -328,23 +329,48 @@ function TableauDeBordPage() {
                 </div>
                 <dl className="tableau-bord-chiffres">
                   <div>
-                    <dt>Vente nette</dt>
+                    <dt>
+                      <InfoBulle
+                        libelle="Vente nette"
+                        info="Montant des ventes moins celui des retours, sur la semaine ou le jour choisi. Les frais de livraison et d’emballage ne sont pas comptés."
+                      />
+                    </dt>
                     <dd>{formatXPF(detail.totaux.net)}</dd>
                   </div>
                   <div>
-                    <dt>Articles vendus</dt>
+                    <dt>
+                      <InfoBulle
+                        libelle="Articles vendus"
+                        info="Exemplaires vendus moins exemplaires rendus."
+                      />
+                    </dt>
                     <dd>{detail.totaux.quantiteNette}</dd>
                   </div>
                   <div>
-                    <dt>Commandes</dt>
+                    <dt>
+                      <InfoBulle
+                        libelle="Commandes"
+                        info="Nombre de commandes passées en ligne par les clients."
+                      />
+                    </dt>
                     <dd>{detail.statistiques.nombreVentes}</dd>
                   </div>
                   <div>
-                    <dt>Panier moyen</dt>
+                    <dt>
+                      <InfoBulle
+                        libelle="Panier moyen"
+                        info="Montant moyen d’une commande : ventes brutes divisées par le nombre de commandes."
+                      />
+                    </dt>
                     <dd>{formatXPF(detail.statistiques.panierMoyen)}</dd>
                   </div>
                   <div>
-                    <dt>Retours</dt>
+                    <dt>
+                      <InfoBulle
+                        libelle="Retours"
+                        info="Nombre de retours enregistrés, et en dessous le montant des articles rendus."
+                      />
+                    </dt>
                     <dd>
                       {detail.statistiques.nombreRetours}
                       <small>{formatXPF(detail.totaux.retours)} rendus</small>

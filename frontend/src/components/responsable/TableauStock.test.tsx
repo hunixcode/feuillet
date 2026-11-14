@@ -43,6 +43,18 @@ describe('TableauStock', () => {
     ])
   })
 
+  it('explique chaque colonne au survol', () => {
+    render(<TableauStock lignes={lignes} onSelection={vi.fn()} />)
+
+    expect(screen.getByRole('columnheader', { name: 'Vendable' })).toBeInTheDocument()
+    expect(screen.getByText('Vendable', { selector: '.info-terme' })).toHaveAccessibleDescription(
+      'En rayon moins mis de côté : ce qui peut encore être commandé par les clients.',
+    )
+    expect(screen.getByText('Défectueux', { selector: '.info-terme' })).toHaveAccessibleDescription(
+      /jamais vendables/,
+    )
+  })
+
   it('affiche épuisé un article sans vendable même s il a des défectueux', () => {
     render(<TableauStock lignes={lignes} onSelection={vi.fn()} />)
 

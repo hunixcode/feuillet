@@ -150,6 +150,20 @@ describe('page catalogue du responsable', () => {
     expect(within(panneau).getByText('Promotion', { selector: 'span' })).toBeInTheDocument()
   })
 
+  it('explique les colonnes du catalogue', async () => {
+    simulerApi()
+    render(<CatalogueAdminPage />)
+    await screen.findByRole('button', { name: "L'Île au trésor" })
+
+    expect(screen.getByRole('columnheader', { name: 'Prix TTC' })).toBeInTheDocument()
+    expect(screen.getByText('TVA', { selector: '.info-terme' })).toHaveAccessibleDescription(
+      'Taux de TVA déjà compris dans le prix TTC.',
+    )
+    expect(screen.getByText('Disponibilité', { selector: '.info-terme' })).toHaveAccessibleDescription(
+      /« Non renseigné » si le stock n’est pas encore connu/,
+    )
+  })
+
   it('affiche séparément les articles archivés', async () => {
     const requetes = simulerApi()
     render(<CatalogueAdminPage />)

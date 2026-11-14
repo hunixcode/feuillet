@@ -1,5 +1,5 @@
 import type { Rapport } from '../types/rapport'
-import { get } from './api'
+import { get, telecharger, type Fichier } from './api'
 
 export interface FiltresRapport {
   semaine?: string
@@ -8,13 +8,21 @@ export interface FiltresRapport {
   categorie?: string
 }
 
-export function lireRapport(filtres: FiltresRapport = {}): Promise<Rapport> {
-  const parametres = new URLSearchParams()
+function parametres(filtres: FiltresRapport): string {
+  const recherche = new URLSearchParams()
   for (const [cle, valeur] of Object.entries(filtres)) {
     if (valeur) {
-      parametres.set(cle, valeur)
+      recherche.set(cle, valeur)
     }
   }
-  const requete = parametres.toString()
-  return get<Rapport>(requete ? `/rapports?${requete}` : '/rapports')
+  const texte = recherche.toString()
+  return texte ? `?${texte}` : ''
+}
+
+export function lireRapport(filtres: FiltresRapport = {}): Promise<Rapport> {
+  return get<Rapport>(`/rapports${parametres(filtres)}`)
+}
+
+export function exporterRapport(filtres: FiltresRapport = {}): Promise<Fichier> {
+  return telecharger(`/rapports/export.csv${parametres(filtres)}`, 'rapport.csv')
 }
