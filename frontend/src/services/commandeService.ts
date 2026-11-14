@@ -17,6 +17,10 @@ export function obtenirCommande(id: string): Promise<Vente> {
   return get<Vente>(`/commandes/${encodeURIComponent(id)}`)
 }
 
+export function paiementRefuse(erreur: unknown): boolean {
+  return erreur instanceof ApiRequestError && erreur.code === 'PAIEMENT_REFUSE'
+}
+
 export function lignesRefusees(erreur: unknown): LigneCommande[] {
   if (!(erreur instanceof ApiRequestError) || erreur.code !== 'LIGNE_INDISPONIBLE') {
     return []

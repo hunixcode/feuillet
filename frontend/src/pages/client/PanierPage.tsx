@@ -8,18 +8,31 @@ import Loader from '../../components/common/Loader.tsx'
 import Select from '../../components/common/Select.tsx'
 import { useAuth } from '../../contexts/useAuth'
 import { usePanier } from '../../contexts/usePanier'
-import { calculerDevis, lignesRefusees, passerCommande } from '../../services/commandeService'
+import {
+  calculerDevis,
+  lignesRefusees,
+  paiementRefuse,
+  passerCommande,
+} from '../../services/commandeService'
 import { obtenirProduits } from '../../services/produitService'
 import type { Produit } from '../../types/produit'
-import type { CommandePayload, Devis, LigneCommande, OccasionCadeau } from '../../types/vente'
+import type {
+  CommandePayload,
+  Devis,
+  LigneCommande,
+  OccasionCadeau,
+  PaiementDemo,
+} from '../../types/vente'
 import { erreursDesChamps, messageErreur, stockModifie } from '../../utils/erreurs'
 import { formatXPF } from '../../utils/format'
 import './PanierPage.css'
 
 const LIGNES_REFUSEES =
-  "Rien n'a été enregistré : certains articles ne sont plus disponibles dans la quantité demandée. Corrigez votre panier puis confirmez à nouveau."
+  "Rien n'a été enregistré : certains articles ne sont plus disponibles dans la quantité demandée. Corrigez votre panier puis payez à nouveau."
 const STOCK_CHANGE =
-  "Le stock a changé pendant votre commande. Rien n'a été enregistré : vérifiez votre panier et confirmez à nouveau."
+  "Le stock a changé pendant votre commande. Rien n'a été enregistré : vérifiez votre panier et payez à nouveau."
+const PAIEMENT_REFUSE =
+  "Paiement refusé (démonstration) : la commande n'a pas été enregistrée. Votre panier est intact, vous pouvez payer à nouveau."
 
 function PanierPage() {
   const { utilisateur, chargement: sessionEnCours } = useAuth()
@@ -36,7 +49,7 @@ function PanierPage() {
   const [devis, setDevis] = useState<{ cle: string; valeur: Devis } | null>(null)
   const [erreurDevis, setErreurDevis] = useState<{ cle: string; message: string } | null>(null)
   const [essaiDevis, setEssaiDevis] = useState(0)
-  const [envoi, setEnvoi] = useState(false)
+  const [envoi, setEnvoi] = useState<PaiementDemo | null>(null)
   const [refus, setRefus] = useState<{ message: string; lignes: LigneCommande[] } | null>(null)
   const [erreurAdresse, setErreurAdresse] = useState('')
 
@@ -122,12 +135,16 @@ function PanierPage() {
     retirer(produitId)
   }
 
-  async function confirmer() {
+  async function payer(paiementDemo: PaiementDemo) {
     setRefus(null)
     setErreurAdresse('')
-    setEnvoi(true)
+    setEnvoi(paiementDemo)
     try {
-      const vente = await passerCommande({ ...panier, adresseLivraison: adresse.trim() })
+      const vente = await passerCommande({
+        ...panier,
+        adresseLivraison: adresse.trim(),
+        paiementDemo,
+      })
       vider()
       navigate(`/commandes/${vente.id}`, { state: { confirmee: true } })
     } catch (raison) {
@@ -141,11 +158,13 @@ function PanierPage() {
         setEssaiDevis((actuel) => actuel + 1)
       } else if (champs.adresseLivraison) {
         setErreurAdresse(champs.adresseLivraison)
+      } else if (paiementRefuse(raison)) {
+        setRefus({ message: PAIEMENT_REFUSE, lignes: [] })
       } else {
         setRefus({ message: messageErreur(raison), lignes: [] })
       }
     } finally {
-      setEnvoi(false)
+      setEnvoi(null)
     }
   }
 
@@ -172,10 +191,24 @@ function PanierPage() {
     if (utilisateur.role !== 'client') {
       return <p className="aide">Connectez-vous avec un compte client pour commander.</p>
     }
+    const bloque = aDesProblemes || !devisAJour || envoi !== null
     return (
-      <Button onClick={confirmer} loading={envoi} disabled={aDesProblemes || !devisAJour}>
-        Confirmer la commande
-      </Button>
+      <section className="paiement" aria-labelledby="titre-paiement">
+        <h3 id="titre-paiement">Paiement (démonstration)</h3>
+        <p className="paiement-fictif">Paiement fictif : aucun montant n'est débité.</p>
+        <p className="aide">Aucune carte n'est demandée. Le paiement confirme la commande.</p>
+        <Button onClick={() => payer('accepte')} loading={envoi === 'accepte'} disabled={bloque}>
+          Payer (démo)
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={() => payer('refuse')}
+          loading={envoi === 'refuse'}
+          disabled={bloque}
+        >
+          Simuler un refus
+        </Button>
+      </section>
     )
   }
 

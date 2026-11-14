@@ -417,3 +417,16 @@ Reste à faire :
 Fait :
 - Décision : pas de mise en ligne, c'est un projet de classe ; la démo se fait avec `docker compose` et le seed, noté dans `docs/rapport.md`
 - #55 (environnement de dev sur Render) fermée sans suite
+
+14/11/2026 - Noah (front A) : paiement fictif de démonstration dans le panier (issue #57)
+
+Fait :
+- Panier : étape « Paiement (démonstration) » dans le récapitulatif, avec « Paiement fictif : aucun montant n'est débité », sans aucun champ de carte
+- Bouton « Payer (démo) » qui envoie paiementDemo « accepte » à POST /api/commandes, et bouton « Simuler un refus » qui envoie « refuse »
+- Paiement refusé (402 PAIEMENT_REFUSE) : message dans le récapitulatif, rien n'est enregistré, panier et adresse gardés, le client peut payer à nouveau
+- Types : paiementDemo dans le panier envoyé, paiement (mode demo, statut accepte, date) dans la commande
+- 348 tests (heure de Tahiti et UTC), le build et le lint passent
+- Vérifié avec le back de la PR #74 sur une base MongoDB temporaire locale (la base partagée n'est pas touchée) : refus sans commande enregistrée, puis paiement accepté et commande qui garde le paiement ; le parcours client complet passe toujours (22 étapes)
+
+Reste à faire :
+- Merge de la PR #74 (back du paiement) avec ce front

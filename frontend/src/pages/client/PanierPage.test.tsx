@@ -142,8 +142,8 @@ function afficher(session: Partial<AuthContextValue> = {}) {
   return router
 }
 
-async function boutonConfirmer() {
-  const bouton = await screen.findByRole('button', { name: 'Confirmer la commande' })
+async function boutonPayer() {
+  const bouton = await screen.findByRole('button', { name: 'Payer (démo)' })
   await waitFor(() => expect(bouton).toBeEnabled())
   return bouton
 }
@@ -278,7 +278,7 @@ describe('page Panier', () => {
     simulerApi([{ ...ile, disponibilite: 'epuise' }])
     afficher({ utilisateur: client })
 
-    expect(await boutonConfirmer()).toBeEnabled()
+    expect(await boutonPayer()).toBeEnabled()
     expect(screen.queryByText(/Cet article est épuisé/)).not.toBeInTheDocument()
   })
 
@@ -292,7 +292,8 @@ describe('page Panier', () => {
         'Cette quantité n\'est plus disponible : réduisez-la ou retirez l\'article.',
       ),
     ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Confirmer la commande' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Payer (démo)' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Simuler un refus' })).toBeDisabled()
   })
 
   it('signale un article qui n existe plus dans le catalogue', async () => {
@@ -357,6 +358,9 @@ describe('page Panier', () => {
     const router = afficher()
     await screen.findByRole('link', { name: 'L\'Île au trésor' })
 
+    expect(
+      screen.queryByRole('heading', { name: 'Paiement (démonstration)' }),
+    ).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('link', { name: 'Se connecter pour commander' }))
 
     expect(await screen.findByRole('heading', { name: 'Connexion' })).toBeInTheDocument()
@@ -371,7 +375,21 @@ describe('page Panier', () => {
     expect(
       await screen.findByText('Connectez-vous avec un compte client pour commander.'),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Confirmer la commande' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Payer (démo)' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Simuler un refus' })).not.toBeInTheDocument()
+  })
+
+  it('affiche l étape de paiement fictif sans aucun champ de carte', async () => {
+    remplirPanier([{ produitId: 'p-1', quantite: 1 }])
+    simulerApi([ile])
+    afficher({ utilisateur: client })
+    await boutonPayer()
+    const paiement = within(screen.getByRole('region', { name: 'Paiement (démonstration)' }))
+
+    expect(paiement.getByText('Paiement fictif : aucun montant n\'est débité.')).toBeInTheDocument()
+    expect(paiement.getByRole('button', { name: 'Simuler un refus' })).toBeEnabled()
+    expect(paiement.queryByRole('textbox')).not.toBeInTheDocument()
+    expect(paiement.queryByRole('spinbutton')).not.toBeInTheDocument()
   })
 
   it('confirme la commande, vide le panier et ouvre la commande enregistrée', async () => {
@@ -380,7 +398,7 @@ describe('page Panier', () => {
       commande: () => reponse({ id: 'v-1', statut: 'a_preparer' }, 201),
     })
     const router = afficher({ utilisateur: client })
-    const bouton = await boutonConfirmer()
+    const bouton = await boutonPayer()
 
     fireEvent.change(screen.getByLabelText('Adresse de livraison'), {
       target: { value: '  12 rue des Remparts, Papeete  ' },
@@ -396,7 +414,44 @@ describe('page Panier', () => {
       lignes: [{ produitId: 'p-1', quantite: 2 }],
       emballageCadeau: false,
       adresseLivraison: '12 rue des Remparts, Papeete',
+      paiementDemo: 'accepte',
     })
+  })
+
+  it('n enregistre rien quand le paiement est refusé et laisse payer à nouveau', async () => {
+    remplirPanier([{ produitId: 'p-1', quantite: 2 }])
+    const fetchMock = simulerApi([ile], {
+      commande: (panier) =>
+        panier.paiementDemo === 'refuse'
+          ? reponse(
+              {
+                code: 'PAIEMENT_REFUSE',
+                message: 'Paiement refusé (démonstration) : la commande n\'a pas été enregistrée.',
+              },
+              402,
+            )
+          : reponse({ id: 'v-2', statut: 'a_preparer' }, 201),
+    })
+    const router = afficher({ utilisateur: client })
+    await boutonPayer()
+    fireEvent.change(screen.getByLabelText('Adresse de livraison'), { target: { value: 'BP 12' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Simuler un refus' }))
+
+    expect(await screen.findByText(/Paiement refusé \(démonstration\)/)).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/panier')
+    expect(panierEnregistre()).toEqual([{ produitId: 'p-1', quantite: 2 }])
+    expect(screen.getByLabelText('Adresse de livraison')).toHaveValue('BP 12')
+    const [, refus] = appels(fetchMock, '/api/commandes')[0]
+    expect(JSON.parse(String(refus?.body))).toMatchObject({ paiementDemo: 'refuse' })
+
+    fireEvent.click(await boutonPayer())
+
+    expect(await screen.findByRole('heading', { name: 'Commande' })).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/commandes/v-2')
+    expect(panierEnregistre()).toEqual([])
+    const [, accepte] = appels(fetchMock, '/api/commandes')[1]
+    expect(JSON.parse(String(accepte?.body))).toMatchObject({ paiementDemo: 'accepte' })
   })
 
   it('affiche sous le champ l erreur d adresse renvoyée par la librairie', async () => {
@@ -414,7 +469,7 @@ describe('page Panier', () => {
     })
     afficher({ utilisateur: client })
 
-    fireEvent.click(await boutonConfirmer())
+    fireEvent.click(await boutonPayer())
 
     expect(
       await screen.findByText('L\'adresse de livraison est obligatoire.'),
@@ -437,7 +492,7 @@ describe('page Panier', () => {
         ),
     })
     afficher({ utilisateur: client })
-    const bouton = await boutonConfirmer()
+    const bouton = await boutonPayer()
     fireEvent.change(screen.getByLabelText('Adresse de livraison'), { target: { value: 'BP 12' } })
 
     fireEvent.click(bouton)
@@ -459,7 +514,7 @@ describe('page Panier', () => {
       commande: () => reponse({ code: 'STOCK_MODIFIE', message: 'Le stock a changé.' }, 409),
     })
     afficher({ utilisateur: client })
-    const bouton = await boutonConfirmer()
+    const bouton = await boutonPayer()
     fireEvent.change(screen.getByLabelText('Adresse de livraison'), { target: { value: 'BP 12' } })
 
     fireEvent.click(bouton)

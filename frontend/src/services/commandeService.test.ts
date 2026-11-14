@@ -5,6 +5,7 @@ import {
   lignesRefusees,
   listerCommandes,
   obtenirCommande,
+  paiementRefuse,
   passerCommande,
 } from './commandeService'
 
@@ -36,12 +37,12 @@ describe('service des commandes', () => {
     expect(JSON.parse(String(options?.body))).toEqual(panier)
   })
 
-  it('passe la commande avec l adresse de livraison', async () => {
+  it('passe la commande avec l adresse de livraison et le paiement de démonstration', async () => {
     const vente = { id: 'v-1', statut: 'a_preparer' }
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(reponse(vente, 201))
 
     await expect(
-      passerCommande({ ...panier, adresseLivraison: 'BP 12, Papeete' }),
+      passerCommande({ ...panier, adresseLivraison: 'BP 12, Papeete', paiementDemo: 'accepte' }),
     ).resolves.toEqual(vente)
 
     const [url, options] = fetchMock.mock.calls[0]
@@ -49,7 +50,16 @@ describe('service des commandes', () => {
     expect(JSON.parse(String(options?.body))).toEqual({
       ...panier,
       adresseLivraison: 'BP 12, Papeete',
+      paiementDemo: 'accepte',
     })
+  })
+
+  it('reconnaît un paiement de démonstration refusé', () => {
+    const refus = new ApiRequestError({ code: 'PAIEMENT_REFUSE', message: 'Paiement refusé.' })
+
+    expect(paiementRefuse(refus)).toBe(true)
+    expect(paiementRefuse(new ApiRequestError({ code: 'STOCK_MODIFIE', message: 'x' }))).toBe(false)
+    expect(paiementRefuse(new Error('x'))).toBe(false)
   })
 
   it('liste les commandes du client', async () => {

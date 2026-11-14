@@ -13,8 +13,17 @@ export interface OptionsVente {
   adresseLivraison?: string
 }
 
+export type PaiementDemo = 'accepte' | 'refuse'
+
 export interface CommandePayload extends OptionsVente {
   lignes: LigneCommande[]
+  paiementDemo?: PaiementDemo
+}
+
+export interface PaiementVente {
+  mode: 'demo'
+  statut: 'accepte'
+  date: string
 }
 
 export interface LigneVente extends LigneCommande {
@@ -55,6 +64,7 @@ export interface Vente extends OptionsVente, Montants {
   statut: StatutVente
   client: ClientVente
   lignes: LigneVente[]
+  paiement?: PaiementVente
   dateExpedition?: string
 }
 
