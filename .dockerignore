@@ -1,0 +1,12 @@
+# Le contexte de build est la racine du dépôt : seuls les sources utiles partent vers Docker.
+**/node_modules
+**/dist
+**/coverage
+**/.env
+**/.env.*
+!**/.env.example
+**/*.log
+.git
+.github
+.dev
+docs
