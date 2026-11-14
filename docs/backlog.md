@@ -273,3 +273,9 @@ Fait :
 
 Reste à faire :
 - Déploiement sur Render (#55)
+
+13/11/2026 - Déploiement : démo en local avec Docker (#55)
+
+Fait :
+- Décision : pas de mise en ligne, c'est un projet de classe ; la démo se fait avec `docker compose` et le seed, noté dans `docs/rapport.md`
+- #55 (environnement de dev sur Render) fermée sans suite
