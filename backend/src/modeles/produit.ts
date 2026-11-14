@@ -44,6 +44,8 @@ export type ProduitCatalogue = FicheProduit & {
   prixApplique: number;
   promotion?: Promotion;
   disponibilite: "disponible" | "epuise";
+  // Produit épuisé avec une commande fournisseur en cours (EX04), AAAA-MM-JJ.
+  arriveePrevue?: string;
 };
 
 // shortcut: recherche sensible aux accents (« ile » ne trouve pas « Île ») ; normaliser un champ dédié si besoin.

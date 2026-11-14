@@ -14,7 +14,7 @@ rectangle "Système de gestion de librairie" {
   usecase "Demander un livre\nindisponible" as UC_DEM
   usecase "Vérifier la disponibilité" as UC_DISPO
 
-  usecase "Enregistrer ventes\net retours" as UC_VENTE
+  usecase "Suivre les commandes\net les retours" as UC_VENTE
   usecase "Gérer le catalogue" as UC_GCAT
   usecase "Gérer le stock et\nle réapprovisionnement" as UC_STOCK
   usecase "Produire un rapport" as UC_RAP
@@ -28,7 +28,7 @@ C -- UC_DEM
 
 UC_CAT ..> UC_DISPO : <<include>>
 UC_ACH ..> UC_DISPO : <<include>>
-UC_DISPO <.. UC_VENTE : <<include>>
+UC_DEM -[hidden]- UC_VENTE
 UC_DEM -[hidden]- UC_GCAT
 UC_DEM -[hidden]- UC_STOCK
 UC_DEM -[hidden]- UC_RAP

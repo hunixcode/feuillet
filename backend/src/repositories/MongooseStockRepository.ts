@@ -1,10 +1,11 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, type ClientSession } from "mongoose";
 import { estErreurDoublon } from "../baseDeDonnees.js";
 import {
   LIMITE_JOURNAL,
   OPERATEURS,
   STOCK_VIDE,
   TYPES_MOUVEMENT,
+  type ChangementStock,
   type FiltresMouvements,
   type Mouvement,
   type NouveauMouvement,
@@ -34,6 +35,9 @@ const mouvementSchema = new Schema<NouveauMouvement>(
     operateur: { type: String, enum: OPERATEURS, required: true },
     quantiteAvant: Number,
     quantiteApres: Number,
+    venteId: String,
+    receptionId: String,
+    retourId: String,
   },
   { versionKey: false },
 );
@@ -50,6 +54,22 @@ function versStock(document: Stock | null): Stock {
   return { quantitePhysique, quantiteMiseDeCote, quantiteDefectueuse };
 }
 
+// À appeler dans une transaction. Le filtre sur `avant` fait échouer l'écriture si le stock a changé :
+// l'upsert tente alors de recréer le même _id (doublon), et la transaction annule tout le reste.
+export async function appliquerChangement(
+  { produitId, avant, apres, mouvement }: ChangementStock,
+  session: ClientSession,
+): Promise<void> {
+  try {
+    await StockModel.updateOne({ _id: produitId, ...avant }, { $set: apres }, { upsert: true, session });
+  } catch (erreur) {
+    throw estErreurDoublon(erreur) ? new StockModifieErreur(produitId) : erreur;
+  }
+  if (mouvement) {
+    await MouvementModel.create([mouvement], { session });
+  }
+}
+
 export class MongooseStockRepository implements StockRepository {
   async trouver(produitId: string): Promise<Stock> {
     return versStock(await StockModel.findById(produitId).lean());
@@ -61,22 +81,10 @@ export class MongooseStockRepository implements StockRepository {
     return new Map(produitIds.map((id) => [id, parId.get(id) ?? { ...STOCK_VIDE }]));
   }
 
-  // Le filtre sur `avant` fait échouer l'écriture si le stock a changé : l'upsert tente alors de recréer
-  // le même _id (doublon), et la transaction annule aussi le mouvement.
   async enregistrer(produitId: string, avant: Stock, apres: Stock, mouvement?: NouveauMouvement): Promise<void> {
-    try {
-      await mongoose.connection.transaction(async (session) => {
-        await StockModel.updateOne({ _id: produitId, ...avant }, { $set: apres }, { upsert: true, session });
-        if (mouvement) {
-          await MouvementModel.create([mouvement], { session });
-        }
-      });
-    } catch (erreur) {
-      if (estErreurDoublon(erreur)) {
-        throw new StockModifieErreur(produitId);
-      }
-      throw erreur;
-    }
+    await mongoose.connection.transaction((session) =>
+      appliquerChangement({ produitId, avant, apres, ...(mouvement && { mouvement }) }, session),
+    );
   }
 
   async listerMouvements({ produitId, type }: FiltresMouvements): Promise<Mouvement[]> {
@@ -88,6 +96,19 @@ export class MongooseStockRepository implements StockRepository {
       .limit(LIMITE_JOURNAL)
       .lean();
     return documents.map(({ _id, ...mouvement }) => ({ id: _id.toString(), ...mouvement }));
+  }
+
+  async stockInitial(produitId: string): Promise<number | undefined> {
+    const premier = await MouvementModel.findOne({ produitId }).sort({ date: 1, _id: 1 }).lean();
+    return premier ? (premier.quantiteApres ?? premier.quantite) : undefined;
+  }
+
+  async variationsDepuis(date: Date): Promise<Map<string, number>> {
+    const sommes = await MouvementModel.aggregate<{ _id: string; variation: number }>([
+      { $match: { date: { $gt: date } } },
+      { $group: { _id: "$produitId", variation: { $sum: "$quantite" } } },
+    ]);
+    return new Map(sommes.map((s) => [s._id, s.variation]));
   }
 
   async aDesMouvements(produitId: string): Promise<boolean> {
