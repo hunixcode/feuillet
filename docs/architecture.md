@@ -41,7 +41,7 @@ Le diagramme de séquence suit les noms de services de `rapport.md` (`ReapproSer
 └── docs/          Rapport, écrans et diagrammes
 ```
 
-Le backend expose pour l'instant `GET /api/health`, l'authentification (EX09), le catalogue (EX01, EX11) et le stock (EX02, EX04) ; le contrat est dans [`api.md`](./api.md). La logique métier vit dans `backend/` et reste testable **sans interface** :
+Le backend expose pour l'instant `GET /api/health`, l'authentification (EX09), le catalogue (EX01, EX11), le stock (EX02, EX04), les paramètres et les ventes (EX03) ; le contrat est dans [`api.md`](./api.md). La logique métier vit dans `backend/` et reste testable **sans interface** :
 
 ```
 backend/src/
@@ -59,4 +59,4 @@ backend/src/
 
 Les services reçoivent leurs dépendances (repository, horloge, secret) par constructeur : les tests unitaires utilisent le repository en mémoire (`tests/servicesMemoire.ts` les assemble), les tests d'API passent par supertest et les tests de persistance par une base MongoDB en mémoire (un replica set pour ceux qui utilisent une transaction).
 
-Les employés au comptoir n'ont pas de compte ni d'espace applicatif propre ; leurs opérations passent par l'espace responsable.
+La librairie vend uniquement en ligne : pas de magasin ni de vente au comptoir. Les seuls comptes sont ceux des clients et du responsable.
