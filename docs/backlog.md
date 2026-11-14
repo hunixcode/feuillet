@@ -156,6 +156,19 @@ Reste à faire :
 - Front : écran 8 et affichage de la disponibilité
 
 
+
+08/11/2026 - Sécurité des dépendances (issue #52)
+
+Fait :
+- `npm audit fix` dans `backend/` (lockfile seulement) : body-parser 2.3.0 vers 2.4.0 (haute, déni de service), qs 6.16.0 vers 6.17.1 (moyenne), follow-redirects 1.16.1 vers 1.16.3 (développement) ; plus aucune vulnérabilité, 136 tests et build passent
+- Workflows backend et frontend : étape `npm audit --omit=dev --audit-level=high`, la CI échoue sur une vulnérabilité haute ou critique d'une dépendance de production
+- `.github/dependabot.yml` : mises à jour hebdomadaires (lundi, heure de Tahiti) de `backend/`, `frontend/` et des actions GitHub, mineures regroupées
+- README : marche à suivre quand une alerte arrive
+- 13/11/2026 : la nouvelle étape de CI a bloqué la PR sur une faille haute de mongoose publiée entre-temps ; `npm audit fix` (mongoose 9.11.1 vers 9.12.1, mongodb 7.7.0 vers 7.8.0), 272 tests et build passent
+
+Reste à faire :
+- Activer les alertes et les mises à jour de sécurité Dependabot dans les réglages du dépôt (Settings, Code security), qui ne se configurent pas par fichier
+
 08/11/2026 - Back : paramètres et ventes (EX03, issue #38)
 
 Fait :
@@ -215,6 +228,28 @@ Fait :
 Reste à faire :
 - Front : retours de l'écran 9, rapports de l'écran 12, meilleures ventes de l'accueil (#42, #43, #46)
 
+09/11/2026 - Sécurité : limites de requêtes (#50)
+
+Fait :
+- `express-rate-limit` : connexion limitée à 10 essais échoués par 15 minutes (par IP et e-mail), inscription à 5 comptes par heure et par IP, routes publiques (`GET /api/produits`, `GET /api/meilleures-ventes`, `POST /api/commandes/devis`) à 120 requêtes par minute et par IP
+- Réponse `429 TROP_DE_REQUETES` au format commun avec `Retry-After` ; contrat dans `docs/api.md`, message affiché par la page de connexion
+- `TRUST_PROXY` pour lire l'IP réelle derrière le proxy de Render ; limites réglables dans `createApp` (valeurs basses dans les tests)
+
+Reste à faire :
+- Compteurs en mémoire, pour une seule instance du serveur : passer à Redis ou à la base si l'API tourne un jour sur plusieurs instances
+
+09/11/2026 - Sécurité : en-têtes HTTP, CORS et taille des requêtes (#51)
+
+Fait :
+- helmet : `nosniff`, `Referrer-Policy`, `X-Frame-Options: DENY`, `frame-ancestors 'none'`, `Strict-Transport-Security` en production seulement
+- Content Security Policy sans script inline, compatible avec le front compilé et Google Fonts (vérifiée dans Chrome sur accueil, catalogue, connexion, inscription et panier, sans violation)
+- CORS : même origine par défaut, `CORS_ORIGINES` si le front est servi ailleurs
+- Corps JSON limité à 100 ko ; aucune trace d'erreur renvoyée au client (testé) ; contrat dans `docs/api.md`
+
+Reste à faire :
+- Décider en équipe : token dans `localStorage` (actuel, protégé par la CSP) ou cookie `httpOnly`, `Secure`, `SameSite=Strict` ; noter la décision dans `docs/rapport.md`
+- Ajouter les domaines des images de couverture à la CSP avec #47
+
 09/11/2026 - Production : front servi par l'API, arrêt propre, journaux (#54)
 
 Fait :
@@ -226,7 +261,6 @@ Fait :
 - `package.json` à la racine : `npm run installer`, `npm run build`, `npm start`, `npm run seed` ; section « Déployer » du README
 
 Reste à faire :
-- HSTS en production : PR #60 (#51)
 - Docker (#53) et déploiement sur Render (#55)
 
 09/11/2026 - Docker : back, front et MongoDB en replica set (#53)
