@@ -1,0 +1,42 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Pacific/Tahiti
+    groups:
+      mineures:
+        update-types: [minor, patch]
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(backend)"
+    labels: [devops, backend]
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Pacific/Tahiti
+    groups:
+      mineures:
+        update-types: [minor, patch]
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(frontend)"
+    labels: [devops, frontend]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Pacific/Tahiti
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "ci"
+    labels: [devops]
