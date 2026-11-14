@@ -1,0 +1,66 @@
+# Développement : docker compose up, puis une fois : docker compose run --rm backend npm run seed
+# Front sur http://localhost:5173 (proxy /api vers le backend), API sur http://localhost:3000 ;
+# ports réglables avec PORT_FRONT, PORT_API et PORT_MONGO si ceux-ci sont déjà pris.
+# Secrets dans backend/.env (copie de backend/.env.example) ; MONGODB_URI y est remplacée par la base du conteneur.
+
+services:
+  mongo:
+    image: mongo:7
+    # Replica set à un nœud : les ventes et les réceptions utilisent des transactions.
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "${PORT_MONGO:-27017}:27017"
+    volumes:
+      - mongo-data:/data/db
+    # Initialise le replica set au premier lancement, puis vérifie qu'il répond.
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - "try { rs.status().ok } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo:27017' }] }).ok }"
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 10s
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: dev
+    env_file: backend/.env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/librairie?replicaSet=rs0
+      NODE_ENV: development
+      PORT: "3000"
+      # tsx watch scrute les fichiers : les changements d'un dossier monté depuis Windows ou macOS ne sont pas signalés.
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "${PORT_API:-3000}:3000"
+    volumes:
+      - ./backend/src:/app/backend/src
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: front-dev
+    environment:
+      VITE_PROXY_API: http://backend:3000
+      # Les changements de fichiers d'un dossier monté depuis Windows ou macOS ne sont vus qu'en scrutant.
+      VITE_SCRUTER_FICHIERS: "true"
+    ports:
+      - "${PORT_FRONT:-5173}:5173"
+    volumes:
+      - ./frontend/src:/app/frontend/src
+      - ./frontend/public:/app/frontend/public
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:
