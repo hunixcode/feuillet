@@ -249,3 +249,16 @@ Fait :
 Reste à faire :
 - Décider en équipe : token dans `localStorage` (actuel, protégé par la CSP) ou cookie `httpOnly`, `Secure`, `SameSite=Strict` ; noter la décision dans `docs/rapport.md`
 - Ajouter les domaines des images de couverture à la CSP avec #47
+
+09/11/2026 - Production : front servi par l'API, arrêt propre, journaux (#54)
+
+Fait :
+- En production, l'API sert le front compilé (`frontend/dist`) sur la même origine et renvoie `index.html` pour les routes de React Router ; `/api` inconnue reste un 404 JSON, un asset absent aussi ; assets en cache un an, `index.html` sans cache
+- Vérification de toutes les variables d'environnement au démarrage, avec tous les problèmes signalés d'un coup
+- Arrêt propre sur `SIGTERM` : plus de nouvelles requêtes, fin de celles en cours (10 s au plus), fermeture de MongoDB
+- Journal d'une ligne par requête sans corps ni en-têtes ; erreur 500 avec un identifiant de requête (`X-Request-Id`)
+- Index MongoDB créés au démarrage (`autoIndex` coupé en production)
+- `package.json` à la racine : `npm run installer`, `npm run build`, `npm start`, `npm run seed` ; section « Déployer » du README
+
+Reste à faire :
+- Docker (#53) et déploiement sur Render (#55)

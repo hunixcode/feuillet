@@ -1,5 +1,7 @@
 import express from "express";
 import { gererErreurs, routeIntrouvable } from "./erreurs.js";
+import { servirFront } from "./front.js";
+import { identifierRequete, journaliserRequetes, type Journal } from "./journal.js";
 import { creerLimiteurs, LIMITES_PAR_DEFAUT, type LimitesRequetes } from "./limitesRequetes.js";
 import { routesAuth } from "./routes/auth.js";
 import { routesCategories } from "./routes/categories.js";
@@ -35,6 +37,10 @@ export interface Dependances {
   retourService: RetourService;
   rapportService: RapportService;
   verifierBase: VerifierBase;
+  // Production : dossier du front compilé, servi sur la même origine que l'API.
+  dossierFront?: string;
+  // Journal d'une ligne par requête ; aucun par défaut (tests).
+  journal?: Journal;
   /** Active Strict-Transport-Security (HTTPS seulement). */
   production?: boolean;
   /** Origines autorisées en CORS, seulement si le front est servi ailleurs ; vide : même origine. */
@@ -57,6 +63,8 @@ export function createApp({
   retourService,
   rapportService,
   verifierBase,
+  dossierFront,
+  journal,
   production = false,
   originesCors = [],
   limites = LIMITES_PAR_DEFAUT,
@@ -66,6 +74,10 @@ export function createApp({
   const limiteurs = creerLimiteurs(limites);
 
   app.disable("x-powered-by");
+  app.use(identifierRequete);
+  if (journal) {
+    app.use(journaliserRequetes(journal));
+  }
   app.use(enTetesSecurite({ production }));
   app.use(corsAutorise(originesCors));
   app.set("trust proxy", confianceProxy);
@@ -90,6 +102,9 @@ export function createApp({
   app.use("/api", routesStock(stockService, authService));
   app.use("/api", routesReappro(reapproService, authService));
   app.use("/api", routesRapports(rapportService, authService));
+  if (dossierFront) {
+    app.use(servirFront(dossierFront));
+  }
 
   app.use(routeIntrouvable);
   app.use(gererErreurs);
