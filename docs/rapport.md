@@ -46,6 +46,10 @@ Le sujet ne demande pas de paiement : la validation du panier enregistre la vent
 
 Deux workflows dans `.github/workflows/` (`backend.yml`, `frontend.yml`), lancés sur chaque PR qui touche leur dossier et sur `main` : `npm ci`, `npm audit` (bloquant sur une vulnérabilité haute d'une dépendance de production), typecheck ou lint, tests et build. Dependabot propose chaque lundi les mises à jour des dépendances et des actions. Gratuit et intégré au dépôt. Alternative écartée : Jenkins (serveur dédié, trop lourd).
 
+### Déploiement : **démo en local avec Docker**
+
+Pas de mise en ligne : c'est un projet de classe, sans hébergement ni base de production. La démonstration se fait en local avec `docker compose` (MongoDB en replica set, API et front), puis `npm run seed` pour les données de démonstration. L'application reste prête à être hébergée : image de production (`backend/Dockerfile`), front servi par l'API, variables vérifiées au démarrage, arrêt propre, en-têtes de sécurité et limites de requêtes ; il suffirait d'une vraie `MONGODB_URI` et d'un hébergeur. Alternative écartée : un environnement de démonstration sur Render avec MongoDB Atlas (#55), qui demande des comptes et des secrets en dehors du dépôt.
+
 ---
 
 ## 2. Spécification
