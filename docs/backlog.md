@@ -218,7 +218,7 @@ Reste à faire :
 09/11/2026 - Sécurité : limites de requêtes (#50)
 
 Fait :
-- `express-rate-limit` : connexion limitée à 10 essais échoués par 15 minutes (par IP et e-mail), inscription à 5 comptes par heure et par IP, routes publiques (`GET /api/produits`, `POST /api/commandes/devis`) à 120 requêtes par minute et par IP
+- `express-rate-limit` : connexion limitée à 10 essais échoués par 15 minutes (par IP et e-mail), inscription à 5 comptes par heure et par IP, routes publiques (`GET /api/produits`, `GET /api/meilleures-ventes`, `POST /api/commandes/devis`) à 120 requêtes par minute et par IP
 - Réponse `429 TROP_DE_REQUETES` au format commun avec `Retry-After` ; contrat dans `docs/api.md`, message affiché par la page de connexion
 - `TRUST_PROXY` pour lire l'IP réelle derrière le proxy de Render ; limites réglables dans `createApp` (valeurs basses dans les tests)
 
