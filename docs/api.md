@@ -40,8 +40,19 @@ Toute erreur suit le format de `ApiError` (`frontend/src/types/api.ts`) :
 | 409 | `VENTE_NON_EXPEDIEE` | Retour sur une commande pas encore expédiée |
 | 409 | `DELAI_RETOUR_DEPASSE` | Retour après la date limite (RG09, `details.dateLimiteRetour`) |
 | 409 | `QUANTITE_NON_RETOURNABLE` | Retour supérieur à la quantité vendue non encore retournée (RG07, `details.quantiteRetournable`) |
+| 413 | `CORPS_TROP_VOLUMINEUX` | Corps JSON de plus de 100 ko |
+| 415 | `ENCODAGE_NON_SUPPORTE` | Encodage du corps non supporté |
 | 429 | `TROP_DE_REQUETES` | Trop de requêtes en peu de temps (voir [Limites de requêtes](#limites-de-requêtes)) ; l'en-tête `Retry-After` donne l'attente en secondes |
-| 500 | `ERREUR_SERVEUR` | Erreur inattendue |
+| 500 | `ERREUR_SERVEUR` | Erreur inattendue (ni trace ni message d'origine renvoyés au client, l'erreur est journalisée côté serveur) |
+
+## Sécurité HTTP
+
+- **Taille du corps** : 100 ko au plus par requête JSON (`TAILLE_MAX_CORPS`), au-delà `413 CORPS_TROP_VOLUMINEUX`.
+- **En-têtes** (helmet, sur toutes les réponses) : `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-Frame-Options: DENY`, `Strict-Transport-Security` (un an) seulement quand `NODE_ENV=production`, plus les en-têtes par défaut de helmet (`Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`...).
+- **Content Security Policy**, prévue pour le front compilé servi par l'application :
+  `default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'`.
+  Aucun script inline ni externe : le token étant dans `localStorage`, c'est la protection principale contre son vol par XSS. Une nouvelle ressource externe (images de couverture, autre police) doit être ajoutée dans `backend/src/securite.ts`.
+- **CORS** : par défaut aucun en-tête, le front appelle `/api` sur la même origine. Si le front est servi ailleurs, `CORS_ORIGINES` liste les origines autorisées (séparées par des virgules) ; une autre origine ne reçoit pas `Access-Control-Allow-Origin` et le navigateur bloque la réponse.
 
 ## Limites de requêtes
 

@@ -237,3 +237,15 @@ Fait :
 
 Reste à faire :
 - Compteurs en mémoire, pour une seule instance du serveur : passer à Redis ou à la base si l'API tourne un jour sur plusieurs instances
+
+09/11/2026 - Sécurité : en-têtes HTTP, CORS et taille des requêtes (#51)
+
+Fait :
+- helmet : `nosniff`, `Referrer-Policy`, `X-Frame-Options: DENY`, `frame-ancestors 'none'`, `Strict-Transport-Security` en production seulement
+- Content Security Policy sans script inline, compatible avec le front compilé et Google Fonts (vérifiée dans Chrome sur accueil, catalogue, connexion, inscription et panier, sans violation)
+- CORS : même origine par défaut, `CORS_ORIGINES` si le front est servi ailleurs
+- Corps JSON limité à 100 ko ; aucune trace d'erreur renvoyée au client (testé) ; contrat dans `docs/api.md`
+
+Reste à faire :
+- Décider en équipe : token dans `localStorage` (actuel, protégé par la CSP) ou cookie `httpOnly`, `Secure`, `SameSite=Strict` ; noter la décision dans `docs/rapport.md`
+- Ajouter les domaines des images de couverture à la CSP avec #47

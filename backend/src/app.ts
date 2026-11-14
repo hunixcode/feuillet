@@ -11,6 +11,7 @@ import { routesReappro } from "./routes/reappro.js";
 import { routesSante, type VerifierBase } from "./routes/sante.js";
 import { routesStock } from "./routes/stock.js";
 import { routesCommandes, routesVentes } from "./routes/ventes.js";
+import { corsAutorise, enTetesSecurite, TAILLE_MAX_CORPS } from "./securite.js";
 import type { AuthService } from "./services/AuthService.js";
 import type { CategorieService } from "./services/CategorieService.js";
 import type { DemandeService } from "./services/DemandeService.js";
@@ -34,6 +35,10 @@ export interface Dependances {
   retourService: RetourService;
   rapportService: RapportService;
   verifierBase: VerifierBase;
+  /** Active Strict-Transport-Security (HTTPS seulement). */
+  production?: boolean;
+  /** Origines autorisées en CORS, seulement si le front est servi ailleurs ; vide : même origine. */
+  originesCors?: string[];
   /** Limites de requêtes ; valeurs basses dans les tests. */
   limites?: LimitesRequetes;
   /** Réglage `trust proxy` d'Express : `1` derrière le proxy de Render, sinon toutes les requêtes ont la même IP. */
@@ -52,6 +57,8 @@ export function createApp({
   retourService,
   rapportService,
   verifierBase,
+  production = false,
+  originesCors = [],
   limites = LIMITES_PAR_DEFAUT,
   confianceProxy = false,
 }: Dependances) {
@@ -59,8 +66,10 @@ export function createApp({
   const limiteurs = creerLimiteurs(limites);
 
   app.disable("x-powered-by");
+  app.use(enTetesSecurite({ production }));
+  app.use(corsAutorise(originesCors));
   app.set("trust proxy", confianceProxy);
-  app.use(express.json());
+  app.use(express.json({ limit: TAILLE_MAX_CORPS }));
 
   app.post("/api/auth/connexion", limiteurs.connexion);
   app.post("/api/auth/inscription", limiteurs.inscription);
