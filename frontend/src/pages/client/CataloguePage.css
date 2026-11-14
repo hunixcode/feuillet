@@ -111,6 +111,39 @@
   gap: 64px 32px;
 }
 
+.meilleures-ventes {
+  margin-top: 40px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid var(--ligne-douce);
+}
+
+.meilleures-ventes h2 {
+  font-size: 1.5rem;
+  letter-spacing: -0.03em;
+}
+
+.meilleures-ventes > p {
+  margin-top: 4px;
+  color: var(--gris);
+  font-size: 0.9375rem;
+}
+
+.meilleures-ventes ol {
+  display: grid;
+  grid-auto-columns: minmax(160px, 180px);
+  grid-auto-flow: column;
+  gap: 32px;
+  margin: 28px 0 0;
+  padding: 0 0 12px;
+  overflow-x: auto;
+  list-style: none;
+  scroll-snap-type: x mandatory;
+}
+
+.meilleures-ventes li {
+  scroll-snap-align: start;
+}
+
 .catalogue .achat-ligne {
   display: flex;
   flex-wrap: wrap;

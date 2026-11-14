@@ -339,3 +339,17 @@ Fait :
 
 Reste à faire (#42) :
 - Meilleures ventes (RG14) en haut du catalogue
+
+11/11/2026 - Noah (front A) : meilleures ventes sur le catalogue (issue #42, partie 4)
+
+Fait :
+- produitService : listerMeilleuresVentes (GET /api/meilleures-ventes, RG14)
+- Catalogue : rangée « Les meilleures ventes » en haut de la page complète, dans l'ordre renvoyé par le back ; cachée pendant une recherche, dans un rayon ou s'il n'y a encore aucune vente
+- Plus aucun « bientôt disponible » dans les pages client
+- Route vérifiée avec le vrai back (réponse vide tant qu'aucune vente n'est enregistrée dans la base partagée)
+- 344 tests (heure de Tahiti et UTC), le build et le lint passent
+- Parcours client vérifié de bout en bout avec le vrai back et le vrai front sur une base MongoDB temporaire locale remplie par le seed (la base partagée n'est pas touchée) : commande, Mes commandes, demande depuis la fiche, réception du responsable, notification, commande du livre mis de côté, demande hors catalogue et annulation (22 étapes réussies)
+
+Reste à faire :
+- Issue #42 terminée : PR dev-front vers main à ouvrir
+- Issue #43 : page Ventes et retours du responsable

@@ -24,6 +24,10 @@ export function listerProduits(filtres: FiltresProduits = {}): Promise<Produit[]
   return get<Produit[]>(texte ? `/produits?${texte}` : '/produits')
 }
 
+export function listerMeilleuresVentes(): Promise<Produit[]> {
+  return get<Produit[]>('/meilleures-ventes')
+}
+
 export function obtenirProduit(id: string): Promise<ProduitDetail> {
   return get<ProduitDetail>(`/produits/${encodeURIComponent(id)}`)
 }

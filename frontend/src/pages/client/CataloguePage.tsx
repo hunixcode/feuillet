@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import ProduitCarte from '../../components/client/ProduitCarte.tsx'
 import Button from '../../components/common/Button.tsx'
 import { listerCategories } from '../../services/categorieService'
-import { listerProduits } from '../../services/produitService'
+import { listerMeilleuresVentes, listerProduits } from '../../services/produitService'
 import type { Categorie } from '../../types/categorie'
 import type { Produit } from '../../types/produit'
 import { messageErreur } from '../../utils/erreurs'
@@ -47,6 +47,7 @@ function CataloguePage() {
   const tri = parametres.get('tri') ?? ''
 
   const [categories, setCategories] = useState<Categorie[]>([])
+  const [meilleuresVentes, setMeilleuresVentes] = useState<Produit[]>([])
   const [essai, setEssai] = useState(0)
   const [resultat, setResultat] = useState<Resultat | null>(null)
 
@@ -61,6 +62,20 @@ function CataloguePage() {
       .then((liste) => {
         if (actif) {
           setCategories(liste)
+        }
+      })
+      .catch(() => {})
+    return () => {
+      actif = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let actif = true
+    listerMeilleuresVentes()
+      .then((liste) => {
+        if (actif) {
+          setMeilleuresVentes(liste)
         }
       })
       .catch(() => {})
@@ -193,6 +208,23 @@ function CataloguePage() {
         <h1>Catalogue</h1>
         <p>{intro()}</p>
       </div>
+
+      {!q && !type && !categorie && meilleuresVentes.length > 0 && (
+        <section className="meilleures-ventes" aria-labelledby="titre-meilleures-ventes">
+          <h2 id="titre-meilleures-ventes">Les meilleures ventes</h2>
+          <p>Les articles les plus vendus ces 30 derniers jours.</p>
+          <ol>
+            {meilleuresVentes.map((produit) => (
+              <li key={produit.id}>
+                <ProduitCarte
+                  produit={produit}
+                  categorie={categories.find((rayon) => rayon.id === produit.categorie)?.libelle}
+                />
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       <form className="filtres" role="search" onSubmit={rechercher}>
         <div className="recherche">

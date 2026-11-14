@@ -41,10 +41,13 @@ function reponse(corps: unknown, status = 200) {
   return new Response(JSON.stringify(corps), { status })
 }
 
-function simulerApi(produits: Produit[]) {
+function simulerApi(produits: Produit[], meilleuresVentes: Produit[] = []) {
   return vi.spyOn(globalThis, 'fetch').mockImplementation(async (entree) => {
     if (String(entree).startsWith('/api/categories')) {
       return reponse(categories)
+    }
+    if (String(entree) === '/api/meilleures-ventes') {
+      return reponse(meilleuresVentes)
     }
     return reponse(produits)
   })
@@ -57,7 +60,7 @@ function appelsProduits(fetchMock: ReturnType<typeof simulerApi>) {
 }
 
 function titresAffiches() {
-  return Array.from(document.querySelectorAll('.livre-titre')).map((titre) => titre.textContent)
+  return Array.from(document.querySelectorAll('.rayonnage .livre-titre')).map((titre) => titre.textContent)
 }
 
 function afficher(url = '/catalogue') {
@@ -265,8 +268,8 @@ describe('page du catalogue', () => {
   it('affiche une erreur et permet de réessayer', async () => {
     let appels = 0
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (entree) => {
-      if (String(entree).startsWith('/api/categories')) {
-        return reponse(categories)
+      if (!String(entree).startsWith('/api/produits')) {
+        return reponse(String(entree).startsWith('/api/categories') ? categories : [])
       }
       appels += 1
       if (appels === 1) {
@@ -283,5 +286,38 @@ describe('page du catalogue', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }))
 
     expect(await screen.findByText('1 article')).toBeInTheDocument()
+  })
+
+  it('montre les meilleures ventes en haut du catalogue complet', async () => {
+    const fetchMock = simulerApi([ileAuTresor, carnet], [carnet, ileAuTresor])
+    afficher()
+
+    const section = await screen.findByRole('region', { name: 'Les meilleures ventes' })
+    const titres = within(section)
+      .getAllByRole('listitem')
+      .map((element) => element.querySelector('.livre-titre')?.textContent)
+    expect(titres).toEqual(['Carnet ligné', 'L\x27Île au trésor'])
+    expect(within(section).getByRole('link', { name: /Carnet ligné/ })).toHaveAttribute(
+      'href',
+      '/produits/p-2',
+    )
+    expect(fetchMock).toHaveBeenCalledWith('/api/meilleures-ventes', expect.any(Object))
+    expect(titresAffiches()).toEqual(['L\x27Île au trésor', 'Carnet ligné'])
+  })
+
+  it('cache les meilleures ventes pendant une recherche ou dans un rayon', async () => {
+    simulerApi([ileAuTresor], [carnet])
+    afficher('/catalogue?categorie=roman')
+
+    await screen.findByText('1 article')
+    expect(screen.queryByRole('region', { name: 'Les meilleures ventes' })).not.toBeInTheDocument()
+  })
+
+  it('n affiche pas de meilleures ventes quand rien n a été vendu', async () => {
+    simulerApi([ileAuTresor])
+    afficher()
+
+    await screen.findByText('1 article')
+    expect(screen.queryByRole('region', { name: 'Les meilleures ventes' })).not.toBeInTheDocument()
   })
 })
