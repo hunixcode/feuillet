@@ -5,8 +5,15 @@ export type StatutDemande =
   | 'expiree'
   | 'annulee'
 
+export interface ClientDemande {
+  id: string
+  nom: string
+  email: string
+}
+
 export interface Demande {
   id: string
+  client?: ClientDemande
   produitId?: string
   titre: string
   auteur?: string
