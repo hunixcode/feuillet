@@ -85,6 +85,17 @@ Au démarrage, toutes les variables sont vérifiées et chaque problème est sig
 - Branches personnelles (`hau`, `hiva`, `noah`) ou par tâche (`feature/...`, ex. `feature/front-connexion`), fusion via pull request relue par un autre membre
 - `main` toujours exécutable : les tests passent à chaque fusion
 
+## Sécurité des dépendances
+La CI lance `npm audit --omit=dev --audit-level=high` dans `backend/` et `frontend/` : elle échoue si une dépendance de production a une vulnérabilité haute ou critique, même sur une PR qui n'y touche pas. Dependabot ouvre chaque lundi des PR de mise à jour (labels `devops` et `backend` ou `frontend`).
+
+Quand la CI signale une vulnérabilité :
+1. Dans le dossier concerné, `npm audit` montre le paquet, la gravité et la version corrigée.
+2. `npm audit fix` (jamais `--force`, qui peut changer de version majeure), puis vérifier typecheck ou lint, tests et build.
+3. Commit séparé `fix(backend): ...` ou `fix(frontend): ...` qui cite les paquets et les versions.
+4. Sans version corrigée pour une dépendance indirecte : forcer une version sûre avec `overrides` dans `package.json`. Si la faille ne concerne pas notre usage, ouvrir une issue `devops` qui l'explique et décider en équipe ; la CI reste bloquante tant que ce n'est pas réglé.
+
+Une PR Dependabot se relit comme les autres : la CI doit passer, et une mise à jour majeure se teste à la main avant la fusion.
+
 ## Répartition des tâches
 Un issue GitHub par tâche, assigné et avec label.
 [Issues](https://github.com/hunixcode/Groupe-5-Genie-Log-DM/issues)

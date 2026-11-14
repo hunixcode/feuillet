@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { createApp } from "./app.js";
 import { creerArret } from "./arret.js";
 import { verifierMongo } from "./baseDeDonnees.js";
+import { lireConfianceProxy, lireOriginesCors } from "./config.js";
 import { ConfigurationInvalide, lireConfiguration, type Configuration } from "./configuration.js";
 import { MongooseCategorieRepository } from "./repositories/MongooseCategorieRepository.js";
 import { MongooseDemandeRepository } from "./repositories/MongooseDemandeRepository.js";
@@ -92,6 +93,9 @@ const app = createApp({
   verifierBase: verifierMongo,
   ...(dossierFront && { dossierFront }),
   journal: (ligne) => console.log(ligne),
+  production,
+  originesCors: lireOriginesCors(process.env.CORS_ORIGINES),
+  confianceProxy: lireConfianceProxy(process.env.TRUST_PROXY),
 });
 // RG06 : les mises de côté échues sont libérées chaque minute (et avant chaque liste de demandes).
 const MINUTE = 60_000;

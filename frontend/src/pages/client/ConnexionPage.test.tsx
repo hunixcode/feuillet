@@ -123,6 +123,26 @@ describe('page de connexion', () => {
     expect(screen.getByRole('heading', { name: 'Connexion' })).toBeInTheDocument()
   })
 
+  it('affiche le message du serveur après trop de tentatives', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      reponse(
+        {
+          code: 'TROP_DE_REQUETES',
+          message: 'Trop de tentatives. Réessayez dans quelques minutes.',
+        },
+        429,
+      ),
+    )
+    afficher()
+
+    seConnecter('tiare@exemple.pf', 'mauvais')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Trop de tentatives. Réessayez dans quelques minutes.',
+    )
+    expect(screen.getByRole('button', { name: 'Se connecter' })).toBeEnabled()
+  })
+
   it('affiche les erreurs du serveur sous chaque champ', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       reponse(
