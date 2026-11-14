@@ -40,7 +40,7 @@ Créées par les services métier, vérifiables dans les tests, persistantes. Un
 
 ### Paiement — **simulation**
 
-Le sujet ne demande pas de paiement : la validation du panier enregistre la vente.
+Le sujet ne demande pas de paiement : la validation du panier enregistre la vente. Pour la démonstration, une étape de paiement fictive précède la confirmation (#57) : le front envoie seulement le résultat simulé (`accepte` ou `refuse`), sans aucune donnée de carte, et un refus n'enregistre rien (`402 PAIEMENT_REFUSE`). La vente garde le mode `demo`, le statut et la date du paiement. Alternative écartée : un prestataire en mode test (Stripe), qui demande un compte, des clés secrètes et un formulaire de carte pour un besoin que le sujet n'a pas.
 
 ### CI — **GitHub Actions**
 

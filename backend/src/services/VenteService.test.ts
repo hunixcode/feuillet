@@ -64,7 +64,7 @@ describe("VenteService", () => {
     lignes: lignes.map(([produitId, quantite]) => ({ produitId, quantite })),
     ...options,
   });
-  const livraison = { adresseLivraison: "Papeete" };
+  const livraison = { adresseLivraison: "Papeete", paiementDemo: "accepte" };
 
   it("calcule la TVA incluse arrondie à l'unité (RG11)", () => {
     expect(montantTva(3060, 5)).toBe(146);
@@ -160,7 +160,7 @@ describe("VenteService", () => {
   it("enregistre une commande en ligne à préparer, à prix figés, et sort le stock (EX03)", async () => {
     const vente = await services.venteService.commanderEnLigne(
       client,
-      panier([[livre, 2]], { occasionCadeau: "noel", emballageCadeau: true, adresseLivraison: "  BP 12, Papeete  " }),
+      panier([[livre, 2]], { occasionCadeau: "noel", emballageCadeau: true, adresseLivraison: "  BP 12, Papeete  ", paiementDemo: "accepte" }),
     );
 
     expect(vente).toMatchObject({
@@ -190,7 +190,7 @@ describe("VenteService", () => {
   });
 
   it("garde le prix payé quand le catalogue change ensuite (RG02)", async () => {
-    const vente = await services.venteService.commanderEnLigne(client, panier([[livre, 1]], { adresseLivraison: "Papeete" }));
+    const vente = await services.venteService.commanderEnLigne(client, panier([[livre, 1]], livraison));
     await services.produitService.modifier(livre, {
       reference: "LIV-001",
       designation: "L'Île au trésor (poche)",
@@ -209,7 +209,7 @@ describe("VenteService", () => {
   });
 
   it("exige l'adresse de livraison en ligne et valide les options", async () => {
-    const sansAdresse = await erreurDe(services.venteService.commanderEnLigne(client, panier([[livre, 1]])));
+    const sansAdresse = await erreurDe(services.venteService.commanderEnLigne(client, panier([[livre, 1]], { paiementDemo: "accepte" })));
     const options = await erreurDe(
       services.venteService.devisEnLigne(panier([[livre, 1]], { occasionCadeau: "paques", emballageCadeau: "oui" })),
     );
@@ -222,9 +222,48 @@ describe("VenteService", () => {
     expect(quantite.statut).toBe(400);
   });
 
+  describe("paiement de démonstration", () => {
+    it("garde le paiement fictif accepté avec la commande", async () => {
+      const vente = await services.venteService.commanderEnLigne(client, panier([[cahier, 1]], livraison));
+
+      expect(vente.paiement).toEqual({ mode: "demo", statut: "accepte", date: horloge.date });
+      expect((await services.venteService.obtenir(vente.id)).paiement).toEqual(vente.paiement);
+    });
+
+    it("n'enregistre rien quand le paiement est refusé : ni vente, ni stock, ni mouvement", async () => {
+      const erreur = await erreurDe(
+        services.venteService.commanderEnLigne(client, panier([[livre, 2]], { adresseLivraison: "Papeete", paiementDemo: "refuse" })),
+      );
+
+      expect(erreur).toMatchObject({ statut: 402, code: "PAIEMENT_REFUSE" });
+      expect((await services.stockService.obtenir(livre)).quantitePhysique).toBe(5);
+      await expect(services.stockService.mouvements({ type: "vente" })).resolves.toEqual([]);
+      await expect(services.repositories.ventes.lister({})).resolves.toEqual([]);
+    });
+
+    it("exige le résultat du paiement à la commande, pas au devis", async () => {
+      const sansPaiement = await erreurDe(services.venteService.commanderEnLigne(client, panier([[livre, 1]], { adresseLivraison: "Papeete" })));
+      const inconnu = await erreurDe(
+        services.venteService.commanderEnLigne(client, panier([[livre, 1]], { adresseLivraison: "Papeete", paiementDemo: "carte" })),
+      );
+
+      expect(sansPaiement.details).toEqual({ champs: { paiementDemo: expect.any(String) } });
+      expect(inconnu.statut).toBe(400);
+      await expect(services.venteService.devisEnLigne(panier([[livre, 1]]))).resolves.toBeDefined();
+    });
+
+    it("vérifie les articles avant de simuler le paiement", async () => {
+      const erreur = await erreurDe(
+        services.venteService.commanderEnLigne(client, panier([[livre, 6]], { adresseLivraison: "Papeete", paiementDemo: "refuse" })),
+      );
+
+      expect(erreur.code).toBe("LIGNE_INDISPONIBLE");
+    });
+  });
+
   it("n'enregistre rien si une ligne n'est plus disponible et renvoie les lignes en cause (RG03)", async () => {
     const erreur = await erreurDe(
-      services.venteService.commanderEnLigne(client, panier([[cahier, 2], [livre, 6]], { adresseLivraison: "Papeete" })),
+      services.venteService.commanderEnLigne(client, panier([[cahier, 2], [livre, 6]], livraison)),
     );
 
     expect(erreur).toMatchObject({ statut: 409, code: "LIGNE_INDISPONIBLE", details: { lignes: [{ produitId: livre, quantite: 6 }] } });
@@ -283,8 +322,8 @@ describe("VenteService", () => {
       motDePasseHash: "x",
       role: "client",
     });
-    const sienne = await services.venteService.commanderEnLigne(client, panier([[cahier, 1]], { adresseLivraison: "Papeete" }));
-    const autreCommande = await services.venteService.commanderEnLigne(autre, panier([[cahier, 1]], { adresseLivraison: "Faa'a" }));
+    const sienne = await services.venteService.commanderEnLigne(client, panier([[cahier, 1]], livraison));
+    const autreCommande = await services.venteService.commanderEnLigne(autre, panier([[cahier, 1]], { adresseLivraison: "Faa'a", paiementDemo: "accepte" }));
 
     expect((await services.venteService.mesCommandes(client)).map((v) => v.id)).toEqual([sienne.id]);
     await expect(services.venteService.maCommande(client, sienne.id)).resolves.toMatchObject({ id: sienne.id });
@@ -329,7 +368,7 @@ describe("VenteService", () => {
     });
 
     it("consomme la mise de côté à la commande en ligne et passe la demande à honoree", async () => {
-      await services.venteService.commanderEnLigne(client, panier([[livre, 2]], { adresseLivraison: "Papeete" }));
+      await services.venteService.commanderEnLigne(client, panier([[livre, 2]], livraison));
 
       await expect(services.repositories.stocks.trouver(livre)).resolves.toEqual({
         quantitePhysique: 0,

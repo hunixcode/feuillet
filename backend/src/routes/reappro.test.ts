@@ -111,7 +111,7 @@ describe("API du réapprovisionnement", () => {
 
   it("liste les produits à recommander et règle le seuil d'un produit", async () => {
     await envoyer("post", `/api/produits/${produitId}/stock/inventaire`, { quantiteComptee: 10, motif: "Stock initial" }).expect(200);
-    await envoyer("post", "/api/commandes", { lignes: [{ produitId, quantite: 7 }], adresseLivraison: "Papeete" }, tokenClient).expect(201);
+    await envoyer("post", "/api/commandes", { lignes: [{ produitId, quantite: 7 }], adresseLivraison: "Papeete", paiementDemo: "accepte" }, tokenClient).expect(201);
     expect((await envoyer("get", "/api/reapprovisionnement")).body).toEqual([]);
 
     const seuil = await envoyer("put", `/api/produits/${produitId}/seuil-alerte`, { seuilAlerte: 30 });

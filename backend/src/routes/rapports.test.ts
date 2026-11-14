@@ -40,7 +40,7 @@ describe("API des retours, des rapports et des meilleures ventes", () => {
       tauxTva: 5,
     }));
     await envoyer("post", `/api/produits/${produitId}/stock/inventaire`, { quantiteComptee: 5, motif: "Comptage" }).expect(200);
-    const commande = { lignes: [{ produitId, quantite: 3 }], adresseLivraison: "Papeete" };
+    const commande = { lignes: [{ produitId, quantite: 3 }], adresseLivraison: "Papeete", paiementDemo: "accepte" };
     ({ body: { id: venteId } } = await envoyer("post", "/api/commandes", commande, tokenClient).expect(201));
     await envoyer("post", `/api/ventes/${venteId}/expedition`).expect(200);
   });

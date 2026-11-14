@@ -33,6 +33,7 @@ function vente(date: string, quantite: number, statut: StatutVente = "a_preparer
     frais: 800,
     montantTva: Math.round((1530 * quantite * 5) / 105),
     total: 1530 * quantite + 800,
+    paiement: { mode: "demo", statut: "accepte", date: new Date(date) },
   };
 }
 

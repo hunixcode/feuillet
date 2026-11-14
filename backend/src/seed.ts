@@ -130,6 +130,7 @@ for (const { jours, lignes, ...options } of VENTES_DEMO) {
   );
   const commande = await ventes.commanderEnLigne(client, {
     ...options,
+    paiementDemo: "accepte",
     lignes: lignes.map(([reference, quantite]) => ({ produitId: idsDemo.get(reference), quantite })),
   });
   if (jours > 1) {

@@ -57,6 +57,7 @@ describe("API des ventes", () => {
   const commande = (quantite = 1) => ({
     lignes: [{ produitId, quantite }],
     adresseLivraison: "BP 12, Papeete",
+    paiementDemo: "accepte",
   });
 
   it("chiffre le panier d'un visiteur sans compte", async () => {
@@ -81,6 +82,7 @@ describe("API des ventes", () => {
       statut: "a_preparer",
       client: { nom: "Marie", email: "marie@example.pf" },
       total: 4400,
+      paiement: { mode: "demo", statut: "accepte", date: "2026-11-08T20:00:00.000Z" },
     });
     const { body: mes } = await envoyer("get", "/api/commandes", undefined, tokenClient);
     expect(mes).toEqual([creee.body]);
@@ -105,7 +107,16 @@ describe("API des ventes", () => {
     const reponse = await envoyer("post", "/api/commandes", { lignes: [{ produitId, quantite: 1 }] }, tokenClient);
 
     expect(reponse.status).toBe(400);
-    expect(reponse.body.details.champs).toEqual({ adresseLivraison: expect.any(String) });
+    expect(reponse.body.details.champs).toEqual({ adresseLivraison: expect.any(String), paiementDemo: expect.any(String) });
+  });
+
+  it("répond 402 PAIEMENT_REFUSE à un paiement de démonstration refusé, sans rien enregistrer", async () => {
+    const reponse = await envoyer("post", "/api/commandes", { ...commande(2), paiementDemo: "refuse" }, tokenClient);
+
+    expect(reponse.status).toBe(402);
+    expect(reponse.body).toEqual({ code: "PAIEMENT_REFUSE", message: expect.any(String) });
+    expect((await envoyer("get", "/api/commandes", undefined, tokenClient)).body).toEqual([]);
+    expect((await envoyer("get", `/api/produits/${produitId}/stock`)).body.quantitePhysique).toBe(3);
   });
 
   it("réserve la commande au client et le suivi des commandes au responsable", async () => {
