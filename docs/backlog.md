@@ -156,6 +156,19 @@ Reste à faire :
 - Front : écran 8 et affichage de la disponibilité
 
 
+
+08/11/2026 - Sécurité des dépendances (issue #52)
+
+Fait :
+- `npm audit fix` dans `backend/` (lockfile seulement) : body-parser 2.3.0 vers 2.4.0 (haute, déni de service), qs 6.16.0 vers 6.17.1 (moyenne), follow-redirects 1.16.1 vers 1.16.3 (développement) ; plus aucune vulnérabilité, 136 tests et build passent
+- Workflows backend et frontend : étape `npm audit --omit=dev --audit-level=high`, la CI échoue sur une vulnérabilité haute ou critique d'une dépendance de production
+- `.github/dependabot.yml` : mises à jour hebdomadaires (lundi, heure de Tahiti) de `backend/`, `frontend/` et des actions GitHub, mineures regroupées
+- README : marche à suivre quand une alerte arrive
+- 13/11/2026 : la nouvelle étape de CI a bloqué la PR sur une faille haute de mongoose publiée entre-temps ; `npm audit fix` (mongoose 9.11.1 vers 9.12.1, mongodb 7.7.0 vers 7.8.0), 272 tests et build passent
+
+Reste à faire :
+- Activer les alertes et les mises à jour de sécurité Dependabot dans les réglages du dépôt (Settings, Code security), qui ne se configurent pas par fichier
+
 08/11/2026 - Back : paramètres et ventes (EX03, issue #38)
 
 Fait :
