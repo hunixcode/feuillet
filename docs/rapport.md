@@ -44,7 +44,7 @@ Le sujet ne demande pas de paiement : la validation du panier enregistre la vent
 
 ### CI — **GitHub Actions**
 
-Lancera les tests, le lint et le build TypeScript du front et du back à chaque PR (workflow à créer dans `.github/workflows/`). Gratuit et intégré au dépôt. Alternative écartée : Jenkins (serveur dédié, trop lourd).
+Deux workflows dans `.github/workflows/` (`backend.yml`, `frontend.yml`), lancés sur chaque PR qui touche leur dossier et sur `main` : `npm ci`, `npm audit` (bloquant sur une vulnérabilité haute d'une dépendance de production), typecheck ou lint, tests et build. Dependabot propose chaque lundi les mises à jour des dépendances et des actions. Gratuit et intégré au dépôt. Alternative écartée : Jenkins (serveur dédié, trop lourd).
 
 ---
 
