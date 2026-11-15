@@ -1,0 +1,522 @@
+.ventes-page {
+  display: grid;
+  gap: 24px;
+}
+
+.ventes-entete {
+  display: grid;
+  gap: 10px;
+}
+
+.ventes-entete p {
+  max-width: 64ch;
+  color: var(--gris);
+}
+
+.ventes-surface {
+  display: grid;
+  align-content: start;
+  gap: 20px;
+  padding: 24px;
+  border-radius: var(--rayon-carte);
+  background: var(--blanc);
+}
+
+.ventes-surface h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.375rem;
+  line-height: 1.15;
+}
+
+.ventes-surface h3 {
+  font-size: 1.125rem;
+}
+
+.ventes-surface h4 {
+  font-size: 1rem;
+}
+
+.ventes-titre-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+
+.ventes-filtre {
+  min-width: 200px;
+}
+
+.ventes-compte {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: var(--rayon-pilule);
+  background: var(--gris-fond);
+  font-family: var(--etroit);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.ventes-aide,
+.ventes-secondaire {
+  color: var(--gris);
+  font-size: 0.875rem;
+}
+
+.ventes-secondaire {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.ventes-succes {
+  padding: 12px 16px;
+  border-radius: var(--rayon-champ);
+  background: var(--ok-pale);
+  color: var(--ok);
+  font-size: 0.875rem;
+}
+
+.ventes-tableau-cadre {
+  overflow-x: auto;
+}
+
+.ventes-tableau {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.ventes-tableau th {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--ligne);
+  color: var(--gris);
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.ventes-tableau td {
+  padding: 12px;
+  border-bottom: 1px solid var(--ligne-douce);
+  vertical-align: top;
+}
+
+.ventes-tableau tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.ventes-tableau tr[aria-current='true'] td {
+  background: var(--laiton-pale);
+}
+
+.ventes-tableau tr[aria-current='true'] td:first-child {
+  box-shadow: inset 2px 0 0 var(--laiton);
+}
+
+.ventes-tableau--lignes td {
+  padding: 10px 8px;
+}
+
+.ventes-tableau .ventes-nombre {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ventes-adresse {
+  max-width: 28ch;
+}
+
+.ventes-lien {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--encre);
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ventes-lien:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.ventes-cadeau {
+  display: block;
+  color: var(--laiton-fonce);
+  font-size: 0.8125rem;
+}
+
+.ventes-statut {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.ventes-statut::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.ventes-statut--a_preparer {
+  color: var(--bas);
+}
+
+.ventes-statut--expediee {
+  color: var(--ok);
+}
+
+.ventes-remise {
+  display: block;
+  color: var(--manque);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.ventes-voile {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(17, 17, 19, 0.28);
+  animation: ventes-apparition 160ms ease-out;
+}
+
+.ventes-panneau {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 41;
+  display: flex;
+  flex-direction: column;
+  width: min(600px, 100vw);
+  background: var(--blanc);
+  box-shadow: -12px 0 32px rgba(17, 17, 19, 0.16);
+  animation: ventes-glissement 200ms ease-out;
+}
+
+@keyframes ventes-apparition {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes ventes-glissement {
+  from {
+    transform: translateX(32px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ventes-voile,
+  .ventes-panneau {
+    animation: none;
+  }
+}
+
+.ventes-panneau-tete {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  padding: 24px 24px 0;
+  border-bottom: 1px solid var(--ligne);
+}
+
+.ventes-entete-vente {
+  display: grid;
+  gap: 6px;
+  padding-right: 40px;
+}
+
+.ventes-entete-vente .ventes-statut-ligne {
+  margin-top: 6px;
+}
+
+.ventes-panneau-corps {
+  flex: 1;
+  min-height: 0;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.ventes-onglets {
+  display: flex;
+  gap: 4px;
+}
+
+.ventes-onglet {
+  margin-bottom: -1px;
+  padding: 10px 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--gris);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ventes-onglet:hover {
+  color: var(--encre);
+}
+
+.ventes-onglet[aria-selected='true'] {
+  border-bottom-color: var(--laiton);
+  color: var(--encre);
+}
+
+.ventes-fermer {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--gris-fond);
+  color: var(--encre);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ventes-fermer:hover {
+  background: var(--gris-fond-2);
+}
+
+.ventes-bloc {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.ventes-surtitre {
+  color: var(--laiton-fonce);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.ventes-statut-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ventes-infos,
+.ventes-totaux {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.ventes-infos > div,
+.ventes-totaux > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 0.875rem;
+}
+
+.ventes-infos dt,
+.ventes-totaux dt {
+  color: var(--gris);
+}
+
+.ventes-infos dd,
+.ventes-totaux dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ventes-totaux {
+  padding-top: 12px;
+  border-top: 1px solid var(--ligne);
+}
+
+.ventes-totaux-tva {
+  font-size: 0.8125rem;
+}
+
+.ventes-totaux-total {
+  padding-top: 8px;
+  border-top: 1px solid var(--ligne-douce);
+}
+
+.ventes-totaux-total dt,
+.ventes-totaux-total dd {
+  color: var(--encre);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.ventes-limite {
+  display: grid;
+  gap: 2px;
+  padding: 12px 16px;
+  border-radius: var(--rayon-champ);
+  background: var(--ok-pale);
+  color: var(--ok);
+  font-weight: 500;
+}
+
+.ventes-limite--depassee {
+  background: var(--manque-pale);
+  color: var(--manque);
+}
+
+.ventes-colis {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px dashed var(--ligne);
+  border-radius: var(--rayon-champ);
+}
+
+.ventes-formulaire {
+  padding: 16px;
+  border-radius: var(--rayon-champ);
+  background: var(--gris-fond);
+}
+
+.ventes-deux {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.ventes-choix {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.ventes-choix legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.ventes-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--ligne-douce);
+  border-radius: 10px;
+  background: var(--blanc);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.ventes-option:has(input:checked) {
+  border-color: var(--laiton);
+  box-shadow: inset 0 0 0 1px var(--laiton);
+}
+
+.ventes-option input,
+.ventes-case input {
+  margin-top: 3px;
+  accent-color: var(--encre);
+}
+
+.ventes-option > span {
+  display: grid;
+  gap: 2px;
+}
+
+.ventes-case {
+  display: grid;
+  gap: 6px;
+}
+
+.ventes-case label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ventes-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ventes-resultat {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--ok);
+  border-radius: var(--rayon-champ);
+  background: var(--ok-pale);
+  font-size: 0.875rem;
+}
+
+.ventes-historique {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ventes-historique li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--gris-fond);
+  font-size: 0.875rem;
+}
+
+.ventes-montant {
+  font-weight: 500;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .ventes-surface {
+    padding: 20px 16px;
+  }
+
+  .ventes-panneau-tete {
+    padding: 20px 16px 0;
+  }
+
+  .ventes-panneau-corps {
+    padding: 20px 16px;
+  }
+
+  .ventes-deux {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

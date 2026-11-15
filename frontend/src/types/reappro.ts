@@ -30,3 +30,36 @@ export interface ProduitAReapprovisionner {
   pourcentageVendu: number
   quantiteEnCommande: number
 }
+
+export interface FicheFournisseur {
+  nom: string
+  contact?: string
+}
+
+export interface NouvelleCommandeFournisseur {
+  fournisseurId: string
+  produitId: string
+  quantiteCommandee: number
+  dateArriveePrevue: string
+}
+
+export interface Reception {
+  id: string
+  commandeId: string
+  produitId: string
+  date: string
+  quantiteRecue: number
+  quantiteAbimee: number
+  validee: boolean
+  dateValidation?: string
+}
+
+export interface SaisieReception {
+  quantiteRecue: number
+  quantiteAbimee: number
+}
+
+export interface ReceptionValidee {
+  reception: Reception
+  commande: CommandeFournisseur
+}

@@ -53,7 +53,8 @@ function InfoBulle({ libelle, info, aDroite = false }: InfoBulleProps) {
       onFocus={ouvrir}
       onBlur={() => setPosition(null)}
       onKeyDown={(evenement) => {
-        if (evenement.key === 'Escape') {
+        if (evenement.key === 'Escape' && position) {
+          evenement.stopPropagation()
           setPosition(null)
         }
       }}

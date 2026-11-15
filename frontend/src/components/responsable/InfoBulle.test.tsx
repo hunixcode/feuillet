@@ -76,6 +76,20 @@ describe('InfoBulle', () => {
     expect(bulle()).not.toHaveClass('info-bulle--visible')
   })
 
+  it('garde Échap pour elle seulement quand elle est ouverte', () => {
+    const echap = vi.fn()
+    document.addEventListener('keydown', echap)
+    render(<InfoBulle libelle="Vendable" info="Texte" />)
+
+    fireEvent.focus(terme())
+    fireEvent.keyDown(terme(), { key: 'Escape' })
+    expect(echap).not.toHaveBeenCalled()
+
+    fireEvent.keyDown(terme(), { key: 'Escape' })
+    expect(echap).toHaveBeenCalledTimes(1)
+    document.removeEventListener('keydown', echap)
+  })
+
   it('se cache quand la page défile', () => {
     render(<InfoBulle libelle="Vendable" info="Texte" />)
     fireEvent.mouseEnter(terme())
