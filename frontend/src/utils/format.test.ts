@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDate, formatDateHeure, formatJourTahiti, formatXPF } from './format'
+import { formatDate, formatDateHeure, formatJour, formatJourCourt, formatJourTahiti, formatXPF, jourIso } from './format'
 
 describe('formatXPF', () => {
   it.each([
@@ -73,6 +73,32 @@ describe('formatDateHeure', () => {
 
   it('garde le jour de Tahiti quand il est déjà le lendemain en UTC', () => {
     expect(formatDateHeure('2026-10-23T05:30:00.000Z')).toBe('22/10/2026 19:30')
+  })
+})
+
+describe('formatJour', () => {
+  it('donne le jour de la semaine et la date à Tahiti', () => {
+    expect(formatJour(new Date('2026-11-09T20:00:00.000Z'))).toBe('lundi 9 novembre')
+  })
+
+  it('garde le jour de Tahiti quand il est déjà le lendemain en UTC', () => {
+    expect(formatJour(new Date('2026-11-10T05:00:00.000Z'))).toBe('lundi 9 novembre')
+  })
+})
+
+describe('formatJourCourt', () => {
+  it('formate un jour seul sans décalage', () => {
+    expect(formatJourCourt('2026-11-14')).toBe('sam. 14 nov.')
+  })
+
+  it('formate un instant au jour de Tahiti', () => {
+    expect(formatJourCourt('2026-11-16T09:59:59.999Z')).toBe('dim. 15 nov.')
+  })
+})
+
+describe('jourIso', () => {
+  it('donne le jour de Tahiti au format AAAA-MM-JJ', () => {
+    expect(jourIso(new Date('2026-11-10T05:00:00.000Z'))).toBe('2026-11-09')
   })
 })
 

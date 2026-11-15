@@ -1,0 +1,49 @@
+.info-terme {
+  display: inline;
+  border-bottom: 1px dotted var(--gris-clair);
+  cursor: help;
+}
+
+.info-terme:focus-visible {
+  outline: 2px solid var(--laiton);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.info-bulle {
+  position: fixed;
+  z-index: 100;
+  display: none;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--encre);
+  color: var(--blanc);
+  font-family: var(--sans);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 1.4;
+  text-align: left;
+  text-transform: none;
+  white-space: normal;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+  pointer-events: none;
+}
+
+.info-bulle--visible {
+  display: block;
+  animation: info-bulle-apparition 0.12s ease-out;
+}
+
+@keyframes info-bulle-apparition {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .info-bulle--visible {
+    animation: none;
+  }
+}

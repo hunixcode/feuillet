@@ -1,0 +1,575 @@
+.tableau-bord {
+  display: grid;
+  gap: 24px;
+}
+
+.tableau-bord-entete {
+  display: grid;
+  gap: 4px;
+}
+
+.tableau-bord-jour {
+  color: var(--gris);
+}
+
+.tableau-bord-jour::first-letter {
+  text-transform: uppercase;
+}
+
+.tableau-bord-colonnes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 24px;
+}
+
+.tableau-bord-colonnes > section {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 24px;
+  border-radius: var(--rayon-carte);
+  background: var(--blanc);
+}
+
+.tableau-bord-colonne-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tableau-bord-colonnes h2 {
+  font-size: 1.125rem;
+}
+
+.tableau-bord-compte {
+  min-width: 28px;
+  padding: 2px 10px;
+  border-radius: var(--rayon-pilule);
+  background: var(--gris-fond);
+  color: var(--encre);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.tableau-bord-liste {
+  padding: 0;
+  list-style: none;
+}
+
+.tableau-bord-liste > li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--ligne-douce);
+  font-size: 0.9375rem;
+}
+
+.tableau-bord-liste > li:last-child {
+  border-bottom: 0;
+}
+
+.tableau-bord-liste small {
+  display: block;
+  color: var(--gris);
+  font-size: 0.8125rem;
+}
+
+.tableau-bord-nombre {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.tableau-bord-etat {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--bas);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.tableau-bord-etat--manque {
+  color: var(--manque);
+}
+
+.tableau-bord-etat::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.tableau-bord-vide,
+.tableau-bord-aide,
+.tableau-bord-note {
+  color: var(--gris);
+  font-size: 0.875rem;
+}
+
+.tableau-bord-surface {
+  display: grid;
+  gap: 12px;
+  padding: 24px;
+  border-radius: var(--rayon-carte);
+  background: var(--blanc);
+}
+
+.tableau-bord-titre-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+}
+
+.tableau-bord-titre-ligne h2 {
+  font-size: 1.375rem;
+  line-height: 1.15;
+}
+
+.tableau-bord-lien {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--laiton-fonce);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.tableau-bord-liens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+}
+
+.tableau-bord-lien:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tableau-bord-detail {
+  display: grid;
+  gap: 16px;
+  padding-top: 20px;
+  border-top: 1px solid var(--ligne-douce);
+}
+
+.tableau-bord-detail h3 {
+  font-size: 1.0625rem;
+}
+
+.tableau-bord-detail h3::first-letter {
+  text-transform: uppercase;
+}
+
+.tableau-bord-chiffres {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tableau-bord-chiffres > div {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: var(--rayon-champ);
+  background: var(--gris-fond);
+}
+
+.tableau-bord-chiffres dt {
+  color: var(--gris);
+  font-size: 0.8125rem;
+}
+
+.tableau-bord-chiffres dd {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.tableau-bord-chiffres small {
+  display: block;
+  color: var(--gris);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.ventes-produits-cadre {
+  overflow-x: auto;
+}
+
+.ventes-produits {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.ventes-produits th {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--ligne);
+  color: var(--gris);
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.ventes-produits td {
+  padding: 12px;
+  border-bottom: 1px solid var(--ligne-douce);
+  vertical-align: middle;
+}
+
+.ventes-produits tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.ventes-produits .ventes-produits-nombre {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ventes-produits .ventes-produits-montant {
+  width: 34%;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ventes-produits td.ventes-produits-montant {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ventes-produits-jauge {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--gris-fond);
+  overflow: hidden;
+}
+
+.ventes-produits-jauge > span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--laiton);
+}
+
+.ventes-produits tr[aria-current='true'] td {
+  background: var(--laiton-pale);
+}
+
+.ventes-produits-lien {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--encre);
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ventes-produits-aide {
+  margin-bottom: 8px;
+  color: var(--gris);
+  font-size: 0.8125rem;
+}
+
+.ventes-produits-evolution {
+  display: block;
+  padding: 4px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+}
+
+.ventes-produits-evolution:hover,
+.ventes-produits-evolution:focus-visible {
+  border-color: var(--laiton);
+  background: var(--blanc);
+}
+
+.ventes-produits-mini {
+  display: block;
+  width: 80px;
+  height: 24px;
+  overflow: visible;
+}
+
+.ventes-produits-mini polyline {
+  fill: none;
+  stroke: var(--laiton-fonce);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.ventes-produits-lien:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.suivi-ventes {
+  display: grid;
+  gap: 8px;
+  padding: 16px 20px;
+  border-radius: var(--rayon-champ);
+  background: var(--gris-fond);
+  scroll-margin: 16px;
+}
+
+.suivi-ventes-entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.suivi-ventes-entete h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.suivi-ventes-choix {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gris);
+  font-size: 0.875rem;
+}
+
+.suivi-ventes-choix select {
+  min-width: 220px;
+  max-width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--ligne);
+  border-radius: 8px;
+  background: var(--blanc);
+  color: var(--encre);
+  font: inherit;
+}
+
+.suivi-ventes-attente {
+  display: grid;
+  place-items: center;
+  height: 140px;
+  color: var(--gris);
+  font-size: 0.875rem;
+}
+
+.ventes-produits-choisi > td {
+  background: var(--laiton-pale);
+}
+
+.ventes-produits-lien[aria-pressed='true'] {
+  color: var(--laiton-fonce);
+  font-weight: 600;
+}
+
+
+.courbe-ventes-trace {
+  width: 100%;
+  max-height: 190px;
+  height: auto;
+  overflow: visible;
+}
+
+.courbe-ventes-axe {
+  stroke: var(--ligne);
+  stroke-width: 1;
+}
+
+.courbe-ventes-ligne {
+  fill: none;
+  stroke: var(--laiton-fonce);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.courbe-ventes-cible {
+  fill: transparent;
+}
+
+.courbe-ventes-marque {
+  fill: var(--laiton-fonce);
+  stroke: var(--blanc);
+  stroke-width: 2;
+}
+
+.courbe-ventes-point--marque .courbe-ventes-marque {
+  r: 7;
+  fill: var(--encre);
+}
+
+.courbe-ventes-point--marque .courbe-ventes-jour {
+  fill: var(--encre);
+  font-weight: 600;
+}
+
+.courbe-ventes-point:hover .courbe-ventes-marque {
+  fill: var(--encre);
+}
+
+.courbe-ventes-valeur {
+  fill: var(--encre);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.courbe-ventes-jour {
+  fill: var(--gris);
+  font-size: 12px;
+}
+
+.courbe-ventes-legende {
+  color: var(--gris);
+  font-size: 0.8125rem;
+}
+
+.ventes-produits-reference {
+  display: block;
+  color: var(--gris);
+  font-size: 0.8125rem;
+}
+
+.graphique-ventes {
+  margin: 8px 0 0;
+}
+
+.graphique-ventes-barres {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.graphique-ventes-jour {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  outline-offset: 4px;
+}
+
+.graphique-ventes-zone {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  height: 200px;
+  padding-top: 24px;
+  border-bottom: 1px solid var(--ligne);
+}
+
+.graphique-ventes-barre {
+  position: relative;
+  width: min(56px, 100%);
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+  background: var(--laiton);
+  transition: background-color 0.15s;
+}
+
+.graphique-ventes-jour--fort .graphique-ventes-barre {
+  background: var(--laiton-fonce);
+}
+
+.graphique-ventes-jour:hover .graphique-ventes-barre,
+.graphique-ventes-jour:focus-visible .graphique-ventes-barre,
+.graphique-ventes-jour--choisi .graphique-ventes-barre {
+  background: var(--encre);
+}
+
+.graphique-ventes-valeur {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--encre);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.graphique-ventes-jour--fort .graphique-ventes-valeur,
+.graphique-ventes-jour:hover .graphique-ventes-valeur,
+.graphique-ventes-jour:focus-visible .graphique-ventes-valeur,
+.graphique-ventes-jour--choisi .graphique-ventes-valeur {
+  opacity: 1;
+}
+
+.graphique-ventes-date {
+  color: var(--gris);
+  font-size: 0.75rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.graphique-ventes-jour--choisi .graphique-ventes-date {
+  color: var(--encre);
+  font-weight: 600;
+}
+
+.graphique-ventes-legende {
+  margin-top: 12px;
+  color: var(--gris);
+  font-size: 0.8125rem;
+}
+
+.graphique-ventes-vide {
+  color: var(--gris);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 1024px) {
+  .tableau-bord-colonnes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 880px) {
+  .tableau-bord-chiffres {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .graphique-ventes-barres {
+    gap: 4px;
+  }
+
+  .graphique-ventes-valeur,
+  .graphique-ventes-date {
+    font-size: 0.6875rem;
+  }
+
+  .graphique-ventes-zone {
+    height: 160px;
+  }
+}

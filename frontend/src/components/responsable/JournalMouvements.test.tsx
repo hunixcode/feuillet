@@ -70,6 +70,19 @@ describe('JournalMouvements', () => {
     ])
   })
 
+  it('explique les types de mouvement et les opérateurs', () => {
+    render(
+      <JournalMouvements mouvements={mouvements} articles={articles} filtres={{}} onFiltres={vi.fn()} />,
+    )
+
+    expect(screen.getByText('Type', { selector: '.info-terme' })).toHaveAccessibleDescription(
+      /Ajustement : correction d’inventaire/,
+    )
+    expect(screen.getByText('Opérateur', { selector: '.info-terme' })).toHaveAccessibleDescription(
+      /le responsable, un client \(commande en ligne\) ou le système/,
+    )
+  })
+
   it('affiche une vente en ligne faite par le client', () => {
     render(
       <JournalMouvements mouvements={mouvements} articles={articles} filtres={{}} onFiltres={vi.fn()} />,

@@ -1,5 +1,8 @@
 import type { Produit, TypeProduit } from '../../types/produit'
+import type { CommandeFournisseur, StatutCommandeFournisseur } from '../../types/reappro'
+import type { IssueRetour } from '../../types/retour'
 import type { EtatStock, Mouvement, Operateur, TypeMouvement } from '../../types/stock'
+import type { OccasionCadeau, StatutVente } from '../../types/vente'
 
 export const LIBELLES_TYPE: Record<TypeProduit, string> = {
   livre: 'Livre',
@@ -43,4 +46,35 @@ export function libelleDisponibilite(produit: Produit): string {
     return produit.disponibilite === 'disponible' ? 'Disponible' : 'Épuisé'
   }
   return 'Non renseigné'
+}
+
+export const LIBELLES_STATUT_COMMANDE: Record<StatutCommandeFournisseur, string> = {
+  en_cours: 'En cours',
+  partiellement_recue: 'Partiellement reçue',
+  recue: 'Reçue',
+}
+
+export function restantARecevoir(commande: CommandeFournisseur): number {
+  return commande.quantiteCommandee - commande.quantiteRecue
+}
+
+export function enRetard(commande: CommandeFournisseur, aujourdhui: string): boolean {
+  return commande.statut !== 'recue' && commande.dateArriveePrevue < aujourdhui
+}
+
+export const LIBELLES_STATUT_VENTE: Record<StatutVente, string> = {
+  a_preparer: 'À préparer',
+  expediee: 'Expédiée',
+}
+
+export const LIBELLES_OCCASION: Record<OccasionCadeau, string> = {
+  noel: 'Noël',
+  anniversaire: 'Anniversaire',
+  fete: 'Fête',
+}
+
+export const LIBELLES_ISSUE: Record<IssueRetour, string> = {
+  remboursement: 'Remboursement',
+  echange: 'Échange',
+  remplacement: 'Remplacement',
 }
