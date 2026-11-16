@@ -196,7 +196,7 @@ describe("API des demandes et des notifications", () => {
       expect(tokenInvalide.status).toBe(200);
       expect(tokenInvalide.body.lignesIndisponibles).toHaveLength(1);
       expect(titulaire.body.lignesIndisponibles).toEqual([]);
-      await envoyer("post", "/api/commandes", { ...panier, adresseLivraison: "Papeete" }, tokenMarie).expect(201);
+      await envoyer("post", "/api/commandes", { ...panier, adresseLivraison: "Papeete", paiementDemo: "accepte" }, tokenMarie).expect(201);
       const [demande] = (await envoyer("get", "/api/demandes", undefined, tokenMarie)).body;
       expect(demande.statut).toBe("honoree");
     });

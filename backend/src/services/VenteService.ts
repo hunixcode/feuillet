@@ -5,6 +5,7 @@ import { quantiteVendable, type ChangementStock, type Stock } from "../modeles/s
 import type { UtilisateurPublic } from "../modeles/utilisateur.js";
 import {
   OCCASIONS_CADEAU,
+  RESULTATS_PAIEMENT_DEMO,
   STATUTS_VENTE,
   type ClientVente,
   type FiltresVentes,
@@ -13,6 +14,7 @@ import {
   type Montants,
   type OccasionCadeau,
   type OptionsVente,
+  type ResultatPaiementDemo,
   type StatutVente,
   type Vente,
 } from "../modeles/vente.js";
@@ -37,6 +39,7 @@ export interface Devis extends Montants {
 
 interface Panier extends OptionsVente {
   lignes: LigneCommande[];
+  paiementDemo?: ResultatPaiementDemo;
 }
 
 // RG11 : TVA incluse dans le prix TTC, arrondie à l'unité, calculée sur le montant de la ligne.
@@ -78,8 +81,9 @@ function lireLignes(valeur: unknown, champs: ErreursChamps): LigneCommande[] {
   return [...quantites].map(([produitId, quantite]) => ({ produitId, quantite }));
 }
 
-// adresseObligatoire : commande en ligne confirmée (la livraison est obligatoire en ligne, RG13).
-function lirePanier(corps: unknown, adresseObligatoire: boolean): Panier {
+// confirmation : commande en ligne du client, qui exige l'adresse (la livraison est obligatoire en ligne, RG13)
+// et le résultat du paiement de démonstration.
+function lirePanier(corps: unknown, confirmation: boolean): Panier {
   const donnees = lireObjet(corps);
   const champs: ErreursChamps = {};
   const lignes = lireLignes(donnees.lignes, champs);
@@ -94,8 +98,12 @@ function lirePanier(corps: unknown, adresseObligatoire: boolean): Panier {
   const adresse = lireTexte(donnees.adresseLivraison);
   if (adresse.length > LONGUEUR_MAX_ADRESSE) {
     champs.adresseLivraison = `L'adresse ne doit pas dépasser ${LONGUEUR_MAX_ADRESSE} caractères.`;
-  } else if (!adresse && adresseObligatoire) {
+  } else if (!adresse && confirmation) {
     champs.adresseLivraison = "L'adresse de livraison est obligatoire.";
+  }
+  const paiementDemo = donnees.paiementDemo;
+  if (confirmation && !RESULTATS_PAIEMENT_DEMO.includes(paiementDemo as ResultatPaiementDemo)) {
+    champs.paiementDemo = `Le paiement de démonstration doit valoir : ${RESULTATS_PAIEMENT_DEMO.join(", ")}.`;
   }
 
   if (Object.keys(champs).length > 0) {
@@ -106,6 +114,7 @@ function lirePanier(corps: unknown, adresseObligatoire: boolean): Panier {
     emballageCadeau: donnees.emballageCadeau === true,
     ...(OCCASIONS_CADEAU.includes(occasion as OccasionCadeau) && { occasionCadeau: occasion as OccasionCadeau }),
     ...(adresse && { adresseLivraison: adresse }),
+    ...(confirmation && { paiementDemo: paiementDemo as ResultatPaiementDemo }),
   };
 }
 
@@ -218,6 +227,10 @@ export class VenteService {
         { lignes: devis.lignesIndisponibles },
       );
     }
+    // Le paiement n'est simulé qu'une fois les articles vérifiés, comme un vrai paiement ; refusé, rien n'est écrit.
+    if (panier.paiementDemo === "refuse") {
+      throw new ErreurApi(402, "PAIEMENT_REFUSE", "Paiement refusé (démonstration) : la commande n'a pas été enregistrée.");
+    }
     const date = this.horloge.maintenant();
     const { lignesIndisponibles: _, ...montantsEtLignes } = devis;
     const demandesHonorees = devis.lignes.flatMap(({ produitId }) => reservations.get(produitId)?.demandeIds ?? []);
@@ -251,6 +264,7 @@ export class VenteService {
           emballageCadeau: panier.emballageCadeau,
           ...(panier.occasionCadeau && { occasionCadeau: panier.occasionCadeau }),
           ...(panier.adresseLivraison && { adresseLivraison: panier.adresseLivraison }),
+          ...(panier.paiementDemo === "accepte" && { paiement: { mode: "demo", statut: "accepte", date } }),
           ...montantsEtLignes,
         },
         changements,

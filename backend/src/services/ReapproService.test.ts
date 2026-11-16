@@ -260,7 +260,7 @@ describe("ReapproService", () => {
       await services.stockService.corrigerInventaire(livre, { quantiteComptee: 10, motif: "Stock initial" });
       await expect(services.reapproService.aRecommander()).resolves.toEqual([]);
 
-      await services.venteService.commanderEnLigne(marie, { lignes: [{ produitId: livre, quantite: 8 }], adresseLivraison: "Papeete" });
+      await services.venteService.commanderEnLigne(marie, { lignes: [{ produitId: livre, quantite: 8 }], adresseLivraison: "Papeete", paiementDemo: "accepte" });
 
       await expect(services.reapproService.aRecommander()).resolves.toEqual([
         {
@@ -280,10 +280,10 @@ describe("ReapproService", () => {
       await services.stockService.corrigerInventaire(livre, { quantiteComptee: 10, motif: "Stock initial" });
       const ancienne = await commander(4);
       await recevoir(ancienne.id, 4);
-      await services.venteService.commanderEnLigne(marie, { lignes: [{ produitId: livre, quantite: 13 }], adresseLivraison: "Papeete" });
+      await services.venteService.commanderEnLigne(marie, { lignes: [{ produitId: livre, quantite: 13 }], adresseLivraison: "Papeete", paiementDemo: "accepte" });
       const enCours = await commander(6);
       await recevoir(enCours.id, 2);
-      await services.venteService.commanderEnLigne(marie, { lignes: [{ produitId: livre, quantite: 3 }], adresseLivraison: "Papeete" });
+      await services.venteService.commanderEnLigne(marie, { lignes: [{ produitId: livre, quantite: 3 }], adresseLivraison: "Papeete", paiementDemo: "accepte" });
 
       const [produit] = await services.reapproService.aRecommander();
 
@@ -292,7 +292,7 @@ describe("ReapproService", () => {
 
     it("suit le seuil propre au produit, et revient au seuil par défaut avec null", async () => {
       await services.stockService.corrigerInventaire(livre, { quantiteComptee: 10, motif: "Stock initial" });
-      await services.venteService.commanderEnLigne(marie, { lignes: [{ produitId: livre, quantite: 6 }], adresseLivraison: "Papeete" });
+      await services.venteService.commanderEnLigne(marie, { lignes: [{ produitId: livre, quantite: 6 }], adresseLivraison: "Papeete", paiementDemo: "accepte" });
       await expect(services.reapproService.aRecommander()).resolves.toEqual([]);
 
       await expect(services.reapproService.definirSeuil(livre, { seuilAlerte: 50 })).resolves.toEqual({

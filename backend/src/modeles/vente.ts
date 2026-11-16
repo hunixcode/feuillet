@@ -38,6 +38,17 @@ export interface OptionsVente {
   adresseLivraison?: string;
 }
 
+// Paiement fictif de démonstration : aucun montant n'est débité et aucune donnée de carte n'est reçue ni gardée.
+// Le front envoie le résultat simulé ; seule une commande au paiement accepté est enregistrée.
+export const RESULTATS_PAIEMENT_DEMO = ["accepte", "refuse"] as const;
+export type ResultatPaiementDemo = (typeof RESULTATS_PAIEMENT_DEMO)[number];
+
+export interface Paiement {
+  mode: "demo";
+  statut: "accepte";
+  date: Date;
+}
+
 export interface ClientVente {
   id: string;
   nom: string;
@@ -50,6 +61,8 @@ export interface Vente extends OptionsVente, Montants {
   statut: StatutVente;
   client: ClientVente;
   lignes: LigneVente[];
+  // Absent sur un échange : la différence est réglée ou remboursée avec le retour (RG12).
+  paiement?: Paiement;
   dateExpedition?: Date;
 }
 

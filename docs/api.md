@@ -18,6 +18,7 @@ Toute erreur suit le format de `ApiError` (`frontend/src/types/api.ts`) :
 | 400 | `JSON_INVALIDE` | Corps de requête mal formé |
 | 401 | `IDENTIFIANTS_INVALIDES` | E-mail ou mot de passe incorrect (même message dans les deux cas) |
 | 401 | `NON_AUTHENTIFIE` | Token absent, invalide ou expiré |
+| 402 | `PAIEMENT_REFUSE` | Paiement de démonstration refusé : la commande n'est pas enregistrée (voir [Paiement de démonstration](#paiement-de-démonstration)) |
 | 403 | `ACCES_REFUSE` | Rôle insuffisant pour l'espace demandé |
 | 404 | `INTROUVABLE` | Route ou ressource inconnue |
 | 409 | `EMAIL_DEJA_UTILISE` | Inscription avec un e-mail existant (`details.champs.email`) |
@@ -291,7 +292,8 @@ Tous les montants sont calculés par le back, en XPF entiers ; le front affiche 
   "lignes": [{ "produitId": "…", "quantite": 2 }],
   "occasionCadeau": "noel",
   "emballageCadeau": true,
-  "adresseLivraison": "BP 12, Papeete"
+  "adresseLivraison": "BP 12, Papeete",
+  "paiementDemo": "accepte"
 }
 ```
 
@@ -301,6 +303,7 @@ Tous les montants sont calculés par le back, en XPF entiers ; le front affiche 
 | `occasionCadeau` | Facultatif : `noel`, `anniversaire` ou `fete` ; une vente avec occasion est un cadeau (délai de retour allongé, RG09) |
 | `emballageCadeau` | Booléen, `false` par défaut ; ajoute les frais d'emballage des paramètres |
 | `adresseLivraison` | 300 caractères au plus. La librairie vend uniquement en ligne : toute commande est livrée, l'adresse est exigée à la confirmation et les frais de livraison sont toujours comptés |
+| `paiementDemo` | Exigé à la confirmation (`POST /api/commandes`), ignoré par le devis : `accepte` ou `refuse`, résultat du paiement fictif choisi dans le front (voir [Paiement de démonstration](#paiement-de-démonstration)) |
 
 ### Calcul
 
@@ -339,7 +342,7 @@ Pour chaque ligne, au jour de Tahiti : `prixUnitaire` = prix appliqué avec la p
 
 `lignesIndisponibles` : lignes qui seraient refusées à la confirmation, avec la quantité demandée : produit inconnu ou archivé (absent de `lignes`, non chiffré), ou quantité supérieure au stock vendable (chiffrée dans `lignes`). Le stock exact n'est pas donné au client.
 
-`Vente` : les champs du devis sans `lignesIndisponibles`, avec `id`, `date`, `statut` (`a_preparer` ou `expediee`), les options, `client` (`{ "id", "nom", "email" }`, figé à la vente) et `dateExpedition` quand la commande est expédiée. Les lignes gardent prix, remise, TVA, référence et désignation du jour de la vente (RG02) : elles ne changent pas si le catalogue change.
+`Vente` : les champs du devis sans `lignesIndisponibles`, avec `id`, `date`, `statut` (`a_preparer` ou `expediee`), les options, `client` (`{ "id", "nom", "email" }`, figé à la vente), `paiement` (`{ "mode": "demo", "statut": "accepte", "date" }`, absent sur la commande d'un échange) et `dateExpedition` quand la commande est expédiée. Les lignes gardent prix, remise, TVA, référence et désignation du jour de la vente (RG02) : elles ne changent pas si le catalogue change.
 
 ### Validation (RG03)
 
@@ -349,6 +352,8 @@ Tout ou rien : les disponibilités sont revérifiées à la confirmation sur le 
 { "code": "LIGNE_INDISPONIBLE", "message": "…", "details": { "lignes": [{ "produitId": "…", "quantite": 6 }] } }
 ```
 
+Les articles sont vérifiés avant le paiement : un panier indisponible répond `409` même si le paiement serait refusé. Si le paiement de démonstration est refusé, rien n'est enregistré (`402 PAIEMENT_REFUSE`).
+
 Sinon la vente et la sortie de stock de chaque ligne (un mouvement `vente` par ligne, opérateur `client`) sont écrites dans une même transaction ; si le stock a changé entre-temps, rien n'est écrit (`409 STOCK_MODIFIE`, recharger le panier et recommencer). Un produit vendu a des mouvements et n'est donc plus supprimable (RG05). Vendre au client titulaire d'une mise de côté la consomme (voir [Mises de côté](#mises-de-côté)).
 
 ### Commandes (client)
@@ -356,11 +361,18 @@ Sinon la vente et la sortie de stock de chaque ligne (un mouvement `vente` par l
 | Route | Accès | Réponse | Erreurs |
 |---|---|---|---|
 | `POST /api/commandes/devis` | public (panier sans compte) ; avec le token d'un client, ses mises de côté comptent comme disponibles (un token invalide est ignoré) | `200` : `Devis` en ligne | `400 VALIDATION` |
-| `POST /api/commandes` | client | `201` : `Vente` au statut `a_preparer` | `400` (dont `adresseLivraison`), `409 LIGNE_INDISPONIBLE`, `409 STOCK_MODIFIE` |
+| `POST /api/commandes` | client | `201` : `Vente` au statut `a_preparer` | `400` (dont `adresseLivraison` et `paiementDemo`), `402 PAIEMENT_REFUSE`, `409 LIGNE_INDISPONIBLE`, `409 STOCK_MODIFIE` |
 | `GET /api/commandes` | client | `200` : ses commandes, de la plus récente à la plus ancienne | |
 | `GET /api/commandes/:id` | client | `200` : `Vente` | `404` si la commande n'est pas la sienne |
 
 Le responsable n'a pas accès à ces routes de commande (`403`), sauf au devis public.
+
+### Paiement de démonstration
+
+Le sujet ne demande pas de paiement réel. Pour que la démonstration ressemble à un achat, le front affiche une étape « Paiement (démonstration) » avant la confirmation, avec la mention « Paiement fictif : aucun montant n'est débité », un bouton « Payer (démo) » et un moyen de simuler un refus. Aucun numéro de carte ni aucune donnée de paiement n'est saisi, envoyé ou gardé : le front envoie seulement `paiementDemo`.
+
+- `accepte` : la commande est enregistrée et garde `paiement: { "mode": "demo", "statut": "accepte", "date" }` (date de la vente)
+- `refuse` : `402 PAIEMENT_REFUSE`, ni vente, ni sortie de stock, ni mise de côté consommée ; le client peut recommencer
 
 ### Suivi des commandes (responsable)
 

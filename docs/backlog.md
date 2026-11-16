@@ -412,6 +412,17 @@ Fait :
 Reste à faire :
 - Déploiement sur Render (#55)
 
+13/11/2026 - Back : paiement fictif de démonstration (#57)
+
+Fait :
+- `POST /api/commandes` exige `paiementDemo` (`accepte` ou `refuse`) : résultat simulé envoyé par le front, aucune donnée de carte reçue ni gardée ; le devis n'en a pas besoin
+- Articles vérifiés d'abord (RG03), puis un refus répond `402 PAIEMENT_REFUSE` sans rien écrire : ni vente, ni sortie de stock, ni mise de côté consommée
+- La vente garde `paiement` (mode `demo`, statut `accepte`, date) ; la commande d'un échange n'en a pas (la différence se règle avec le retour)
+- Seed des ventes de démonstration au paiement accepté ; contrat dans `docs/api.md`, décision dans `docs/rapport.md` ; 320 tests backend
+
+Reste à faire :
+- Front : fait dans la PR #77 (étape « Paiement (démonstration) » du panier)
+
 13/11/2026 - Déploiement : démo en local avec Docker (#55)
 
 Fait :

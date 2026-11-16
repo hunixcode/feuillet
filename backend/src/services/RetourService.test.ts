@@ -45,7 +45,7 @@ describe("RetourService", () => {
   const marie = { id: "1", nom: "Marie", email: "marie@example.pf", role: "client" as const };
   // Commande de Marie aussitôt expédiée : seule une commande expédiée peut être retournée.
   async function vendre(options: object = {}, lignes = [{ produitId: livre, quantite: 2 }]) {
-    const commande = await services.venteService.commanderEnLigne(marie, { lignes, adresseLivraison: "Papeete", ...options });
+    const commande = await services.venteService.commanderEnLigne(marie, { lignes, adresseLivraison: "Papeete", paiementDemo: "accepte", ...options });
     return services.venteService.marquerExpediee(commande.id);
   }
   const stock = (produitId = livre) => services.repositories.stocks.trouver(produitId);
@@ -99,6 +99,7 @@ describe("RetourService", () => {
       const commande = await services.venteService.commanderEnLigne(marie, {
         lignes: [{ produitId: livre, quantite: 1 }],
         adresseLivraison: "Papeete",
+        paiementDemo: "accepte",
       });
 
       expect(await erreurDe(services.retourService.enregistrer(commande.id, { produitId: livre, quantite: 1, issue: "remboursement" }))).toMatchObject({
@@ -184,6 +185,7 @@ describe("RetourService", () => {
         client: { email: "marie@example.pf" },
         adresseLivraison: "Papeete",
       });
+      expect(venteEchange.paiement).toBeUndefined();
       await expect(stock()).resolves.toMatchObject({ quantitePhysique: 4 });
       await expect(stock(cahier)).resolves.toMatchObject({ quantitePhysique: 8 });
     });
