@@ -28,6 +28,20 @@ updates:
       prefix: "chore(frontend)"
     labels: [devops, frontend]
 
+  - package-ecosystem: npm
+    directory: /e2e
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Pacific/Tahiti
+    groups:
+      mineures:
+        update-types: [minor, patch]
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(e2e)"
+    labels: [devops]
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
