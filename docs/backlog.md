@@ -441,3 +441,10 @@ Fait :
 
 Reste à faire :
 - Merge de la PR #74 (back du paiement) avec ce front
+
+15/11/2026 - Sécurité : couvertures des livres autorisées par la CSP (#47)
+
+Fait :
+- La CSP de production n'autorisait que les images du même domaine : les couvertures Open Library de la #77 étaient bloquées quand l'API sert le front (image Docker), et chaque livre gardait sa couverture dessinée
+- `img-src` autorise `covers.openlibrary.org`, `archive.org` et `*.us.archive.org` (Open Library redirige vers les deux derniers) ; test de la CSP et `docs/api.md` à jour
+- Vérifié dans Chrome sur l'API en production avec une base temporaire : 20 images bloquées avant, les couvertures s'affichent après, sans aucune violation de CSP
