@@ -1,0 +1,92 @@
+.parametres-page {
+  display: grid;
+  gap: 24px;
+}
+
+.parametres-entete {
+  display: grid;
+  gap: 10px;
+}
+
+.parametres-entete p {
+  max-width: 60ch;
+  color: var(--gris);
+}
+
+.parametres-formulaire {
+  display: grid;
+  gap: 20px;
+  max-width: 880px;
+}
+
+.parametres-surface {
+  display: grid;
+  gap: 20px;
+  padding: 24px;
+  border-radius: var(--rayon-carte);
+  background: var(--blanc);
+}
+
+.parametres-surface h2 {
+  font-size: 1.25rem;
+  line-height: 1.15;
+}
+
+.parametres-champ {
+  display: grid;
+  grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+  align-items: start;
+  gap: 8px 24px;
+}
+
+.parametres-champ + .parametres-champ {
+  padding-top: 20px;
+  border-top: 1px solid var(--ligne-douce);
+}
+
+.parametres-aide {
+  padding-top: 30px;
+  color: var(--gris);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.parametres-barre {
+  position: sticky;
+  bottom: 16px;
+  display: grid;
+  gap: 12px;
+  padding: 16px 24px;
+  border-radius: var(--rayon-carte);
+  background: var(--blanc);
+  box-shadow: 0 8px 24px rgba(17, 17, 19, 0.08);
+}
+
+.parametres-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.parametres-succes {
+  padding: 12px 16px;
+  border-radius: var(--rayon-champ);
+  background: var(--ok-pale);
+  color: var(--ok);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 720px) {
+  .parametres-champ {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .parametres-aide {
+    padding-top: 0;
+  }
+
+  .parametres-surface,
+  .parametres-barre {
+    padding: 20px 16px;
+  }
+}

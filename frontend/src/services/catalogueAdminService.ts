@@ -15,7 +15,7 @@ export interface NouvellePromotion {
   fin: string
 }
 
-export function listerProduits(filtres: FiltresCatalogue = {}): Promise<Produit[]> {
+export function cheminAvecFiltres(chemin: string, filtres: FiltresCatalogue): string {
   const parametres = new URLSearchParams()
   if (filtres.q?.trim()) {
     parametres.set('q', filtres.q.trim())
@@ -30,7 +30,11 @@ export function listerProduits(filtres: FiltresCatalogue = {}): Promise<Produit[
     parametres.set('archive', 'true')
   }
   const requete = parametres.toString()
-  return get<Produit[]>(requete ? `/produits?${requete}` : '/produits')
+  return requete ? `${chemin}?${requete}` : chemin
+}
+
+export function listerProduits(filtres: FiltresCatalogue = {}): Promise<Produit[]> {
+  return get<Produit[]>(cheminAvecFiltres('/produits', filtres))
 }
 
 export function creerProduit(fiche: FicheProduit): Promise<Produit> {
@@ -47,7 +51,6 @@ export function ficheDuProduit(produit: Produit): FicheProduit {
     prixApplique: _prixApplique,
     promotion: _promotion,
     disponibilite: _disponibilite,
-    quantiteVendable: _quantiteVendable,
     ...fiche
   } = produit
   return fiche

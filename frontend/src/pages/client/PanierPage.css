@@ -1,0 +1,174 @@
+.panier-grille {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 48px 72px;
+  align-items: start;
+  margin-top: 48px;
+}
+
+.panier .vide .common-button {
+  margin-top: 32px;
+}
+
+.panier-erreur {
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+  max-width: 640px;
+  margin-top: 48px;
+}
+
+.panier .aide {
+  color: var(--gris);
+  font-size: 0.875rem;
+}
+
+.options {
+  display: grid;
+  gap: 32px;
+  margin-top: 48px;
+}
+
+.options fieldset {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.options legend {
+  margin-bottom: 12px;
+  font-size: 1.3125rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.choix {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.choix input {
+  margin-top: 5px;
+  accent-color: var(--encre);
+}
+
+.choix small {
+  display: block;
+  color: var(--gris);
+  font-size: 0.875rem;
+}
+
+.recap {
+  position: sticky;
+  top: 84px;
+  padding: 32px;
+  border-radius: var(--rayon-carte);
+  background: var(--gris-fond);
+}
+
+.recap h2 {
+  font-size: 1.5rem;
+}
+
+.recap dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px 0;
+  margin-top: 24px;
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.recap dt {
+  color: var(--gris);
+}
+
+.recap dd {
+  padding-left: 16px;
+  text-align: right;
+}
+
+.recap .total {
+  margin-top: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ligne);
+  color: var(--encre);
+  font-weight: 600;
+}
+
+.recap .common-button {
+  width: 100%;
+  margin-top: 28px;
+}
+
+.recap .aide {
+  margin-top: 16px;
+}
+
+.recap-erreur {
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.recap .recap-erreur .common-button {
+  width: auto;
+  margin-top: 0;
+}
+
+.recap .recap-refus {
+  margin-top: 16px;
+}
+
+.paiement {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--ligne);
+}
+
+.paiement h3 {
+  font-size: 1.0625rem;
+}
+
+.paiement-fictif {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: var(--rayon-champ);
+  background: var(--laiton-pale);
+  color: var(--laiton-fonce);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.recap .paiement .aide {
+  margin-top: 10px;
+}
+
+.recap .paiement .common-button {
+  margin-top: 12px;
+}
+
+.recap .paiement .common-button--primary {
+  margin-top: 20px;
+}
+
+@media (max-width: 880px) {
+  .panier-grille {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .recap {
+    position: static;
+  }
+}
+
+@media (max-width: 560px) {
+  .recap {
+    padding: 24px;
+  }
+}

@@ -1,0 +1,286 @@
+.rapports-page {
+  display: grid;
+  gap: 24px;
+}
+
+.rapports-entete {
+  display: grid;
+  gap: 10px;
+}
+
+.rapports-entete p {
+  max-width: 60ch;
+  color: var(--gris);
+}
+
+.rapports-surface {
+  display: grid;
+  align-content: start;
+  gap: 20px;
+  padding: 24px;
+  border-radius: var(--rayon-carte);
+  background: var(--blanc);
+}
+
+.rapports-surface h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.375rem;
+  line-height: 1.15;
+}
+
+.rapports-surface h3 {
+  font-size: 1.0625rem;
+}
+
+.rapports-titre-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+
+.rapports-compte {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: var(--rayon-pilule);
+  background: var(--gris-fond);
+  font-family: var(--etroit);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.rapports-lien {
+  color: var(--laiton-fonce);
+  font-size: 0.875rem;
+}
+
+.rapports-lien:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.rapports-aide,
+.rapports-vide,
+.rapports-periode {
+  color: var(--gris);
+  font-size: 0.875rem;
+}
+
+.rapports-periode {
+  color: var(--encre);
+  font-weight: 500;
+}
+
+.rapports-filtres {
+  display: grid;
+  grid-template-columns: auto repeat(3, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: 16px;
+  padding: 16px;
+  border-radius: var(--rayon-champ);
+  background: var(--gris-fond);
+}
+
+.rapports-mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.rapports-mode legend {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.rapports-mode label,
+.rapports-case {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.rapports-mode input,
+.rapports-case input {
+  accent-color: var(--encre);
+}
+
+.rapports-case {
+  color: var(--gris);
+}
+
+.rapports-stats {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1fr;
+  gap: 16px;
+}
+
+.rapports-stats > section {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 16px 20px;
+  border: 1px solid var(--ligne-douce);
+  border-radius: var(--rayon-champ);
+}
+
+.rapports-stats h3 {
+  color: var(--gris);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.rapports-stats dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  margin: 0;
+}
+
+.rapports-stats dt {
+  color: var(--gris);
+  font-size: 0.8125rem;
+}
+
+.rapports-stats dd {
+  margin: 2px 0 0;
+  font-family: var(--etroit);
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.rapports-stats-net {
+  background: var(--laiton-pale);
+  border-color: transparent;
+}
+
+.rapports-tableau-cadre {
+  overflow-x: auto;
+}
+
+.rapports-tableau {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.rapports-tableau th {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ligne);
+  color: var(--gris);
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.rapports-tableau th.rapports-nombre {
+  white-space: normal;
+  min-width: 84px;
+  vertical-align: bottom;
+}
+
+.rapports-tableau .rapports-debut-groupe {
+  border-left: 1px solid var(--ligne-douce);
+}
+
+.rapports-tableau td {
+  padding: 12px;
+  border-bottom: 1px solid var(--ligne-douce);
+  vertical-align: middle;
+}
+
+.rapports-tableau tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.rapports-tableau tbody tr:hover td {
+  background: var(--gris-fond);
+}
+
+.rapports-tableau .rapports-nombre {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.rapports-reference {
+  display: block;
+  color: var(--gris);
+  font-size: 0.8125rem;
+}
+
+.rapports-retour {
+  color: var(--manque);
+}
+
+.rapports-fort {
+  font-weight: 600;
+}
+
+.rapports-epuise {
+  color: var(--manque);
+  font-weight: 500;
+}
+
+.rapports-part {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.rapports-part-jauge {
+  width: 96px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--rayon-pilule);
+  background: var(--gris-fond-2);
+}
+
+.rapports-part-jauge > span {
+  display: block;
+  height: 100%;
+  border-radius: var(--rayon-pilule);
+  background: var(--laiton-fonce);
+}
+
+@media (max-width: 1024px) {
+  .rapports-filtres {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rapports-mode {
+    grid-column: 1 / -1;
+  }
+
+  .rapports-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .rapports-surface {
+    padding: 20px 16px;
+  }
+
+  .rapports-filtres {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

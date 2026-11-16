@@ -108,12 +108,12 @@ describe('page catalogue du responsable', () => {
     simulerApi((requete) =>
       requete.url === '/api/produits'
         ? json([
-            { ...livre, quantiteVendable: 9 },
+            { ...livre, disponibilite: 'disponible' },
             {
               ...magazineArchive,
               archive: false,
               designation: 'Magazine épuisé',
-              quantiteVendable: 0,
+              disponibilite: 'epuise',
             },
             { ...magazineArchive, id: 'p-4', archive: false, designation: 'Sans stock connu' },
           ])
@@ -124,11 +124,11 @@ describe('page catalogue du responsable', () => {
     const ligne = async (nom: string) =>
       (await screen.findByRole('button', { name: nom })).closest('tr') as HTMLElement
     const livreLigne = await ligne("L'Île au trésor")
-    expect(within(livreLigne).getByText('9 vendables')).toBeInTheDocument()
+    expect(within(livreLigne).getByText('Disponible')).not.toHaveClass('catalogue-disponibilite--epuise')
     expect(within(livreLigne).getByText('−15 %')).toBeInTheDocument()
     const epuise = await ligne('Magazine épuisé')
     expect(within(epuise).getByText('Aucune')).toBeInTheDocument()
-    expect(within(epuise).getByText('Épuisé')).toBeInTheDocument()
+    expect(within(epuise).getByText('Épuisé')).toHaveClass('catalogue-disponibilite--epuise')
     expect(within(await ligne('Sans stock connu')).getByText('Non renseigné')).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Disponibilité' })).toBeInTheDocument()
   })
@@ -148,6 +148,20 @@ describe('page catalogue du responsable', () => {
     expect(courbe).toHaveTextContent('sept.')
     expect(within(panneau).getByText('Prix catalogue')).toBeInTheDocument()
     expect(within(panneau).getByText('Promotion', { selector: 'span' })).toBeInTheDocument()
+  })
+
+  it('explique les colonnes du catalogue', async () => {
+    simulerApi()
+    render(<CatalogueAdminPage />)
+    await screen.findByRole('button', { name: "L'Île au trésor" })
+
+    expect(screen.getByRole('columnheader', { name: 'Prix TTC' })).toBeInTheDocument()
+    expect(screen.getByText('TVA', { selector: '.info-terme' })).toHaveAccessibleDescription(
+      'Taux de TVA déjà compris dans le prix TTC.',
+    )
+    expect(screen.getByText('Disponibilité', { selector: '.info-terme' })).toHaveAccessibleDescription(
+      /« Non renseigné » si le stock n’est pas encore connu/,
+    )
   })
 
   it('affiche séparément les articles archivés', async () => {

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { PanierProvider } from '../contexts/PanierContext.tsx'
 import { AuthContext, type AuthContextValue } from '../contexts/useAuth'
 import type { Utilisateur } from '../types/utilisateur'
 import ClientLayout from './ClientLayout.tsx'
@@ -36,13 +37,42 @@ function afficher(url: string, session: Partial<AuthContextValue>) {
   )
   render(
     <AuthContext value={valeur}>
-      <RouterProvider router={router} />
+      <PanierProvider>
+        <RouterProvider router={router} />
+      </PanierProvider>
     </AuthContext>,
   )
   return within(screen.getByRole('navigation', { name: 'Menu principal' }))
 }
 
 describe('en-tête de l espace client', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  it('n affiche pas de compteur quand le panier est vide', () => {
+    const menu = afficher('/catalogue', {})
+
+    expect(menu.getByRole('link', { name: 'Panier' })).toHaveAttribute('href', '/panier')
+  })
+
+  it('affiche le nombre d articles du panier', () => {
+    localStorage.setItem(
+      'panier',
+      JSON.stringify([
+        { produitId: 'p-1', quantite: 2 },
+        { produitId: 'p-2', quantite: 1 },
+      ]),
+    )
+
+    const menu = afficher('/catalogue', {})
+
+    expect(menu.getByRole('link', { name: 'Panier, 3 articles' })).toHaveAttribute(
+      'href',
+      '/panier',
+    )
+  })
+
   it('propose la connexion à un visiteur', () => {
     const menu = afficher('/catalogue', {})
 

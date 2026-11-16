@@ -155,6 +155,87 @@ Reste à faire :
 - Seuil d'alerte et quantité achetée à l'origine : avec le réapprovisionnement (EX06)
 - Front : écran 8 et affichage de la disponibilité
 
+21/10/2026 - Noah (front A) : fiche produit (écran 3)
+
+Fait :
+- Page /produits/:id reliée à GET /api/produits/:id (obtenirProduit dans services/produitService.ts)
+- Désignation, auteur ou marque, prix TTC en XPF, taux de TVA, référence et catégorie ; en promotion : prix barré, remise et date de fin
+- Champs selon le type : auteur et ISBN (livre), ISSN, numéro et date de parution (magazine), marque (papeterie)
+- Fil d'Ariane vers le catalogue et vers le rayon du produit ; page introuvable si le produit n'existe pas (404) ; erreur avec « Réessayer »
+- Couverture partagée avec le catalogue (components/client/Couverture)
+- utils/format.ts : formatJour pour les dates AAAA-MM-JJ de l'API, sans décalage d'un jour à l'heure de Tahiti (formatDate affichait le 30 au lieu du 31)
+- Quantité et bouton « Ajouter au panier » de la maquette, désactivés avec « L'ajout au panier sera bientôt disponible » en attendant le panier
+- 176 tests (vérifiés à l'heure de Tahiti et en UTC), le build et le lint passent ; fiche vérifiée avec la vraie base
+- Titre de l'onglet propre à chaque page (« Catalogue · Feuillet », « L'Île au trésor · Feuillet », Connexion, Créer un compte, Page introuvable) avec la balise title de React 19 ; 179 tests
+- Page d'erreur générale (pages/ErreurPage) branchée en haut du routeur (errorElement) : si une page plante, « Une erreur est survenue » avec Réessayer et Retour au catalogue, au lieu de l'écran brut de React Router ; 180 tests
+- Chargement de la fiche produit en squelette (blocs gris animés à la place de la couverture, du titre, du prix et des détails), comme le catalogue ; les styles des squelettes sont maintenant communs dans index.css
+
+Reste à faire :
+- Disponibilité, ajout au panier et demande d'un article épuisé, quand le stock, le panier et les demandes existeront
+
+21/10/2026 - Front : catalogue du responsable (écran 7, EX01, EX11)
+
+Fait :
+- Page /admin/catalogue branchée sur `/api/produits` et `/api/categories` : articles actifs et archivés dans deux onglets, recherche, filtres par type et par catégorie ; prix barré et prix appliqué en cas de promotion
+- Panneau d'un article : modification de la fiche (champs du type choisi), archiver ou réactiver, supprimer après confirmation, promotions (programmer, supprimer, « en cours »), historique du prix en marches (SVG, sans bibliothèque) : prix catalogue, promotion en cours en pointillés, mois sous l'axe et légende
+- Colonne Promotion : remise ou « Aucune »
+- Création d'un article et gestion des catégories (ajouter, renommer, supprimer) dans le même panneau ; erreurs du backend affichées sous chaque champ
+- `services/catalogueAdminService.ts` (création, modification, archivage, suppression, promotions, historique des prix, catégories) ; réutilise `Produit`, `Promotion` et `Categorie` du catalogue client, ajoute `FicheProduit` et `EntreePrix` à `types/produit.ts` ; composant commun `Select`
+- `formatDate` garde le jour d'une date AAAA-MM-JJ (avant, une promotion du 10 octobre s'affichait « 9 octobre » à Tahiti) ; profite aussi au catalogue client
+- Vérifié contre la vraie API (repositories en mémoire) : création, modification, historique des prix, promotions, archivage, suppression et catégories, avec les erreurs 400 / 409
+- 183 tests frontend (20 nouveaux), lint et build passent
+
+Reste à faire :
+- Colonne Disponibilité prête : elle affiche « 9 vendables » / « Épuisé » à partir d'un champ `quantiteVendable` (nom du diagramme de classes) que l'API doit ajouter à chaque produit avec le stock ; en attendant « Non renseigné ». Nom du champ à valider avec le back
+- Seuil d'alerte dans la liste : avec le stock
+- Bouton Supprimer seulement pour un article sans historique (RG05) : il faut que l'API indique si l'article est supprimable
+- Rattacher une demande hors catalogue à un article créé : avec les demandes
+
+22/10/2026 - Noah (front A) : page Mes demandes (écran 5)
+
+Fait :
+- Page /demandes (client connecté) de la maquette V2 : formulaire « Demander un livre » pour un livre absent du catalogue (titre, auteur et ISBN facultatifs, quantité)
+- Bouton « Envoyer la demande » grisé avec « L'envoi des demandes sera bientôt disponible » : le backend n'a pas encore de route pour les demandes
+- Zone de suivi avec un message d'attente qui annonce les statuts (en attente, mis de côté, honorée, expirée, annulée)
+- Styles du grand titre de page et du message vide mis en commun dans index.css (catalogue et demandes)
+- Entrée « fiche produit (écran 3) » du 21/10 remise dans le backlog : elle avait été perdue en réglant le conflit de la PR d'Hiva
+- « Demander ce livre » du catalogue (aucun résultat) pré-remplit le titre cherché dans le formulaire (/demandes?titre=...) ; la route protégée garde aussi ces paramètres quand elle renvoie vers la connexion
+- formatJour supprimé : formatDate gère maintenant les dates AAAA-MM-JJ (correction d'Hiva), la fiche produit l'utilise
+- README du front mis à jour : contrat dans docs/api.md, branche commune dev-front, tests avec fetch simulé
+- 206 tests (heure de Tahiti et UTC), le build et le lint passent
+- Parcours client vérifié avec la vraie base (rayons, recherche, tri, fiche, 404, accès protégé, téléphone) ; rayon vide : le message ne parle plus d'orthographe quand rien n'a été cherché ; 207 tests
+- À savoir : la recherche est sensible aux accents (« tresor » ne trouve pas « trésor »), limite déjà notée côté back
+
+Reste à faire, quand le backend aura les routes des demandes :
+- Envoyer la demande et afficher les erreurs du serveur sous chaque champ
+- Liste des demandes avec quantité, date, statut, et la date limite de retrait d'un article mis de côté
+- Annuler une demande en attente ; notifications de réapprovisionnement
+
+29/10/2026 - Noah (front A) : page Panier (écran 4, issue #37)
+
+Fait :
+- Panier partagé entre les pages (contexts/PanierContext et usePanier), gardé dans le navigateur (localStorage) ; un panier enregistré abîmé est ignoré
+- Disponibilité (EX04) envoyée par l'API : « Disponible » ou « Épuisé » sur les cartes du catalogue et sur la fiche produit
+- Fiche produit : quantité et « Ajouter au panier » actifs si l'article est disponible ; s'il est épuisé, bouton grisé et « Demander ce livre »
+- Compteur d'articles sur le lien Panier de l'en-tête
+- Page /panier de la maquette V2 : articles rechargés depuis l'API à l'ouverture (prix et disponibilité à jour), quantité modifiable, retrait, article épuisé ou retiré du catalogue signalé, panier vide
+- Options : cadeau avec occasion (Noël, anniversaire, fête), emballage cadeau, adresse de livraison ; pas de retrait en magasin (vente uniquement en ligne)
+- Total, TVA et frais affichés « calculés par la librairie » et bouton « Confirmer la commande » grisé, en attendant la route des ventes du back ; aucun calcul de prix dans le front
+- Visiteur : « Se connecter pour commander » ramène au panier après la connexion
+- Composants communs ChoixQuantite (fiche et panier) et LignePanier
+- Backlog réparé après la fusion de main : marqueurs de conflit retirés et entrée « fiche produit (écran 3) » remise
+- 240 tests (heure de Tahiti et UTC), le build et le lint passent
+
+Reste à faire, quand le back aura la route des ventes :
+- Afficher le vrai total, la TVA et les frais ; confirmer la commande (tout ou rien, RG03) ; signaler les lignes refusées ; page « Commande confirmée »
+
+08/11/2026 - Noah (front A) : vraies couvertures des livres (issue #47)
+
+Fait :
+- Composant Couverture : la vraie couverture est chargée depuis Open Library avec l'ISBN du livre, par-dessus la couverture dessinée
+- Sans ISBN, ou si Open Library n'a pas d'image, la couverture dessinée reste affichée (aussi pendant le chargement)
+- Les images ne sont chargées qu'en arrivant à l'écran (loading="lazy")
+- 244 tests, le build et le lint passent
 
 
 08/11/2026 - Sécurité des dépendances (issue #52)
@@ -228,6 +309,63 @@ Fait :
 Reste à faire :
 - Front : retours de l'écran 9, rapports de l'écran 12, meilleures ventes de l'accueil (#42, #43, #46)
 
+11/11/2026 - Noah (front A) : panier branché sur les commandes (issue #42, partie 1)
+
+Fait :
+- main récupérée dans dev-front (routes du back #38 à #41)
+- types/vente.ts aligné sur le back : Devis, Montants, lignes avec montant et TVA, client, statut expédiée
+- services/commandeService : devis (POST /api/commandes/devis), commande (POST /api/commandes) et détail d'une commande
+- Panier : sous-total, emballage, livraison, total et TVA affichés tels que renvoyés par le devis du back, recalculés à chaque changement (quantité, emballage, occasion) ; montant de chaque ligne ; aucun calcul de prix dans le front (RG11, RG13)
+- Lignes que la librairie ne peut plus servir signalées grâce au devis
+- « Confirmer la commande » actif pour un client : panier vidé puis page de la commande ouverte ; refus LIGNE_INDISPONIBLE (rien n'est enregistré, lignes signalées, RG03), STOCK_MODIFIE et adresse manquante (message sous le champ) expliqués
+- Page /commandes/:id (client connecté) : « Commande confirmée » après la commande, articles à prix figés, remise, adresse, options et montants
+- 324 tests (heure de Tahiti et UTC), le build et le lint passent
+
+Reste à faire (#42) :
+- Liste « Mes commandes » avec le statut
+- Demandes depuis la fiche produit et la page Mes demandes : envoi, suivi, annulation, notifications
+- Date d'arrivée prévue sur la fiche, meilleures ventes sur le catalogue
+
+11/11/2026 - Noah (front A) : Mes commandes (issue #42, partie 2)
+
+Fait :
+- Page /commandes (client connecté) : liste des commandes de la plus récente à la plus ancienne (GET /api/commandes), avec la date, le nombre d'articles, le total renvoyé par le back et le statut (à préparer, expédiée le …) ; clic vers le détail
+- Lien « Mes commandes » dans le menu du site et lien « Voir toutes mes commandes » sur le détail d'une commande
+- Message quand il n'y a aucune commande, erreur avec bouton Réessayer
+- 330 tests (heure de Tahiti et UTC), le build et le lint passent
+
+Reste à faire (#42) :
+- Demandes depuis la fiche produit et la page Mes demandes : envoi, suivi, annulation, notifications
+- Date d'arrivée prévue sur la fiche, meilleures ventes sur le catalogue
+
+11/11/2026 - Noah (front A) : demandes et notifications (issue #42, partie 3)
+
+Fait :
+- services/demandeService : envoi, liste et annulation des demandes, notifications et lecture (routes du back #39)
+- Fiche produit d'un article épuisé : le client le demande directement avec la quantité souhaitée (POST /api/demandes) ; visiteur invité à se connecter ; DEMANDE_EN_COURS et PRODUIT_DISPONIBLE expliqués ; date de retour prévue affichée quand une commande fournisseur est en cours (arriveePrevue, EX04)
+- Page Mes demandes : suivi de chaque demande (quantité, date, statut en attente, mise de côté, honorée, expirée ou annulée avec sa date), date limite d'une mise de côté, annulation d'une demande en attente, ajout au panier des exemplaires mis de côté
+- Notifications de réapprovisionnement en haut de la page, masquées une fois lues
+- Formulaire pour un livre absent du catalogue branché : erreurs du back sous chaque champ, confirmation et ajout immédiat au suivi ; « bientôt disponible » retiré
+- Panier : un article épuisé mis de côté pour le client n'est plus bloqué, seules les lignes refusées par le devis du back sont signalées
+- formatJourTahiti : dates de demande et de mise de côté affichées au jour de Tahiti
+- 341 tests (heure de Tahiti et UTC), le build et le lint passent
+
+Reste à faire (#42) :
+- Meilleures ventes (RG14) en haut du catalogue
+
+11/11/2026 - Noah (front A) : meilleures ventes sur le catalogue (issue #42, partie 4)
+
+Fait :
+- produitService : listerMeilleuresVentes (GET /api/meilleures-ventes, RG14)
+- Catalogue : rangée « Les meilleures ventes » en haut de la page complète, dans l'ordre renvoyé par le back ; cachée pendant une recherche, dans un rayon ou s'il n'y a encore aucune vente
+- Plus aucun « bientôt disponible » dans les pages client
+- Route vérifiée avec le vrai back (réponse vide tant qu'aucune vente n'est enregistrée dans la base partagée)
+- 344 tests (heure de Tahiti et UTC), le build et le lint passent
+- Parcours client vérifié de bout en bout avec le vrai back et le vrai front sur une base MongoDB temporaire locale remplie par le seed (la base partagée n'est pas touchée) : commande, Mes commandes, demande depuis la fiche, réception du responsable, notification, commande du livre mis de côté, demande hors catalogue et annulation (22 étapes réussies)
+
+Reste à faire :
+- Issue #42 terminée : PR dev-front vers main à ouvrir
+- Issue #43 : page Ventes et retours du responsable
 09/11/2026 - Sécurité : limites de requêtes (#50)
 
 Fait :
@@ -279,3 +417,16 @@ Reste à faire :
 Fait :
 - Décision : pas de mise en ligne, c'est un projet de classe ; la démo se fait avec `docker compose` et le seed, noté dans `docs/rapport.md`
 - #55 (environnement de dev sur Render) fermée sans suite
+
+14/11/2026 - Noah (front A) : paiement fictif de démonstration dans le panier (issue #57)
+
+Fait :
+- Panier : étape « Paiement (démonstration) » dans le récapitulatif, avec « Paiement fictif : aucun montant n'est débité », sans aucun champ de carte
+- Bouton « Payer (démo) » qui envoie paiementDemo « accepte » à POST /api/commandes, et bouton « Simuler un refus » qui envoie « refuse »
+- Paiement refusé (402 PAIEMENT_REFUSE) : message dans le récapitulatif, rien n'est enregistré, panier et adresse gardés, le client peut payer à nouveau
+- Types : paiementDemo dans le panier envoyé, paiement (mode demo, statut accepte, date) dans la commande
+- 348 tests (heure de Tahiti et UTC), le build et le lint passent
+- Vérifié avec le back de la PR #74 sur une base MongoDB temporaire locale (la base partagée n'est pas touchée) : refus sans commande enregistrée, puis paiement accepté et commande qui garde le paiement ; le parcours client complet passe toujours (22 étapes)
+
+Reste à faire :
+- Merge de la PR #74 (back du paiement) avec ce front

@@ -31,6 +31,13 @@ export default function ProduitCarte({ produit, categorie }: ProduitCarteProps) 
             </>
           )}
         </span>
+        {produit.disponibilite && (
+          <span
+            className={`etat ${produit.disponibilite === 'epuise' ? 'etat-manque' : 'etat-ok'}`}
+          >
+            {produit.disponibilite === 'epuise' ? 'Épuisé' : 'Disponible'}
+          </span>
+        )}
       </div>
     </Link>
   )

@@ -95,6 +95,45 @@ textarea {
   white-space: nowrap;
 }
 
+.etat {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.etat::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.etat-ok {
+  color: var(--ok);
+}
+
+.etat-manque {
+  color: var(--manque);
+}
+
+.compteur {
+  display: inline-grid;
+  place-items: center;
+  min-width: 17px;
+  height: 17px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--laiton);
+  color: var(--noir);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
 .page-intro {
   display: flex;
   flex-wrap: wrap;

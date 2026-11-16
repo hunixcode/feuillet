@@ -4,9 +4,11 @@ import ResponsableLayout from '../layouts/ResponsableLayout.tsx'
 import ErreurPage from '../pages/ErreurPage.tsx'
 import NotFoundPage from '../pages/NotFoundPage.tsx'
 import CataloguePage from '../pages/client/CataloguePage.tsx'
+import CommandePage from '../pages/client/CommandePage.tsx'
 import ConnexionPage from '../pages/client/ConnexionPage.tsx'
 import DemandesPage from '../pages/client/DemandesPage.tsx'
 import InscriptionPage from '../pages/client/InscriptionPage.tsx'
+import MesCommandesPage from '../pages/client/MesCommandesPage.tsx'
 import PanierPage from '../pages/client/PanierPage.tsx'
 import ProduitPage from '../pages/client/ProduitPage.tsx'
 import CatalogueAdminPage from '../pages/responsable/CatalogueAdminPage.tsx'
@@ -55,7 +57,11 @@ const pages: RouteObject[] = [
       { path: 'panier', element: <PanierPage /> },
       {
         element: <ProtectedRoute role="client" />,
-        children: [{ path: 'demandes', element: <DemandesPage /> }],
+        children: [
+          { path: 'demandes', element: <DemandesPage /> },
+          { path: 'commandes', element: <MesCommandesPage /> },
+          { path: 'commandes/:id', element: <CommandePage /> },
+        ],
       },
       { path: '*', element: <NotFoundPage /> },
     ],
