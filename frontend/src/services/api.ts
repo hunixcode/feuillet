@@ -45,13 +45,14 @@ function getErrorBody(body: unknown, status: number): ApiError {
   }
 }
 
-async function request<T>(
+async function envoyer(
   method: string,
   path: string,
-  body?: unknown,
-): Promise<T> {
+  body: unknown,
+  accept: string,
+): Promise<Response> {
   const headers = new Headers()
-  headers.set('Accept', 'application/json')
+  headers.set('Accept', accept)
   const token = getToken()
   if (token) {
     headers.set('Authorization', `Bearer ${token}`)
@@ -84,6 +85,16 @@ async function request<T>(
     throw new ApiRequestError(getErrorBody(errorBody, response.status))
   }
 
+  return response
+}
+
+async function request<T>(
+  method: string,
+  path: string,
+  body?: unknown,
+): Promise<T> {
+  const response = await envoyer(method, path, body, 'application/json')
+
   if (response.status === 204 || response.status === 205) {
     return undefined as T
   }
@@ -100,6 +111,18 @@ async function request<T>(
 
 export function get<T>(path: string): Promise<T> {
   return request<T>('GET', path)
+}
+
+export interface Fichier {
+  contenu: Blob
+  nom: string
+}
+
+export async function telecharger(path: string, nomParDefaut: string): Promise<Fichier> {
+  const response = await envoyer('GET', path, undefined, '*/*')
+  const disposition = response.headers.get('Content-Disposition') ?? ''
+  const nom = /filename="?([^";]+)"?/.exec(disposition)?.[1] ?? nomParDefaut
+  return { contenu: await response.blob(), nom }
 }
 
 export function post<T>(path: string, body: unknown): Promise<T> {

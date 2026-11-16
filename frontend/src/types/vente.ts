@@ -13,26 +13,59 @@ export interface OptionsVente {
   adresseLivraison?: string
 }
 
+export type PaiementDemo = 'accepte' | 'refuse'
+
 export interface CommandePayload extends OptionsVente {
   lignes: LigneCommande[]
+  paiementDemo?: PaiementDemo
+}
+
+export interface PaiementVente {
+  mode: 'demo'
+  statut: 'accepte'
+  date: string
 }
 
 export interface LigneVente extends LigneCommande {
+  reference: string
   designation: string
   prixUnitaire: number
   remise: number
   tauxTva: number
+  montant: number
+  montantTva: number
+}
+
+export interface Montants {
+  sousTotal: number
+  fraisEmballage: number
+  fraisLivraison: number
+  frais: number
+  montantTva: number
+  total: number
+}
+
+export interface Devis extends Montants {
+  lignes: LigneVente[]
+  lignesIndisponibles: LigneCommande[]
 }
 
 export type StatutVente = 'a_preparer' | 'expediee'
 
-export interface Vente extends OptionsVente {
+export interface ClientVente {
+  id: string
+  nom: string
+  email: string
+}
+
+export interface Vente extends OptionsVente, Montants {
   id: string
   date: string
   statut: StatutVente
+  client: ClientVente
   lignes: LigneVente[]
-  frais: number
-  total: number
+  paiement?: PaiementVente
+  dateExpedition?: string
 }
 
 export interface LigneIndisponibleError extends ApiError {

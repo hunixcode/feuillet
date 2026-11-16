@@ -1,5 +1,5 @@
-import type { Produit } from '../types/produit'
-import { get } from './api'
+import type { Produit, ProduitDetail } from '../types/produit'
+import { ApiRequestError, get } from './api'
 
 export interface FiltresProduits {
   q?: string
@@ -24,6 +24,26 @@ export function listerProduits(filtres: FiltresProduits = {}): Promise<Produit[]
   return get<Produit[]>(texte ? `/produits?${texte}` : '/produits')
 }
 
-export function obtenirProduit(id: string): Promise<Produit> {
-  return get<Produit>(`/produits/${encodeURIComponent(id)}`)
+export function listerMeilleuresVentes(): Promise<Produit[]> {
+  return get<Produit[]>('/meilleures-ventes')
+}
+
+export function obtenirProduit(id: string): Promise<ProduitDetail> {
+  return get<ProduitDetail>(`/produits/${encodeURIComponent(id)}`)
+}
+
+export async function obtenirProduits(ids: string[]): Promise<Record<string, Produit | null>> {
+  const paires = await Promise.all(
+    ids.map(async (id) => {
+      try {
+        return [id, await obtenirProduit(id)] as const
+      } catch (raison) {
+        if (raison instanceof ApiRequestError && raison.code === 'INTROUVABLE') {
+          return [id, null] as const
+        }
+        throw raison
+      }
+    }),
+  )
+  return Object.fromEntries(paires)
 }

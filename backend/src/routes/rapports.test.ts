@@ -89,7 +89,7 @@ describe("API des retours, des rapports et des meilleures ventes", () => {
     expect(rapport.body.totaux).toMatchObject({ ventesBrutes: 5400, quantiteVendue: 3 });
     expect(csv.status).toBe(200);
     expect(csv.headers["content-type"]).toBe("text/csv; charset=utf-8");
-    expect(csv.headers["content-disposition"]).toBe('attachment; filename="rapport-2026-11-01-2026-11-30.csv"');
+    expect(csv.headers["content-disposition"]).toBe("attachment; filename=rapport-2026-11-01-2026-11-30.csv");
     expect(csv.text).toContain("LIV-001;L'Île au trésor;roman;3;5400");
     await envoyer("get", "/api/rapports?debut=2026-11-01").expect(400);
   });

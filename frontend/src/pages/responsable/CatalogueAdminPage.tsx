@@ -5,6 +5,7 @@ import Input from '../../components/common/Input.tsx'
 import Loader from '../../components/common/Loader.tsx'
 import Select from '../../components/common/Select.tsx'
 import CourbePrix from '../../components/responsable/CourbePrix.tsx'
+import EnteteInfo from '../../components/responsable/EnteteInfo.tsx'
 import FormulaireProduit from '../../components/responsable/FormulaireProduit.tsx'
 import GestionCategories from '../../components/responsable/GestionCategories.tsx'
 import PromotionsProduit from '../../components/responsable/PromotionsProduit.tsx'
@@ -243,14 +244,45 @@ function CatalogueAdminPage() {
               <table className="catalogue-tableau">
                 <thead>
                   <tr>
-                    <th scope="col">Référence</th>
-                    <th scope="col">Désignation</th>
-                    <th scope="col" className="catalogue-secondaire">Type</th>
-                    <th scope="col" className="catalogue-secondaire">Catégorie</th>
-                    <th scope="col" className="catalogue-nombre">Prix TTC</th>
-                    <th scope="col" className="catalogue-nombre catalogue-secondaire">TVA</th>
-                    <th scope="col">Promotion</th>
-                    <th scope="col">Disponibilité</th>
+                    <EnteteInfo
+                      libelle="Référence"
+                      info="Code unique de l’article : l’ISBN pour un livre, sinon une référence interne."
+                    />
+                    <EnteteInfo
+                      libelle="Désignation"
+                      info="Titre ou nom de l’article, tel que les clients le voient. Cliquez dessus pour modifier sa fiche, ses promotions ou l’archiver."
+                    />
+                    <EnteteInfo
+                      libelle="Type"
+                      info="Livre, magazine ou papeterie. Le type décide des informations demandées sur la fiche (auteur, numéro, marque…)."
+                      className="catalogue-secondaire"
+                    />
+                    <EnteteInfo
+                      libelle="Catégorie"
+                      info="Rayon de l’article. Les clients peuvent filtrer le catalogue par catégorie."
+                      className="catalogue-secondaire"
+                    />
+                    <EnteteInfo
+                      libelle="Prix TTC"
+                      info="Prix de vente toutes taxes comprises, en XPF. En promotion, l’ancien prix est barré et le prix payé est affiché à côté."
+                      className="catalogue-nombre"
+                      aDroite
+                    />
+                    <EnteteInfo
+                      libelle="TVA"
+                      info="Taux de TVA déjà compris dans le prix TTC."
+                      className="catalogue-nombre catalogue-secondaire"
+                      aDroite
+                    />
+                    <EnteteInfo
+                      libelle="Promotion"
+                      info="Remise en cours sur l’article. Les promotions se programment avec des dates de début et de fin dans la fiche."
+                    />
+                    <EnteteInfo
+                      libelle="Disponibilité"
+                      info="« Disponible » s’il reste au moins un exemplaire vendable, « Épuisé » sinon, « Non renseigné » si le stock n’est pas encore connu. Le stock se gère dans la page Stock."
+                      aDroite
+                    />
                   </tr>
                 </thead>
                 <tbody>
@@ -295,9 +327,9 @@ function CatalogueAdminPage() {
                       </td>
                       <td
                         className={
-                          produit.quantiteVendable === undefined && !produit.disponibilite
+                          !produit.disponibilite
                             ? 'catalogue-disponibilite catalogue-disponibilite--inconnue'
-                            : produit.quantiteVendable === 0 || produit.disponibilite === 'epuise'
+                            : produit.disponibilite === 'epuise'
                               ? 'catalogue-disponibilite catalogue-disponibilite--epuise'
                               : 'catalogue-disponibilite'
                         }

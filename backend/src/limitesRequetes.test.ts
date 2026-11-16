@@ -15,8 +15,8 @@ function creerApp(limites: LimitesRequetes = LIMITES_PAR_DEFAUT) {
     ...servicesMemoire(),
     verifierBase: async () => true,
     limites,
-    // Permet de simuler plusieurs IP avec X-Forwarded-For.
-    confianceProxy: true,
+    // Un proxy devant l'API, comme sur Render : X-Forwarded-For simule plusieurs IP.
+    confianceProxy: 1,
   });
 }
 

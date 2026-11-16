@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { listerCategories } from './categorieService'
-import { listerProduits, obtenirProduit } from './produitService'
+import { listerProduits, obtenirProduit, obtenirProduits } from './produitService'
 
 function reponse(corps: unknown) {
   return new Response(JSON.stringify(corps), { status: 200 })
@@ -49,6 +49,28 @@ describe('services du catalogue', () => {
     await expect(obtenirProduit('p-1')).resolves.toEqual(produit)
 
     expect(fetchMock).toHaveBeenCalledWith('/api/produits/p-1', expect.any(Object))
+  })
+
+  it('recharge plusieurs produits et marque ceux qui n existent plus', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (entree) =>
+      String(entree) === '/api/produits/p-1'
+        ? reponse({ id: 'p-1', designation: 'Casino Royale' })
+        : new Response(JSON.stringify({ code: 'INTROUVABLE', message: 'Introuvable.' }), {
+            status: 404,
+          }),
+    )
+
+    await expect(obtenirProduits(['p-1', 'p-9'])).resolves.toEqual({
+      'p-1': { id: 'p-1', designation: 'Casino Royale' },
+      'p-9': null,
+    })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('remonte une erreur réseau pendant le rechargement des produits', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('offline'))
+
+    await expect(obtenirProduits(['p-1'])).rejects.toMatchObject({ code: 'RESEAU' })
   })
 
   it('demande la liste des catégories', async () => {

@@ -2,13 +2,16 @@ import { render, screen, within } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthProvider } from '../contexts/AuthContext.tsx'
+import { PanierProvider } from '../contexts/PanierContext.tsx'
 import { routes } from './router.tsx'
 
 function afficher(url: string) {
   const router = createMemoryRouter(routes, { initialEntries: [url] })
   render(
     <AuthProvider>
-      <RouterProvider router={router} />
+      <PanierProvider>
+        <RouterProvider router={router} />
+      </PanierProvider>
     </AuthProvider>,
   )
 }
@@ -88,10 +91,18 @@ describe('routes de l espace client', () => {
     expect(await screen.findByRole('heading', { name: 'Connexion' })).toBeInTheDocument()
   })
 
+  it.each(['/commandes', '/commandes/v-1'])(
+    'envoie vers la connexion un visiteur qui ouvre %s',
+    async (adresse) => {
+      afficher(adresse)
+      expect(await screen.findByRole('heading', { name: 'Connexion' })).toBeInTheDocument()
+    },
+  )
+
   it('affiche le menu de l espace client', async () => {
     afficher('/catalogue')
     const menu = await screen.findByRole('navigation', { name: 'Menu principal' })
-    for (const nom of ['Catalogue', 'Mes demandes', 'Panier', 'Connexion']) {
+    for (const nom of ['Catalogue', 'Mes commandes', 'Mes demandes', 'Panier', 'Connexion']) {
       expect(within(menu).getByRole('link', { name: nom })).toBeInTheDocument()
     }
   })
