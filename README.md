@@ -30,7 +30,7 @@ Le détail (exigences EX01–EX11, règles RG01–RG15, décisions de cadrage is
 - Front : React + Vite + TypeScript
 - Back : Node.js + Express + TypeScript (`GET /api/health`, authentification : inscription, connexion, session ; CRUD des produits)
 - Base de données : MongoDB
-- Tests : Vitest
+- Tests : Vitest, et Playwright pour les parcours de bout en bout
 - CI : GitHub Actions
 
 ## Lancer le projet
@@ -52,6 +52,24 @@ npm i
 
 npm run dev
 ```
+
+## Tests de bout en bout
+
+Les tests du dossier `e2e/` font de vrais parcours dans Chromium sur l'application lancée comme en production : une base MongoDB temporaire en replica set (mongodb-memory-server), le seed, puis l'API qui sert le front compilé sur http://localhost:4173. La base est neuve à chaque lancement et `backend/.env` n'est pas lu : la base partagée n'est jamais touchée.
+
+```sh
+npm run installer && npm run build       # depuis la racine, à refaire après chaque modification du code
+cd e2e
+npm ci
+npx playwright install chromium          # une fois
+npx playwright test                      # ou --ui pour suivre les tests pas à pas
+```
+
+- Parcours client : inscription, catalogue, fiche, panier, paiement refusé puis accepté, la commande apparaît dans Mes commandes.
+- Parcours responsable : il expédie une commande, la sortie de stock apparaît dans le journal et le stock baisse.
+- Article épuisé au moment de payer : rien n'est enregistré et la ligne est signalée dans le panier.
+
+Le port se change avec `E2E_PORT`. Le workflow `E2E` les lance sur chaque PR qui touche `backend/`, `frontend/` ou `e2e/` ; s'ils échouent, les captures et les traces sont dans l'artefact `playwright-captures-et-traces` (`npx playwright show-trace trace.zip`).
 
 ## Lancer avec Docker
 
