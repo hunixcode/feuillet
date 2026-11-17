@@ -37,6 +37,9 @@ describe("en-têtes de sécurité", () => {
     expect(csp).toContain("script-src 'self';");
     expect(csp).toContain("style-src 'self' https://fonts.googleapis.com");
     expect(csp).toContain("font-src 'self' https://fonts.gstatic.com");
+    expect(csp).toContain(
+      "img-src 'self' data: https://covers.openlibrary.org https://archive.org https://*.us.archive.org;",
+    );
     expect(csp).toContain("object-src 'none'");
     expect(csp).toContain("frame-ancestors 'none'");
     expect(csp).not.toContain("unsafe-inline");
