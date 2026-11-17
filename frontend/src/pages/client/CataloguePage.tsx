@@ -245,7 +245,10 @@ function CataloguePage() {
         <ul className="produits catalogue-produits" ref={grille} aria-busy={chargement || undefined}>
           {affiches.map((produit) => (
             <li key={produit.id} data-id={produit.id}>
-              <ProduitCarte produit={produit} />
+              <ProduitCarte
+                produit={produit}
+                rayon={categories.find((entree) => entree.id === produit.categorie)?.libelle ?? ''}
+              />
             </li>
           ))}
         </ul>

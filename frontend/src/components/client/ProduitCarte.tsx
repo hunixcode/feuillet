@@ -9,6 +9,7 @@ import Couverture from './Couverture.tsx'
 interface ProduitCarteProps {
   produit: Produit
   rang?: number
+  rayon?: string
 }
 
 function marque(produit: Produit, epuise: boolean) {
@@ -24,7 +25,7 @@ function marque(produit: Produit, epuise: boolean) {
   return null
 }
 
-export default function ProduitCarte({ produit, rang }: ProduitCarteProps) {
+export default function ProduitCarte({ produit, rang, rayon }: ProduitCarteProps) {
   const { ajouter } = usePanier()
   const annoncer = useAnnonce()
   const sousTitre = produit.auteur ?? produit.marque
@@ -71,7 +72,18 @@ export default function ProduitCarte({ produit, rang }: ProduitCarteProps) {
             </s>
           )}
         </span>
-        {epuise && <span className="produit-etat">Disponible sur demande</span>}
+        {rayon === undefined ? (
+          epuise && <span className="produit-etat">Disponible sur demande</span>
+        ) : (
+          <span className="produit-infos">
+            {rayon && <span className="produit-rayon">{rayon}</span>}
+            {produit.disponibilite && (
+              <span className={epuise ? 'produit-dispo produit-dispo-epuise' : 'produit-dispo'}>
+                {epuise ? 'Épuisé, sur demande' : 'Disponible'}
+              </span>
+            )}
+          </span>
+        )}
       </Link>
     </div>
   )

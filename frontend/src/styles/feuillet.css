@@ -2731,6 +2731,40 @@
   position: relative;
 }
 
+.espace-client .produit-infos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin-top: 6px;
+  color: var(--gris);
+  font-size: 13px;
+}
+
+.espace-client .produit-dispo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--noir);
+}
+
+.espace-client .produit-dispo::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--vert);
+}
+
+.espace-client .produit-dispo-epuise {
+  color: var(--gris);
+}
+
+.espace-client .produit-dispo-epuise::before {
+  background: #b42318;
+}
+
 .espace-client .pilules a[aria-current='page'] {
   border-color: var(--noir);
   background: var(--noir);

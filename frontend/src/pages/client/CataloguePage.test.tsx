@@ -131,11 +131,22 @@ describe('page du catalogue', () => {
     const ile = await screen.findByRole('link', { name: /L'Île au trésor/ })
     const carte = screen.getByRole('link', { name: /Carnet ligné/ })
 
-    expect(within(ile).queryByText('Disponible sur demande')).not.toBeInTheDocument()
-    expect(within(carte).getByText('Disponible sur demande')).toBeInTheDocument()
+    expect(within(ile).getByText('Disponible')).toBeInTheDocument()
+    expect(within(carte).getByText('Épuisé, sur demande')).toBeInTheDocument()
     expect(screen.getByText('Épuisé')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Ajouter L\'Île au trésor au panier' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Ajouter Carnet ligné au panier' })).not.toBeInTheDocument()
+  })
+
+  it('affiche le rayon de chaque article', async () => {
+    simulerApi([ileAuTresor, carnet])
+    afficher()
+
+    const ile = await screen.findByRole('link', { name: /L'Île au trésor/ })
+    const carte = screen.getByRole('link', { name: /Carnet ligné/ })
+
+    expect(await within(ile).findByText('Roman')).toBeInTheDocument()
+    expect(within(carte).getByText('Papeterie')).toBeInTheDocument()
   })
 
   it('ajoute un article au panier depuis sa carte', async () => {
