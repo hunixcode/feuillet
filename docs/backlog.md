@@ -441,3 +441,27 @@ Fait :
 
 Reste à faire :
 - Merge de la PR #74 (back du paiement) avec ce front
+
+16/11/2026 - Noah (front A) : design Feuillet de l'espace client et page d'accueil (issue #81)
+
+Fait :
+- main vérifié après les merges des PR #74, #77 et #78 : 525 tests front, et parcours de bout en bout sur une base MongoDB temporaire locale (paiement, parcours client complet, les 8 pages admin)
+- Feuille de style de la maquette Feuillet reprise telle quelle pour l'espace client (frontend/src/styles/feuillet.css) : l'espace responsable garde son style jusqu'à sa propre issue
+- Toutes les pages client refaites avec le balisage de la maquette : accueil, catalogue, fiche produit, panier, connexion et inscription (un seul écran avec un sélecteur), Mes demandes, Mes commandes et page d'une commande
+- En-tête de la maquette avec recherche en direct, menu mobile et annonce « Ajouté au panier » ; pied de page sans le texte sur Papeete
+- Cartes de livres : vraie couverture Open Library ou une icône, et ajout rapide au panier
+- Page d'accueil sur / : photo plein écran, rayons, plus vendus numérotés, coup de cœur (DEMO-MAN-001, caché tant qu'il n'est pas au catalogue), carrousel des rayons (romans d'abord, BD et manga ensuite) et demande d'un livre
+- Catalogue : les cartes glissent à leur nouvelle place quand on change le tri ou le rayon, comme dans la maquette ; les articles restent affichés pendant le chargement d'un autre rayon
+- Pages comparées une à une avec la maquette sur une base de démonstration temporaire ; correction d'un débordement horizontal sur mobile
+- 531 tests (heure de Tahiti et UTC), le build et le lint passent
+
+Écarts gardés exprès avec la maquette :
+- Filtre par type et tri par prix dans le catalogue (demandés par docs/ecrans.md)
+- Un seul champ « Adresse de livraison » et l'étape de paiement de démonstration dans le récapitulatif
+- Pas de lien « Panier » dans le pied de page : les tests Playwright trouveraient deux liens « Panier »
+
+Reste à faire :
+- Jeu de démonstration (fichier du chef) : ajouter Sakamoto Days, Kuroko's Basket et les livres de la maquette, et donner un ISBN avec couverture aux 5 livres qui n'en ont pas ; la liste est prête et envoyée au chef
+- docs/ecrans.md demande la catégorie et la mention « disponible » sur chaque article du catalogue, ce que la maquette ne montre pas : à décider
+- docs/ecrans.md dit encore que le catalogue est la première page : à mettre à jour par le chef
+- Vérifier Mes demandes et Mes commandes avec un compte client

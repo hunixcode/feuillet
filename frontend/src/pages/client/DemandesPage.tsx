@@ -1,9 +1,10 @@
 import { useEffect, useState, type SubmitEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import Champ from '../../components/client/Champ.tsx'
 import ChoixQuantite from '../../components/client/ChoixQuantite.tsx'
+import Couverture from '../../components/client/Couverture.tsx'
 import Button from '../../components/common/Button.tsx'
 import ErrorMessage from '../../components/common/ErrorMessage.tsx'
-import Input from '../../components/common/Input.tsx'
 import Loader from '../../components/common/Loader.tsx'
 import { usePanier } from '../../contexts/usePanier'
 import { ApiRequestError } from '../../services/api'
@@ -17,23 +18,26 @@ import {
 import type { Demande, NotificationClient, StatutDemande } from '../../types/demande'
 import { erreursDesChamps, messageErreur } from '../../utils/erreurs'
 import { formatJourTahiti } from '../../utils/format'
-import './DemandesPage.css'
 
-const statuts: Record<StatutDemande, string> = {
-  en_attente: 'En attente',
-  mise_de_cote: 'Mise de côté',
-  honoree: 'Honorée',
-  expiree: 'Expirée',
-  annulee: 'Annulée',
+const statuts: Record<StatutDemande, { libelle: string; classe: string }> = {
+  en_attente: { libelle: 'En attente', classe: 'statut-attente' },
+  mise_de_cote: { libelle: 'Mis de côté', classe: 'statut-cote' },
+  honoree: { libelle: 'Honorée', classe: 'statut-honoree' },
+  expiree: { libelle: 'Expirée', classe: 'statut-fini' },
+  annulee: { libelle: 'Annulée', classe: 'statut-fini' },
 }
 
 function exemplaires(nombre: number) {
   return nombre > 1 ? `${nombre} exemplaires` : '1 exemplaire'
 }
 
-function statutAvecDate(demande: Demande) {
-  const libelle = statuts[demande.statut]
-  return demande.dateFin ? `${libelle} le ${formatJourTahiti(demande.dateFin)}` : libelle
+function note(demande: Demande) {
+  if (demande.statut === 'mise_de_cote' && demande.miseDeCote) {
+    const { quantite, dateLimite } = demande.miseDeCote
+    const gardes = quantite > 1 ? `${quantite} exemplaires gardés` : 'Gardé'
+    return `${gardes} pour vous jusqu'au ${formatJourTahiti(dateLimite)}`
+  }
+  return demande.dateFin ? `Le ${formatJourTahiti(demande.dateFin)}` : ''
 }
 
 function DemandesPage() {
@@ -181,7 +185,7 @@ function DemandesPage() {
 
     if (!demandes) {
       return (
-        <div className="demandes-erreur">
+        <div className="vide">
           <ErrorMessage>{actuel.erreur ?? ''}</ErrorMessage>
           <Button onClick={() => setEssai(essai + 1)}>Réessayer</Button>
         </div>
@@ -190,27 +194,51 @@ function DemandesPage() {
 
     if (demandes.length === 0) {
       return (
-        <section className="vide" aria-labelledby="suivi-titre">
-          <h2 id="suivi-titre">Aucune demande pour l'instant.</h2>
+        <div className="suivi-vide">
+          <h3>Aucune demande pour l'instant.</h3>
           <p>
             Un livre est épuisé ou absent du catalogue ? Demandez-le : il vous sera mis de côté
             dès son arrivée.
           </p>
-        </section>
+        </div>
       )
     }
 
     return (
-      <section aria-labelledby="suivi-titre">
-        <h2 id="suivi-titre" className="suivi-titre">
-          Suivi de vos demandes
-        </h2>
-        <ul className="suivi">
-          {demandes.map((demande) => (
+      <ul className="suivi">
+        {demandes.map((demande) => {
+          const statut = statuts[demande.statut]
+          const texte = note(demande)
+          return (
             <li key={demande.id}>
-              <div className="suivi-infos">
-                <span className="suivi-livre">{demande.titre}</span>
-                <span className="suivi-detail">
+              {demande.isbn ? (
+                <span className="tuile">
+                  <Couverture
+                    produit={{
+                      designation: demande.titre,
+                      type: 'livre',
+                      isbn: demande.isbn,
+                      auteur: demande.auteur,
+                    }}
+                  />
+                </span>
+              ) : (
+                <span className="tuile tuile-vide">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4Z" />
+                    <path d="M5 17a3 3 0 0 1 3-3h10" />
+                  </svg>
+                </span>
+              )}
+              <div>
+                <p className="suivi-titre">{demande.titre}</p>
+                <p className="suivi-meta">
                   {[
                     demande.auteur,
                     exemplaires(demande.quantiteSouhaitee),
@@ -218,20 +246,16 @@ function DemandesPage() {
                   ]
                     .filter(Boolean)
                     .join(', ')}
-                </span>
-                {demande.statut === 'mise_de_cote' && demande.miseDeCote && (
-                  <p className="suivi-cote">
-                    {`${exemplaires(demande.miseDeCote.quantite)} mis de côté pour vous jusqu'au ${formatJourTahiti(demande.miseDeCote.dateLimite)}. Commandez avant cette date.`}
-                  </p>
-                )}
+                </p>
                 {erreurLigne?.id === demande.id && <ErrorMessage>{erreurLigne.message}</ErrorMessage>}
               </div>
               <div className="suivi-fin">
-                <span className={`statut statut-${demande.statut}`}>{statutAvecDate(demande)}</span>
+                <span className={`statut ${statut.classe}`}>{statut.libelle}</span>
+                {texte && <span className="suivi-note">{texte}</span>}
                 {demande.statut === 'en_attente' && (
                   <button
                     type="button"
-                    className="lien-action"
+                    className="retirer"
                     disabled={annulation === demande.id}
                     aria-label={`Annuler la demande de ${demande.titre}`}
                     onClick={() => annuler(demande)}
@@ -242,31 +266,37 @@ function DemandesPage() {
                 {demande.statut === 'mise_de_cote' &&
                   demande.produitId &&
                   (ajoutees.includes(demande.id) ? (
-                    <Link to="/panier">Voir le panier</Link>
+                    <Link className="lien" to="/panier">
+                      Voir le panier
+                    </Link>
                   ) : (
-                    <Button
-                      variant="secondary"
+                    <button
+                      type="button"
+                      className="bouton bouton-petit"
                       aria-label={`Ajouter ${demande.titre} au panier`}
                       onClick={() => ajouterAuPanier(demande)}
                     >
                       Ajouter au panier
-                    </Button>
+                    </button>
                   ))}
               </div>
             </li>
-          ))}
-        </ul>
-      </section>
+          )
+        })}
+      </ul>
     )
   }
 
   return (
-    <div className="demandes">
+    <>
       <title>Mes demandes · Feuillet</title>
-      <div className="page-intro">
-        <h1>Mes demandes</h1>
-        <p>Les livres que vous attendez</p>
-      </div>
+      <header className="page-tete">
+        <h1 className="page-titre">Mes demandes</h1>
+        <p className="page-intro">
+          Un livre manque au catalogue ou il est épuisé ? Demandez-le : nous le commandons pour
+          vous et nous vous prévenons dès qu'il arrive.
+        </p>
+      </header>
 
       {nonLues.length > 0 && (
         <section className="notifications" aria-labelledby="titre-notifications">
@@ -277,7 +307,7 @@ function DemandesPage() {
                 <p>{notification.message}</p>
                 <button
                   type="button"
-                  className="lien-action"
+                  className="retirer"
                   aria-label={`Masquer : ${notification.message}`}
                   onClick={() => lire(notification)}
                 >
@@ -289,55 +319,65 @@ function DemandesPage() {
         </section>
       )}
 
-      <div className="demandes-grille">
-        <div>{suivi()}</div>
-
-        <form className="encadre formulaire" onSubmit={envoyer} noValidate>
-          <h2>Demander un livre</h2>
-          <p className="aide">
-            Pour un livre absent du catalogue. Une demande ne vous engage pas à l'acheter.
-          </p>
-          <Input
-            label="Titre"
-            name="titre"
-            placeholder="Ex. Le Rivage des Syrtes"
-            value={titre}
-            error={champs.titre}
-            onChange={(e) => setTitre(e.target.value)}
-          />
-          <Input
-            label="Auteur (facultatif)"
-            name="auteur"
-            value={auteur}
-            error={champs.auteur}
-            onChange={(e) => setAuteur(e.target.value)}
-          />
-          <Input
-            label="ISBN (facultatif)"
-            name="isbn"
-            value={isbn}
-            error={champs.isbn}
-            onChange={(e) => setIsbn(e.target.value)}
-          />
-          <div className="champ-quantite">
-            <span className="common-input__label">Quantité</span>
-            <ChoixQuantite valeur={quantite} onChange={setQuantite} libelle="Quantité souhaitée" />
-            {champs.quantiteSouhaitee && (
-              <span className="common-input__error">{champs.quantiteSouhaitee}</span>
+      <div className="demandes">
+        <section className="carte-demande" aria-labelledby="titre-nouvelle">
+          <h2 id="titre-nouvelle">Demander un livre</h2>
+          <form className="formulaire" onSubmit={envoyer} noValidate>
+            <Champ
+              label="Titre"
+              name="titre"
+              value={titre}
+              error={champs.titre}
+              onChange={(e) => setTitre(e.target.value)}
+            />
+            <Champ
+              label="Auteur"
+              name="auteur"
+              placeholder="Facultatif"
+              value={auteur}
+              error={champs.auteur}
+              onChange={(e) => setAuteur(e.target.value)}
+            />
+            <Champ
+              label="ISBN"
+              name="isbn"
+              inputMode="numeric"
+              placeholder="Facultatif"
+              value={isbn}
+              error={champs.isbn}
+              onChange={(e) => setIsbn(e.target.value)}
+            />
+            <div className="champ">
+              <p className="champ-libelle" id="libelle-quantite">
+                Quantité
+              </p>
+              <ChoixQuantite valeur={quantite} onChange={setQuantite} libelle="Quantité souhaitée" />
+              {champs.quantiteSouhaitee && (
+                <span className="champ-erreur">{champs.quantiteSouhaitee}</span>
+              )}
+            </div>
+            <button className="bouton" type="submit" disabled={envoi} aria-busy={envoi || undefined}>
+              Envoyer la demande
+            </button>
+            {erreurEnvoi && <ErrorMessage>{erreurEnvoi}</ErrorMessage>}
+            {confirmation && (
+              <p className="confirmation" role="status">
+                {confirmation}
+              </p>
             )}
+          </form>
+        </section>
+
+        <section aria-labelledby="titre-suivi">
+          <div className="section-tete">
+            <h2 className="titre-bloc" id="titre-suivi">
+              Suivi
+            </h2>
           </div>
-          <Button type="submit" loading={envoi}>
-            Envoyer la demande
-          </Button>
-          {erreurEnvoi && <ErrorMessage>{erreurEnvoi}</ErrorMessage>}
-          {confirmation && (
-            <p className="aide" role="status">
-              {confirmation}
-            </p>
-          )}
-        </form>
+          {suivi()}
+        </section>
       </div>
-    </div>
+    </>
   )
 }
 

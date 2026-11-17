@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import Champ from '../../components/client/Champ.tsx'
 import LignePanier from '../../components/client/LignePanier.tsx'
 import Button from '../../components/common/Button.tsx'
 import ErrorMessage from '../../components/common/ErrorMessage.tsx'
-import Input from '../../components/common/Input.tsx'
 import Loader from '../../components/common/Loader.tsx'
-import Select from '../../components/common/Select.tsx'
 import { useAuth } from '../../contexts/useAuth'
 import { usePanier } from '../../contexts/usePanier'
 import {
@@ -25,7 +24,6 @@ import type {
 } from '../../types/vente'
 import { erreursDesChamps, messageErreur, stockModifie } from '../../utils/erreurs'
 import { formatXPF } from '../../utils/format'
-import './PanierPage.css'
 
 const LIGNES_REFUSEES =
   "Rien n'a été enregistré : certains articles ne sont plus disponibles dans la quantité demandée. Corrigez votre panier puis payez à nouveau."
@@ -33,6 +31,12 @@ const STOCK_CHANGE =
   "Le stock a changé pendant votre commande. Rien n'a été enregistré : vérifiez votre panier et payez à nouveau."
 const PAIEMENT_REFUSE =
   "Paiement refusé (démonstration) : la commande n'a pas été enregistrée. Votre panier est intact, vous pouvez payer à nouveau."
+
+const OCCASIONS = [
+  { valeur: 'noel', libelle: 'Noël' },
+  { valeur: 'anniversaire', libelle: 'Anniversaire' },
+  { valeur: 'fete', libelle: 'Fête' },
+]
 
 function PanierPage() {
   const { utilisateur, chargement: sessionEnCours } = useAuth()
@@ -179,24 +183,20 @@ function PanierPage() {
     }
     if (!utilisateur) {
       return (
-        <Link
-          className="common-button common-button--primary"
-          to="/connexion"
-          state={{ depuis: '/panier' }}
-        >
+        <Link className="bouton bouton-blanc" to="/connexion" state={{ depuis: '/panier' }}>
           Se connecter pour commander
         </Link>
       )
     }
     if (utilisateur.role !== 'client') {
-      return <p className="aide">Connectez-vous avec un compte client pour commander.</p>
+      return <p className="recap-note">Connectez-vous avec un compte client pour commander.</p>
     }
     const bloque = aDesProblemes || !devisAJour || envoi !== null
     return (
       <section className="paiement" aria-labelledby="titre-paiement">
         <h3 id="titre-paiement">Paiement (démonstration)</h3>
         <p className="paiement-fictif">Paiement fictif : aucun montant n'est débité.</p>
-        <p className="aide">Aucune carte n'est demandée. Le paiement confirme la commande.</p>
+        <p className="recap-note">Aucune carte n'est demandée. Le paiement confirme la commande.</p>
         <Button onClick={() => payer('accepte')} loading={envoi === 'accepte'} disabled={bloque}>
           Payer (démo)
         </Button>
@@ -215,13 +215,13 @@ function PanierPage() {
   function contenu() {
     if (lignes.length === 0) {
       return (
-        <section className="vide">
+        <section className="page-corps vide">
           <h2>Votre panier est vide.</h2>
           <p>
             Ajoutez des livres depuis le catalogue. Le panier ne réserve rien : les quantités sont
             vérifiées quand vous confirmez votre commande.
           </p>
-          <Link className="common-button common-button--primary" to="/catalogue">
+          <Link className="bouton" to="/catalogue">
             Parcourir le catalogue
           </Link>
         </section>
@@ -229,12 +229,16 @@ function PanierPage() {
     }
 
     if (chargement) {
-      return <Loader>Chargement du panier…</Loader>
+      return (
+        <div className="page-corps">
+          <Loader>Chargement du panier…</Loader>
+        </div>
+      )
     }
 
     if (enErreur) {
       return (
-        <div className="panier-erreur">
+        <div className="page-corps vide">
           <ErrorMessage>{erreur?.message ?? ''}</ErrorMessage>
           <Button onClick={() => setEssai(essai + 1)}>Réessayer</Button>
         </div>
@@ -244,7 +248,7 @@ function PanierPage() {
     const valeur = devisAJour ?? devis?.valeur
 
     return (
-      <div className="panier-grille">
+      <div className="panier">
         <div>
           <ul className="lignes">
             {lignes.map((ligne) => (
@@ -260,51 +264,75 @@ function PanierPage() {
             ))}
           </ul>
 
-          <form className="options" onSubmit={(evenement) => evenement.preventDefault()} noValidate>
-            <fieldset>
-              <legend>Cadeau</legend>
-              <label className="choix">
-                <input
-                  type="checkbox"
-                  checked={cadeau}
-                  onChange={(evenement) => setCadeau(evenement.target.checked)}
-                />
-                <span>
-                  C'est un cadeau
-                  <small>Pour une occasion, le délai de retour passe à un mois.</small>
-                </span>
+          <form
+            className="options"
+            aria-labelledby="titre-options"
+            onSubmit={(evenement) => evenement.preventDefault()}
+            noValidate
+          >
+            <h2 className="titre-bloc" id="titre-options">
+              Options
+            </h2>
+            <div className="option">
+              <label className="option-texte" htmlFor="option-cadeau">
+                <strong>C'est un cadeau</strong>
+                <span>Pour une occasion, le délai de retour passe à un mois.</span>
               </label>
-              {cadeau && (
-                <Select
-                  label="Occasion"
-                  value={occasion}
-                  onChange={(evenement) => setOccasion(evenement.target.value)}
-                >
-                  <option value="">Choisir une occasion</option>
-                  <option value="noel">Noël</option>
-                  <option value="anniversaire">Anniversaire</option>
-                  <option value="fete">Fête</option>
-                </Select>
-              )}
-              <label className="choix">
-                <input
-                  type="checkbox"
-                  checked={emballage}
-                  onChange={(evenement) => setEmballage(evenement.target.checked)}
-                />
-                <span>
-                  Emballage cadeau
-                  <small>Les frais s'affichent dans le récapitulatif.</small>
-                </span>
+              <input
+                className="interrupteur"
+                type="checkbox"
+                id="option-cadeau"
+                checked={cadeau}
+                onChange={(evenement) => {
+                  setCadeau(evenement.target.checked)
+                  if (!evenement.target.checked) {
+                    setOccasion('')
+                  }
+                }}
+              />
+            </div>
+            <div className={cadeau ? 'occasions ouvert' : 'occasions'}>
+              <div>
+                {cadeau && (
+                  <ul className="pilules" aria-label="Occasion">
+                    {OCCASIONS.map((choix) => (
+                      <li key={choix.valeur}>
+                        <button
+                          type="button"
+                          aria-pressed={occasion === choix.valeur}
+                          onClick={() => setOccasion(occasion === choix.valeur ? '' : choix.valeur)}
+                        >
+                          {choix.libelle}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+            <div className="option">
+              <label className="option-texte" htmlFor="option-emballage">
+                <strong>Emballage cadeau</strong>
+                <span>Les frais s'affichent dans le récapitulatif.</span>
               </label>
-            </fieldset>
+              <input
+                className="interrupteur"
+                type="checkbox"
+                id="option-emballage"
+                checked={emballage}
+                onChange={(evenement) => setEmballage(evenement.target.checked)}
+              />
+            </div>
 
-            <fieldset>
-              <legend>Livraison</legend>
-              <Input
+            <h2 className="titre-bloc titre-livraison">Livraison</h2>
+            <div className="adresse">
+              <Champ
+                large
                 label="Adresse de livraison"
                 name="adresse"
                 autoComplete="street-address"
+                placeholder="Numéro, rue, code postal et ville"
+                aide="Livraison à domicile uniquement."
                 value={adresse}
                 error={erreurAdresse}
                 onChange={(evenement) => {
@@ -312,8 +340,7 @@ function PanierPage() {
                   setErreurAdresse('')
                 }}
               />
-              <p className="aide">Livraison à domicile uniquement.</p>
-            </fieldset>
+            </div>
           </form>
         </div>
 
@@ -327,25 +354,36 @@ function PanierPage() {
               </Button>
             </div>
           ) : (
-            <dl aria-busy={calculEnCours || undefined}>
-              <dt>{`Articles (${nombreArticles})`}</dt>
-              <dd>{montant((d) => d.sousTotal)}</dd>
-              <dt>Emballage cadeau</dt>
-              <dd>{emballage ? montant((d) => d.fraisEmballage) : 'Aucun'}</dd>
-              <dt>Livraison à domicile</dt>
-              <dd>{montant((d) => d.fraisLivraison)}</dd>
-              <dt className="total">Total TTC</dt>
-              <dd className="total">{montant((d) => d.total)}</dd>
-              <dt>dont TVA</dt>
-              <dd>{montant((d) => d.montantTva)}</dd>
-            </dl>
+            <>
+              <dl aria-busy={calculEnCours || undefined}>
+                <div>
+                  <dt>{`Articles (${nombreArticles})`}</dt>
+                  <dd>{montant((d) => d.sousTotal)}</dd>
+                </div>
+                <div>
+                  <dt>Emballage cadeau</dt>
+                  <dd>{emballage ? montant((d) => d.fraisEmballage) : 'Aucun'}</dd>
+                </div>
+                <div>
+                  <dt>Livraison à domicile</dt>
+                  <dd>{montant((d) => d.fraisLivraison)}</dd>
+                </div>
+              </dl>
+              <div className="recap-total">
+                <span>Total TTC</span>
+                <strong>{montant((d) => d.total)}</strong>
+              </div>
+              <p className="recap-tva">
+                <span>dont TVA</span> <span>{montant((d) => d.montantTva)}</span>
+              </p>
+            </>
           )}
           {action()}
           {refus && <ErrorMessage className="recap-refus">{refus.message}</ErrorMessage>}
           {aDesProblemes && !refus && (
-            <p className="aide">Corrigez les articles signalés pour pouvoir commander.</p>
+            <p className="recap-note">Corrigez les articles signalés pour pouvoir commander.</p>
           )}
-          <p className="aide">
+          <p className="recap-note">
             Le panier ne réserve pas les articles : leur disponibilité est vérifiée quand vous
             confirmez la commande.
           </p>
@@ -355,14 +393,17 @@ function PanierPage() {
   }
 
   return (
-    <div className="panier">
+    <>
       <title>Panier · Feuillet</title>
-      <div className="page-intro">
-        <h1>Panier</h1>
-        <p>{nombreArticles > 1 ? `${nombreArticles} articles` : `${nombreArticles} article`}</p>
-      </div>
+      <header className="page-tete">
+        <h1 className="page-titre">Panier</h1>
+        <p className="page-intro">
+          <span>{nombreArticles > 1 ? `${nombreArticles} articles` : `${nombreArticles} article`}</span>
+          {lignes.length > 0 && '. La disponibilité est vérifiée au moment où vous confirmez la commande.'}
+        </p>
+      </header>
       {contenu()}
-    </div>
+    </>
   )
 }
 

@@ -119,7 +119,7 @@ describe('fiche produit', () => {
     afficher('p-1')
 
     expect(screen.getByRole('status')).toHaveTextContent('Chargement de l\'article…')
-    expect(document.querySelector('.fiche .squelette-couverture')).not.toBeNull()
+    expect(document.querySelector('.fiche .fiche-scene.squelette')).not.toBeNull()
     expect(
       await screen.findByRole('heading', { level: 1, name: 'L\'Écume des jours' }),
     ).toBeInTheDocument()
@@ -127,7 +127,8 @@ describe('fiche produit', () => {
     expect(details().getByText('LIV-002')).toBeInTheDocument()
     expect(details().getByText('Roman')).toBeInTheDocument()
     expect(details().getByText('9782253140870')).toBeInTheDocument()
-    expect(screen.getByText(/TVA de 5 % incluse\./)).toBeInTheDocument()
+    expect(details().getByText('Livre')).toBeInTheDocument()
+    expect(details().getByText('5 % incluse')).toBeInTheDocument()
     expect(document.title).toBe('L\'Écume des jours · Feuillet')
   })
 
@@ -135,8 +136,8 @@ describe('fiche produit', () => {
     simulerApi(ecume)
     afficher('p-1')
 
-    expect(await screen.findByText('1 097 XPF')).toBeInTheDocument()
-    expect(screen.getByText('1 290 XPF')).toBeInTheDocument()
+    expect(await screen.findByText('1 290 XPF')).toBeInTheDocument()
+    expect(document.querySelector('.fiche-prix')).toHaveTextContent(/^1 097 XPF/)
     expect(screen.getByText('−15 %')).toBeInTheDocument()
     expect(screen.getByText(/Promotion valable jusqu'au 31 octobre 2026\./)).toBeInTheDocument()
   })
@@ -145,7 +146,7 @@ describe('fiche produit', () => {
     simulerApi({ ...ecume, disponibilite: 'disponible' })
     afficher('p-1')
 
-    expect(await screen.findByText('Disponible')).toBeInTheDocument()
+    expect(await screen.findByText('Disponible', { selector: '.dispo' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Ajouter un exemplaire' }))
     expect(screen.getByLabelText('Quantité')).toHaveValue('2')
     fireEvent.click(screen.getByRole('button', { name: 'Ajouter au panier' }))
@@ -153,7 +154,7 @@ describe('fiche produit', () => {
     expect(panierEnregistre()).toEqual([{ produitId: 'p-1', quantite: 2 }])
     expect(screen.getByRole('status')).toHaveTextContent('Ajouté au panier.')
     expect(screen.getByRole('link', { name: 'Voir le panier' })).toHaveAttribute('href', '/panier')
-    expect(screen.getByText(/Le panier ne réserve pas l'article\./)).toBeInTheDocument()
+    expect(document.querySelector('.barre-achat')).toHaveAttribute('aria-hidden', 'true')
   })
 
   it('additionne les quantités quand on ajoute deux fois le même article', async () => {
@@ -239,9 +240,10 @@ describe('fiche produit', () => {
     simulerApi(carnet)
     afficher('p-3')
 
-    expect(await screen.findByText('650 XPF')).toBeInTheDocument()
+    await screen.findByRole('heading', { level: 1 })
+    expect(document.querySelector('.fiche-prix')).toHaveTextContent(/^650 XPF/)
     expect(screen.queryByText(/Promotion valable/)).not.toBeInTheDocument()
-    expect(screen.getByText(/TVA de 16 % incluse\./)).toBeInTheDocument()
+    expect(details().getByText('16 % incluse')).toBeInTheDocument()
   })
 
   it('affiche les champs propres à un magazine', async () => {

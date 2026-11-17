@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { PanierProvider } from '../../contexts/PanierContext.tsx'
 import type { Categorie } from '../../types/categorie'
 import type { Produit } from '../../types/produit'
 import CataloguePage from './CataloguePage.tsx'
@@ -41,13 +42,10 @@ function reponse(corps: unknown, status = 200) {
   return new Response(JSON.stringify(corps), { status })
 }
 
-function simulerApi(produits: Produit[], meilleuresVentes: Produit[] = []) {
+function simulerApi(produits: Produit[]) {
   return vi.spyOn(globalThis, 'fetch').mockImplementation(async (entree) => {
     if (String(entree).startsWith('/api/categories')) {
       return reponse(categories)
-    }
-    if (String(entree) === '/api/meilleures-ventes') {
-      return reponse(meilleuresVentes)
     }
     return reponse(produits)
   })
@@ -60,7 +58,7 @@ function appelsProduits(fetchMock: ReturnType<typeof simulerApi>) {
 }
 
 function titresAffiches() {
-  return Array.from(document.querySelectorAll('.rayonnage .livre-titre')).map((titre) => titre.textContent)
+  return Array.from(document.querySelectorAll('.catalogue-produits .produit-titre')).map((titre) => titre.textContent)
 }
 
 function afficher(url = '/catalogue') {
@@ -72,7 +70,11 @@ function afficher(url = '/catalogue') {
     ],
     { initialEntries: [url] },
   )
-  render(<RouterProvider router={router} />)
+  render(
+    <PanierProvider>
+      <RouterProvider router={router} />
+    </PanierProvider>,
+  )
   return router
 }
 
@@ -88,7 +90,7 @@ describe('page du catalogue', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent('Chargement du catalogue')
     expect(await screen.findByText('2 articles')).toBeInTheDocument()
-    const liste = screen.getAllByRole('listitem').filter((item) => item.querySelector('.livre'))
+    const liste = screen.getAllByRole('listitem').filter((item) => item.querySelector('.produit'))
     expect(liste).toHaveLength(2)
     expect(screen.getAllByText('Robert Louis Stevenson').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Clairefontaine').length).toBeGreaterThan(0)
@@ -129,19 +131,22 @@ describe('page du catalogue', () => {
     const ile = await screen.findByRole('link', { name: /L'Île au trésor/ })
     const carte = screen.getByRole('link', { name: /Carnet ligné/ })
 
-    expect(within(ile).getByText('Disponible')).toBeInTheDocument()
-    expect(within(carte).getByText('Épuisé')).toBeInTheDocument()
+    expect(within(ile).queryByText('Disponible sur demande')).not.toBeInTheDocument()
+    expect(within(carte).getByText('Disponible sur demande')).toBeInTheDocument()
+    expect(screen.getByText('Épuisé')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ajouter L\'Île au trésor au panier' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Ajouter Carnet ligné au panier' })).not.toBeInTheDocument()
   })
 
-  it('affiche la catégorie de chaque article', async () => {
-    simulerApi([ileAuTresor, carnet])
+  it('ajoute un article au panier depuis sa carte', async () => {
+    simulerApi([ileAuTresor])
     afficher()
 
-    const ile = await screen.findByRole('link', { name: /L'Île au trésor/ })
-    const carte = screen.getByRole('link', { name: /Carnet ligné/ })
+    fireEvent.click(await screen.findByRole('button', { name: 'Ajouter L\'Île au trésor au panier' }))
 
-    expect(within(ile).getByText('Roman')).toBeInTheDocument()
-    expect(within(carte).getByText('Papeterie')).toBeInTheDocument()
+    expect(JSON.parse(localStorage.getItem('panier') ?? '[]')).toEqual([
+      { produitId: 'p-1', quantite: 1 },
+    ])
   })
 
   it('ouvre la fiche d un article', async () => {
@@ -168,19 +173,16 @@ describe('page du catalogue', () => {
     expect(appelsProduits(fetchMock)).toContain('/api/produits?categorie=roman')
   })
 
-  it('cherche un article', async () => {
+  it('affiche la recherche lancée depuis l en-tête et permet de tout afficher', async () => {
     const fetchMock = simulerApi([ileAuTresor])
-    afficher()
+    const router = afficher('/catalogue?q=Stevenson')
     await screen.findByText('1 article')
 
-    fireEvent.change(screen.getByLabelText('Rechercher dans le catalogue'), {
-      target: { value: 'Stevenson' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Rechercher' }))
+    expect(appelsProduits(fetchMock)).toContain('/api/produits?q=Stevenson')
+    expect(screen.getByText(/Recherche : « Stevenson »/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('link', { name: 'Tout afficher' }))
 
-    await vi.waitFor(() =>
-      expect(appelsProduits(fetchMock)).toContain('/api/produits?q=Stevenson'),
-    )
+    await vi.waitFor(() => expect(router.state.location.search).toBe(''))
   })
 
   it('filtre par type', async () => {
@@ -203,11 +205,11 @@ describe('page du catalogue', () => {
     expect(titresAffiches()).toEqual(['L\'Île au trésor', 'Carnet ligné'])
     const appelsAvant = appelsProduits(fetchMock).length
 
-    fireEvent.change(screen.getByLabelText('Trier par'), { target: { value: 'prix-croissant' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Prix croissant' }))
     await vi.waitFor(() => expect(titresAffiches()).toEqual(['Carnet ligné', 'L\'Île au trésor']))
-    expect(screen.getByLabelText('Trier par')).toHaveValue('prix-croissant')
+    expect(screen.getByRole('button', { name: 'Prix croissant' })).toHaveAttribute('aria-pressed', 'true')
 
-    fireEvent.change(screen.getByLabelText('Trier par'), { target: { value: 'prix-decroissant' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Prix décroissant' }))
     await vi.waitFor(() => expect(titresAffiches()).toEqual(['L\'Île au trésor', 'Carnet ligné']))
 
     expect(appelsProduits(fetchMock)).toHaveLength(appelsAvant)
@@ -220,7 +222,7 @@ describe('page du catalogue', () => {
     await screen.findByText('2 articles')
 
     expect(titresAffiches()).toEqual(['Carnet ligné', 'L\'Île au trésor'])
-    expect(screen.getByLabelText('Trier par')).toHaveValue('prix-croissant')
+    expect(screen.getByRole('button', { name: 'Prix croissant' })).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('reprend les filtres de l adresse', async () => {
@@ -230,7 +232,10 @@ describe('page du catalogue', () => {
     await screen.findByText('1 article')
 
     expect(appelsProduits(fetchMock)).toContain('/api/produits?q=tr%C3%A9sor&categorie=roman')
-    expect(screen.getByLabelText('Rechercher dans le catalogue')).toHaveValue('trésor')
+    expect(screen.getByText(/Recherche : « trésor »/)).toBeInTheDocument()
+    expect(
+      within(screen.getByRole('navigation', { name: 'Rayons' })).getByRole('link', { name: 'Roman' }),
+    ).toHaveAttribute('aria-current', 'page')
   })
 
   it('explique qu un rayon est vide sans parler d orthographe', async () => {
@@ -265,6 +270,35 @@ describe('page du catalogue', () => {
     )
   })
 
+  it('garde les articles affichés pendant le chargement d un autre rayon', async () => {
+    let liberer: (valeur: Response) => void = () => {}
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (entree) => {
+      const url = String(entree)
+      if (url.startsWith('/api/categories')) {
+        return reponse(categories)
+      }
+      if (url.includes('categorie=roman')) {
+        return new Promise<Response>((resoudre) => {
+          liberer = resoudre
+        })
+      }
+      return reponse([ileAuTresor, carnet])
+    })
+    afficher()
+    await screen.findByText('2 articles')
+
+    const rayons = within(screen.getByRole('navigation', { name: 'Rayons' }))
+    fireEvent.click(await rayons.findByRole('link', { name: 'Roman' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Chargement du catalogue')
+    expect(titresAffiches()).toEqual(['L\'Île au trésor', 'Carnet ligné'])
+
+    liberer(reponse([ileAuTresor]))
+
+    expect(await screen.findByText('1 article')).toBeInTheDocument()
+    expect(titresAffiches()).toEqual(['L\'Île au trésor'])
+  })
+
   it('affiche une erreur et permet de réessayer', async () => {
     let appels = 0
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (entree) => {
@@ -286,38 +320,5 @@ describe('page du catalogue', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }))
 
     expect(await screen.findByText('1 article')).toBeInTheDocument()
-  })
-
-  it('montre les meilleures ventes en haut du catalogue complet', async () => {
-    const fetchMock = simulerApi([ileAuTresor, carnet], [carnet, ileAuTresor])
-    afficher()
-
-    const section = await screen.findByRole('region', { name: 'Les meilleures ventes' })
-    const titres = within(section)
-      .getAllByRole('listitem')
-      .map((element) => element.querySelector('.livre-titre')?.textContent)
-    expect(titres).toEqual(['Carnet ligné', 'L\x27Île au trésor'])
-    expect(within(section).getByRole('link', { name: /Carnet ligné/ })).toHaveAttribute(
-      'href',
-      '/produits/p-2',
-    )
-    expect(fetchMock).toHaveBeenCalledWith('/api/meilleures-ventes', expect.any(Object))
-    expect(titresAffiches()).toEqual(['L\x27Île au trésor', 'Carnet ligné'])
-  })
-
-  it('cache les meilleures ventes pendant une recherche ou dans un rayon', async () => {
-    simulerApi([ileAuTresor], [carnet])
-    afficher('/catalogue?categorie=roman')
-
-    await screen.findByText('1 article')
-    expect(screen.queryByRole('region', { name: 'Les meilleures ventes' })).not.toBeInTheDocument()
-  })
-
-  it('n affiche pas de meilleures ventes quand rien n a été vendu', async () => {
-    simulerApi([ileAuTresor])
-    afficher()
-
-    await screen.findByText('1 article')
-    expect(screen.queryByRole('region', { name: 'Les meilleures ventes' })).not.toBeInTheDocument()
   })
 })

@@ -120,13 +120,10 @@ describe('page Mes demandes', () => {
     expect(attente.getByText('Julien Gracq, 1 exemplaire, demandé le 2 novembre 2026')).toBeInTheDocument()
     expect(attente.getByText('En attente')).toBeInTheDocument()
     const cote = within(ligne('L\'Île au trésor'))
-    expect(cote.getByText('Mise de côté')).toBeInTheDocument()
-    expect(
-      cote.getByText(
-        '2 exemplaires mis de côté pour vous jusqu\'au 15 novembre 2026. Commandez avant cette date.',
-      ),
-    ).toBeInTheDocument()
-    expect(within(ligne('Dune')).getByText('Honorée le 25 octobre 2026')).toBeInTheDocument()
+    expect(cote.getByText('Mis de côté')).toBeInTheDocument()
+    expect(cote.getByText('2 exemplaires gardés pour vous jusqu\'au 15 novembre 2026')).toBeInTheDocument()
+    expect(within(ligne('Dune')).getByText('Honorée')).toBeInTheDocument()
+    expect(within(ligne('Dune')).getByText('Le 25 octobre 2026')).toBeInTheDocument()
   })
 
   it('annule une demande en attente', async () => {
@@ -137,7 +134,8 @@ describe('page Mes demandes', () => {
       await screen.findByRole('button', { name: 'Annuler la demande de Le Rivage des Syrtes' }),
     )
 
-    expect(await screen.findByText('Annulée le 11 novembre 2026')).toBeInTheDocument()
+    expect(await screen.findByText('Annulée')).toBeInTheDocument()
+    expect(screen.getByText('Le 11 novembre 2026')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Annuler la demande/ })).not.toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/demandes/d-1/annulation',
@@ -203,7 +201,7 @@ describe('page Mes demandes', () => {
     await screen.findByRole('heading', { name: 'Aucune demande pour l\'instant.' })
 
     expect(screen.getByLabelText('Titre')).toHaveValue('Le Rivage des Syrtes')
-    fireEvent.change(screen.getByLabelText('Auteur (facultatif)'), {
+    fireEvent.change(screen.getByLabelText('Auteur'), {
       target: { value: ' Julien Gracq ' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Ajouter un exemplaire' }))

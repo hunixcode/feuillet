@@ -76,3 +76,7 @@
   letter-spacing: 0.01em;
   opacity: 0.85;
 }
+
+.couv-icone {
+  display: none;
+}
