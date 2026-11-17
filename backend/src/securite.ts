@@ -7,9 +7,13 @@ export const TAILLE_MAX_CORPS = "100kb";
 
 const UN_AN_EN_SECONDES = 365 * 24 * 60 * 60;
 
+/** Couvertures des livres : Open Library redirige vers archive.org, puis vers un serveur *.us.archive.org. */
+export const ORIGINES_COUVERTURES = ["https://covers.openlibrary.org", "https://archive.org", "https://*.us.archive.org"];
+
 /**
  * En-têtes de sécurité (helmet). La CSP vaut pour le front compilé servi par l'application :
- * scripts et styles du même domaine, polices Google Fonts (frontend/index.html), aucun cadre.
+ * scripts et styles du même domaine, polices Google Fonts (frontend/index.html), couvertures
+ * d'Open Library, aucun cadre.
  * Le token étant gardé dans localStorage, aucun script inline ni externe n'est autorisé.
  */
 export function enTetesSecurite({ production }: { production: boolean }): RequestHandler {
@@ -21,7 +25,7 @@ export function enTetesSecurite({ production }: { production: boolean }): Reques
         scriptSrc: ["'self'"],
         styleSrc: ["'self'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
-        imgSrc: ["'self'", "data:"],
+        imgSrc: ["'self'", "data:", ...ORIGINES_COUVERTURES],
         connectSrc: ["'self'"],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
