@@ -454,6 +454,8 @@ Fait :
 - Catalogue : les cartes glissent à leur nouvelle place quand on change le tri ou le rayon, comme dans la maquette ; les articles restent affichés pendant le chargement d'un autre rayon
 - Pages comparées une à une avec la maquette sur une base de démonstration temporaire ; correction d'un débordement horizontal sur mobile
 - 531 tests (heure de Tahiti et UTC), le build et le lint passent
+- Issue #84 (autorisée par le chef) : jeu de démonstration avec 24 livres de plus (dont Sakamoto Days DEMO-MAN-001 et Kuroko's Basket), un ISBN avec couverture Open Library pour chaque livre (édition française quand elle a une couverture) et des ventes de démonstration qui mettent des livres en tête des meilleures ventes ; Le Petit Prince, Orient-Express et la calculatrice gardent leur prix et leur stock pour les tests Playwright
+- Seed testé sur une base locale temporaire : 36 produits, 13 ventes, les 31 livres ont leur couverture
 
 Écarts gardés exprès avec la maquette :
 - Filtre par type et tri par prix dans le catalogue (demandés par docs/ecrans.md)
@@ -461,7 +463,8 @@ Fait :
 - Pas de lien « Panier » dans le pied de page : les tests Playwright trouveraient deux liens « Panier »
 
 Reste à faire :
-- Jeu de démonstration (fichier du chef) : ajouter Sakamoto Days, Kuroko's Basket et les livres de la maquette, et donner un ISBN avec couverture aux 5 livres qui n'en ont pas ; la liste est prête et envoyée au chef
+- Après le merge de #84 : relancer le seed sur la base partagée une seule fois, en prévenant l'équipe (il efface les commandes et demandes liées aux produits de démonstration)
+- Sur ce PC, les tests du backend qui lancent MongoDB dépassent le délai de 10 secondes : ils sont vérifiés par la CI
 - docs/ecrans.md demande la catégorie et la mention « disponible » sur chaque article du catalogue, ce que la maquette ne montre pas : à décider
 - docs/ecrans.md dit encore que le catalogue est la première page : à mettre à jour par le chef
 - Vérifier Mes demandes et Mes commandes avec un compte client
