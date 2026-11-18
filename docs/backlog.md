@@ -441,3 +441,21 @@ Fait :
 
 Reste à faire :
 - Merge de la PR #74 (back du paiement) avec ce front
+
+
+15/11/2026 - Tests de bout en bout du parcours d'achat avec Playwright (#56)
+
+Fait :
+- Dossier `e2e/` : `serveur.mjs` lance l'application comme en production (MongoDB temporaire en replica set, seed, API qui sert le front compilé sur le port 4173), sans lire `backend/.env`
+- Parcours client : inscription, catalogue, fiche, panier, paiement refusé puis accepté, commande confirmée et visible dans Mes commandes, panier vidé
+- Parcours responsable : commande passée par l'API, expédiée depuis Ventes et retours, vente de −2 dans le journal du stock et stock en rayon qui passe de 5 à 3
+- Article épuisé au moment de payer : l'inventaire tombe à 0 pendant que le client est sur son panier, rien n'est enregistré, la ligne est signalée et le panier est gardé
+- Workflow `E2E` sur les PR qui touchent le back, le front ou `e2e/`, avec les captures et les traces en artefact en cas d'échec ; Dependabot surveille `e2e/`
+- Vérifié en local : 3 tests sur 3, quatre lancements de suite, aucun mongod laissé ouvert
+
+15/11/2026 - Sécurité : couvertures des livres autorisées par la CSP (#47)
+
+Fait :
+- La CSP de production n'autorisait que les images du même domaine : les couvertures Open Library de la #77 étaient bloquées quand l'API sert le front (image Docker), et chaque livre gardait sa couverture dessinée
+- `img-src` autorise `covers.openlibrary.org`, `archive.org` et `*.us.archive.org` (Open Library redirige vers les deux derniers) ; test de la CSP et `docs/api.md` à jour
+- Vérifié dans Chrome sur l'API en production avec une base temporaire : 20 images bloquées avant, les couvertures s'affichent après, sans aucune violation de CSP

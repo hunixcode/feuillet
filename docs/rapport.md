@@ -14,6 +14,8 @@ Typage statique : les règles métier (calculs de stock, invariants) sont vérif
 
 Conçu pour Vite, configuration partagée avec le front-end, rapide, couverture native. Utilisé côté front (déjà en place) et côté back (à installer avec la première logique métier, avec supertest pour les tests d'API). Alternative écartée : Jest (moins intégré à Vite), Mocha (trop de config).
 
+**Bout en bout : Playwright** (`e2e/`, #56). Trois parcours dans Chromium sur l'application lancée comme en production (API qui sert le front compilé, base MongoDB temporaire en replica set, seed) : achat par un client, expédition et journal du stock par le responsable, article épuisé au moment de payer. Ils vérifient ce que les tests séparés du front et du back ne voient pas : les deux branchés ensemble, avec la vraie CSP et les vraies transactions. Alternative écartée : Cypress, qui demande un outil en plus pour lancer l'application avant les tests (Playwright le fait avec `webServer`).
+
 **Règle d'organisation :** les règles métier vivent dans des services (`VenteService`, `StockService`…) exposés par une API REST, **jamais dans les composants React** → exigence de tester le métier sans l'interface.
 
 ### Back-end — **Node.js + Express**
@@ -44,7 +46,7 @@ Le sujet ne demande pas de paiement : la validation du panier enregistre la vent
 
 ### CI — **GitHub Actions**
 
-Deux workflows dans `.github/workflows/` (`backend.yml`, `frontend.yml`), lancés sur chaque PR qui touche leur dossier et sur `main` : `npm ci`, `npm audit` (bloquant sur une vulnérabilité haute d'une dépendance de production), typecheck ou lint, tests et build. Dependabot propose chaque lundi les mises à jour des dépendances et des actions. Gratuit et intégré au dépôt. Alternative écartée : Jenkins (serveur dédié, trop lourd).
+Deux workflows dans `.github/workflows/` (`backend.yml`, `frontend.yml`), lancés sur chaque PR qui touche leur dossier et sur `main` : `npm ci`, `npm audit` (bloquant sur une vulnérabilité haute d'une dépendance de production), typecheck ou lint, tests et build. Un troisième (`e2e.yml`) construit l'application et lance les tests Playwright sur chaque PR qui touche le back, le front ou `e2e/`, avec les captures et les traces en artefact quand un test échoue. Dependabot propose chaque lundi les mises à jour des dépendances et des actions. Gratuit et intégré au dépôt. Alternative écartée : Jenkins (serveur dédié, trop lourd).
 
 ### Déploiement : **démo en local avec Docker**
 
