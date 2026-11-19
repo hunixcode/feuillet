@@ -460,6 +460,16 @@ Fait :
 - `img-src` autorise `covers.openlibrary.org`, `archive.org` et `*.us.archive.org` (Open Library redirige vers les deux derniers) ; test de la CSP et `docs/api.md` à jour
 - Vérifié dans Chrome sur l'API en production avec une base temporaire : 20 images bloquées avant, les couvertures s'affichent après, sans aucune violation de CSP
 
+18/11/2026 - Back : seuil d'alerte de chaque produit (#46)
+
+Fait :
+- `GET /api/seuils-alerte` (responsable) : seuil d'alerte de chaque produit, actif ou archivé, avec `parDefaut` quand il suit le seuil des paramètres ; avant, on ne le voyait que pour les produits déjà sous le seuil (`GET /api/reapprovisionnement`)
+- `GET /api/produits/:id/seuil-alerte` (responsable) : seuil d'un seul produit, même réponse que le `PUT` (`{ seuilAlerte, parDefaut }`), `404` si le produit n'existe pas
+- Contrat dans `docs/api.md` ; 323 tests backend
+
+Reste à faire :
+- Front : colonne seuil d'alerte du catalogue du responsable (#46)
+
 18/11/2026 - Sécurité : stockage du token (#51)
 
 Fait :

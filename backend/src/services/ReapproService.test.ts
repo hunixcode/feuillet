@@ -309,6 +309,24 @@ describe("ReapproService", () => {
       expect(await erreurDe(services.reapproService.definirSeuil("inconnu", { seuilAlerte: 10 }))).toMatchObject({ statut: 404 });
     });
 
+    it("liste le seuil de chaque produit, archivé compris, avec le seuil par défaut s'il n'est pas réglé", async () => {
+      await services.reapproService.definirSeuil(livre, { seuilAlerte: 40 });
+      const archive = await services.produitService.creer({
+        reference: "LIV-ARCH",
+        designation: "Ancien roman",
+        type: "livre",
+        categorie: "roman",
+        prix: 1000,
+        tauxTva: 5,
+        archive: true,
+      });
+
+      const seuils = await services.reapproService.listerSeuils();
+
+      expect(seuils).toContainEqual({ produitId: livre, seuilAlerte: 40, parDefaut: false });
+      expect(seuils).toContainEqual({ produitId: archive.id, seuilAlerte: 20, parDefaut: true });
+    });
+
     it("n'évalue pas un produit sans quantité achetée connue", async () => {
       await expect(services.reapproService.aRecommander()).resolves.toEqual([]);
     });
