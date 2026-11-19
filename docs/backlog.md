@@ -475,3 +475,9 @@ Reste à faire :
 Fait :
 - `?q=` du catalogue ne tient plus compte des accents ni des ligatures : « ile » trouve « L'Île », « tresor » trouve « trésor », « coeur » trouve « cœur » (`modeles/recherche.ts`, repositories Mongoose et en mémoire)
 - Profite au catalogue client et à celui du responsable sans changer le front ; `docs/api.md` à jour ; 321 tests backend
+
+18/11/2026 - Sécurité : stockage du token (#51)
+
+Fait :
+- Décision notée dans `docs/rapport.md` (section Session) : le token JWT reste dans `localStorage`, protégé par la CSP sans script inline ni externe, React qui échappe le texte affiché et la durée de 8 h ; cookie `httpOnly` écarté (changement du back et du front, route de déconnexion, protection CSRF)
+- En-têtes de sécurité, CORS et taille des requêtes déjà faits (#60) : #51 est terminée
