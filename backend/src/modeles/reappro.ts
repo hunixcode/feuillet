@@ -75,6 +75,13 @@ export interface ChangementCommande {
 }
 
 // RG10 : vendable ≤ seuil (%) × quantité achetée à l'origine.
+// RG10 : seuil d'alerte d'un produit ; parDefaut quand il suit seuilAlerteDefaut des paramètres.
+export interface SeuilProduit {
+  produitId: string;
+  seuilAlerte: number;
+  parDefaut: boolean;
+}
+
 export interface ProduitARecommander {
   produitId: string;
   reference: string;

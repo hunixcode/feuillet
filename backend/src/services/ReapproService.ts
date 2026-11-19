@@ -10,6 +10,7 @@ import {
   type NouveauFournisseur,
   type ProduitARecommander,
   type Reception,
+  type SeuilProduit,
   type StatutCommandeFournisseur,
 } from "../modeles/reappro.js";
 import { quantiteVendable, type ChangementStock } from "../modeles/stock.js";
@@ -271,6 +272,22 @@ export class ReapproService {
       reception: { ...reception, validee: true, dateValidation: date },
       commande: (await this.commandes.trouverParId(commande.id))!,
     };
+  }
+
+  // RG10 : seuil d'alerte de chaque produit, actif ou archivé, pour le catalogue du responsable.
+  async listerSeuils(): Promise<SeuilProduit[]> {
+    const produits = [
+      ...(await this.produits.lister({ archive: false })),
+      ...(await this.produits.lister({ archive: true })),
+    ];
+    const [seuils, { seuilAlerteDefaut }] = await Promise.all([
+      this.seuils.seuils(produits.map((p) => p.id)),
+      this.parametres.obtenir(),
+    ]);
+    return produits.map((produit) => {
+      const seuil = seuils.get(produit.id);
+      return { produitId: produit.id, seuilAlerte: seuil ?? seuilAlerteDefaut, parDefaut: seuil === undefined };
+    });
   }
 
   // RG10 : réglage du seuil d'alerte d'un produit ; null revient au seuil par défaut des paramètres.

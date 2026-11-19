@@ -54,6 +54,7 @@ describe("API du réapprovisionnement", () => {
       ["get", "/api/commandes-fournisseur"],
       ["post", "/api/receptions/1/validation"],
       ["get", "/api/reapprovisionnement"],
+      ["get", "/api/seuils-alerte"],
       ["put", `/api/produits/${produitId}/seuil-alerte`],
     ] as const) {
       await envoyer(methode, chemin, {}, null).expect(401);
@@ -121,6 +122,14 @@ describe("API du réapprovisionnement", () => {
       expect.objectContaining({ produitId, quantiteVendable: 3, quantiteAcheteeOrigine: 10, seuilAlerte: 30, pourcentageVendu: 70 }),
     ]);
     await envoyer("put", `/api/produits/${produitId}/seuil-alerte`, { seuilAlerte: "x" }).expect(400);
+  });
+
+  it("donne le seuil d'alerte de chaque produit, réglé ou par défaut", async () => {
+    expect((await envoyer("get", "/api/seuils-alerte")).body).toEqual([{ produitId, seuilAlerte: 20, parDefaut: true }]);
+
+    await envoyer("put", `/api/produits/${produitId}/seuil-alerte`, { seuilAlerte: 35 }).expect(200);
+
+    expect((await envoyer("get", "/api/seuils-alerte")).body).toEqual([{ produitId, seuilAlerte: 35, parDefaut: false }]);
   });
 
   it("répond 404 sur une commande ou une réception inconnue", async () => {
