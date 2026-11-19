@@ -48,7 +48,7 @@ export type ProduitCatalogue = FicheProduit & {
   arriveePrevue?: string;
 };
 
-// shortcut: recherche sensible aux accents (« ile » ne trouve pas « Île ») ; normaliser un champ dédié si besoin.
+// Champs de la recherche ?q=, sans tenir compte de la casse ni des accents (modeles/recherche.ts).
 export const CHAMPS_RECHERCHE = ["designation", "reference", "auteur", "isbn", "issn", "marque"] as const;
 
 export interface FiltresProduits {

@@ -470,6 +470,12 @@ Fait :
 Reste à faire :
 - Front : colonne seuil d'alerte du catalogue du responsable (#46)
 
+18/11/2026 - Back : recherche sans tenir compte des accents
+
+Fait :
+- `?q=` du catalogue ne tient plus compte des accents ni des ligatures : « ile » trouve « L'Île », « tresor » trouve « trésor », « coeur » trouve « cœur » (`modeles/recherche.ts`, repositories Mongoose et en mémoire)
+- Profite au catalogue client et à celui du responsable sans changer le front ; `docs/api.md` à jour ; 321 tests backend
+
 18/11/2026 - Sécurité : stockage du token (#51)
 
 Fait :
