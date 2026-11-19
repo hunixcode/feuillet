@@ -11,7 +11,7 @@ réapprovisionnement), Projet de Génie Logiciel, à rendre <b>fin novembre</b>.
 | ARAI Hivanui |
 | TEMEHARO Noah |
 
-## Fonctionnalités prévues
+## Fonctionnalités
 - Catalogue (création, modification, archivage, recherche, filtres par type et catégorie), prix TTC avec TVA, promotions et courbe d'évolution des prix
 - Accueil avec meilleures ventes et catégories de livres
 - Panier et validation de vente — tout ou rien, disponibilités revérifiées ; options cadeau, emballage et livraison
@@ -28,7 +28,7 @@ Le détail (exigences EX01–EX11, règles RG01–RG15, décisions de cadrage is
 
 ## Stack
 - Front : React + Vite + TypeScript
-- Back : Node.js + Express + TypeScript (`GET /api/health`, authentification : inscription, connexion, session ; CRUD des produits)
+- Back : Node.js + Express + TypeScript, API REST décrite dans [`docs/api.md`](docs/api.md)
 - Base de données : MongoDB
 - Tests : Vitest, et Playwright pour les parcours de bout en bout
 - CI : GitHub Actions
