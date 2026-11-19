@@ -459,3 +459,9 @@ Fait :
 - La CSP de production n'autorisait que les images du même domaine : les couvertures Open Library de la #77 étaient bloquées quand l'API sert le front (image Docker), et chaque livre gardait sa couverture dessinée
 - `img-src` autorise `covers.openlibrary.org`, `archive.org` et `*.us.archive.org` (Open Library redirige vers les deux derniers) ; test de la CSP et `docs/api.md` à jour
 - Vérifié dans Chrome sur l'API en production avec une base temporaire : 20 images bloquées avant, les couvertures s'affichent après, sans aucune violation de CSP
+
+18/11/2026 - Back : recherche sans tenir compte des accents
+
+Fait :
+- `?q=` du catalogue ne tient plus compte des accents ni des ligatures : « ile » trouve « L'Île », « tresor » trouve « trésor », « coeur » trouve « cœur » (`modeles/recherche.ts`, repositories Mongoose et en mémoire)
+- Profite au catalogue client et à celui du responsable sans changer le front ; `docs/api.md` à jour ; 321 tests backend
