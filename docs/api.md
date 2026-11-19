@@ -516,6 +516,10 @@ Une réception est **saisie**, puis **validée** : seule la validation fait entr
 - `quantiteEnCommande` : restant à recevoir des commandes en cours, pour ne pas commander deux fois.
 - `seuilAlerte` : celui du produit, sinon `seuilAlerteDefaut` des paramètres (20 % au départ).
 
+`GET /api/seuils-alerte` : seuil d'alerte de chaque produit, actif ou archivé, pour la colonne du catalogue du responsable. Réponse `200` : `[{ "produitId": "…", "seuilAlerte": 20, "parDefaut": true }]` (`parDefaut` : le produit suit `seuilAlerteDefaut` des paramètres).
+
+`GET /api/produits/:id/seuil-alerte` : seuil d'alerte d'un produit. Réponse `200` : `{ "seuilAlerte": 20, "parDefaut": true }`. Erreur : `404`.
+
 `PUT /api/produits/:id/seuil-alerte` : corps `{ "seuilAlerte": 30 }` (entier de 0 à 100) ou `{ "seuilAlerte": null }` pour revenir au seuil par défaut. Réponse `200` : `{ "seuilAlerte": 30, "parDefaut": false }`. Erreurs : `400`, `404`.
 
 ## Retours (EX07, écran 9)
