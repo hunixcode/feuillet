@@ -45,6 +45,16 @@ const venteSchema = new Schema<NouvelleVente>(
     frais: montant,
     montantTva: montant,
     total: montant,
+    paiement: {
+      type: new Schema(
+        {
+          mode: { type: String, enum: ["demo"], required: true },
+          statut: { type: String, enum: ["accepte"], required: true },
+          date: { type: Date, required: true },
+        },
+        { _id: false },
+      ),
+    },
     dateExpedition: Date,
   },
   { versionKey: false },

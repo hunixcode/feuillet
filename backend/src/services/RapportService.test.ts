@@ -25,7 +25,7 @@ describe("RapportService", () => {
 
   const client = { id: "c-1", nom: "Marie", email: "marie@example.pf", role: "client" as const };
   async function vendre(produitId: string, quantite: number) {
-    const commande = await services.venteService.commanderEnLigne(client, { lignes: [{ produitId, quantite }], adresseLivraison: "Papeete" });
+    const commande = await services.venteService.commanderEnLigne(client, { lignes: [{ produitId, quantite }], adresseLivraison: "Papeete", paiementDemo: "accepte" });
     return services.venteService.marquerExpediee(commande.id);
   }
 

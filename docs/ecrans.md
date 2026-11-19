@@ -35,8 +35,8 @@ C'est la première page de l'application.
 
 - **But :** vérifier les articles et les options avant de confirmer l'achat.
 - **Contenu :** articles, quantités, prix unitaires remisés, TVA incluse et total en XPF ; options : cadeau (occasion : Noël, anniversaire, fête), emballage cadeau, livraison à une adresse (obligatoire), avec leurs frais.
-- **Actions :** modifier les quantités, retirer un article, choisir les options, confirmer la commande.
-- **Affichage :** préciser que la présence d'un article dans le panier ne le réserve pas (RG03). Afficher le total, la TVA incluse et les frais d'options avant confirmation. Si un article n'est plus disponible au moment de confirmer, rien n'est enregistré : indiquer les lignes en cause et laisser le client corriger son panier.
+- **Actions :** modifier les quantités, retirer un article, choisir les options, passer l'étape « Paiement (démonstration) » (bouton « Payer (démo) » ou refus simulé), confirmer la commande.
+- **Affichage :** préciser que la présence d'un article dans le panier ne le réserve pas (RG03). Afficher le total, la TVA incluse et les frais d'options avant confirmation. À l'étape de paiement, afficher « Paiement fictif : aucun montant n'est débité », sans aucun champ de carte ; un paiement refusé n'enregistre rien et le client peut recommencer. Si un article n'est plus disponible au moment de confirmer, rien n'est enregistré : indiquer les lignes en cause et laisser le client corriger son panier.
 
 ### 5. Mes demandes
 
