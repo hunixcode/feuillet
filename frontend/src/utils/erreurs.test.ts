@@ -4,6 +4,7 @@ import {
   codeErreur,
   erreursDesChamps,
   messageErreur,
+  messageErreurDemande,
   messageErreurReception,
   messageErreurRetour,
   messageErreurStock,
@@ -165,5 +166,17 @@ describe('erreurs des retours', () => {
     expect(messageErreurRetour(erreur('STOCK_MODIFIE'))).toMatch(/rien n’a été enregistré/)
     expect(messageErreurRetour(erreur('COMMANDE_DEJA_EXPEDIEE'))).toMatch(/déjà été marquée comme expédiée/)
     expect(messageErreurRetour(erreur('AUTRE'))).toBe('Message du serveur.')
+  })
+})
+
+describe('erreurs des demandes', () => {
+  it('explique une demande qui ne peut plus être rattachée', () => {
+    const nonRattachable = new ApiRequestError({ code: 'DEMANDE_NON_RATTACHABLE', message: 'Refusé.' })
+
+    expect(messageErreurDemande(nonRattachable)).toMatch(/ne peut plus être rattachée/)
+    expect(messageErreurDemande(new ApiRequestError({ code: 'AUTRE', message: 'Message du serveur.' }))).toBe(
+      'Message du serveur.',
+    )
+    expect(messageErreurDemande(new Error('réseau'))).toBe(messageErreur(new Error('réseau')))
   })
 })
