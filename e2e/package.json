@@ -1,0 +1,18 @@
+{
+  "name": "librairie-e2e",
+  "version": "0.1.0",
+  "description": "Tests de bout en bout (Playwright) sur l'application lancée comme en production",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "serveur": "node serveur.mjs",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "mongodb-memory-server": "^11.3.0"
+  },
+  "allowScripts": {
+    "mongodb-memory-server@11.3.0": true
+  }
+}
