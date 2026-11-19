@@ -290,6 +290,18 @@ export class ReapproService {
     });
   }
 
+  // RG10 : seuil d'alerte d'un produit, le sien ou celui des paramètres.
+  async obtenirSeuil(produitId: string): Promise<{ seuilAlerte: number; parDefaut: boolean }> {
+    if (!(await this.produits.trouverParId(produitId))) {
+      throw erreurIntrouvable("Produit introuvable.");
+    }
+    const seuil = (await this.seuils.seuils([produitId])).get(produitId);
+    if (seuil === undefined) {
+      return { seuilAlerte: (await this.parametres.obtenir()).seuilAlerteDefaut, parDefaut: true };
+    }
+    return { seuilAlerte: seuil, parDefaut: false };
+  }
+
   // RG10 : réglage du seuil d'alerte d'un produit ; null revient au seuil par défaut des paramètres.
   async definirSeuil(produitId: string, corps: unknown): Promise<{ seuilAlerte: number; parDefaut: boolean }> {
     if (!(await this.produits.trouverParId(produitId))) {

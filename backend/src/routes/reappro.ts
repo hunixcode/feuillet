@@ -54,6 +54,10 @@ export function routesReappro(reappro: ReapproService, auth: AuthService): Route
     res.json(await reappro.listerSeuils());
   });
 
+  router.get("/produits/:id/seuil-alerte", ...estResponsable, async (req: AvecId, res) => {
+    res.json(await reappro.obtenirSeuil(req.params.id));
+  });
+
   router.put("/produits/:id/seuil-alerte", ...estResponsable, async (req: AvecId, res) => {
     res.json(await reappro.definirSeuil(req.params.id, req.body));
   });
