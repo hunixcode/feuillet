@@ -193,7 +193,7 @@ Source **Prof** : réponse de l'enseignant (notes dans `questions-prof.md`). Sou
 
 ## 4. Périmètre des écrans et traçabilité
 
-Le détail de chaque écran est dans [`ecrans.md`](./ecrans.md). Les routes responsable sont créées sous `/admin`, réservées au rôle responsable ; leurs pages restent à remplir.
+Le détail de chaque écran est dans [`ecrans.md`](./ecrans.md). Les pages du responsable sont sous `/admin`, réservées au rôle responsable. Tous les écrans sont faits.
 
 | # | Écran | Route | Exigences |
 |---|---|---|---|
@@ -211,7 +211,7 @@ Le détail de chaque écran est dans [`ecrans.md`](./ecrans.md). Les routes resp
 | 12 | Réapprovisionnement et rapports | `/admin/rapports` | EX06, EX08 |
 | 13 | Paramètres | `/admin/parametres` | RG06, RG09, RG13 |
 
-| Exigence | Service prévu | Diagramme |
+| Exigence | Service | Diagramme |
 |---|---|---|
 | EX01 | `ProduitService` | Classes |
 | EX02 | `StockService` | Classes |
