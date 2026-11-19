@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   creerCommandeFournisseur,
   creerFournisseur,
+  definirSeuilAlerte,
+  lireSeuilAlerte,
+  listerSeuilsAlerte,
   enregistrerReception,
   listerCommandesFournisseur,
   listerFournisseurs,
@@ -104,5 +107,28 @@ describe('service du réapprovisionnement', () => {
     await validerReception('r-1')
     expect(url(fetchMock)).toBe('/api/receptions/r-1/validation')
     expect(fetchMock.mock.calls[0][1]?.method).toBe('POST')
+  })
+
+  it('lit le seuil d alerte de tous les articles puis d un seul', async () => {
+    let fetchMock = simulerFetch([{ produitId: 'p-1', seuilAlerte: 20, parDefaut: true }])
+    expect(await listerSeuilsAlerte()).toEqual([{ produitId: 'p-1', seuilAlerte: 20, parDefaut: true }])
+    expect(url(fetchMock)).toBe('/api/seuils-alerte')
+
+    vi.restoreAllMocks()
+    fetchMock = simulerFetch({ seuilAlerte: 30, parDefaut: false })
+    expect(await lireSeuilAlerte('p-1')).toEqual({ seuilAlerte: 30, parDefaut: false })
+    expect(url(fetchMock)).toBe('/api/produits/p-1/seuil-alerte')
+  })
+
+  it('fixe le seuil d alerte d un article ou revient au seuil par défaut', async () => {
+    let fetchMock = simulerFetch({ seuilAlerte: 30, parDefaut: false })
+    expect(await definirSeuilAlerte('p-1', 30)).toEqual({ seuilAlerte: 30, parDefaut: false })
+    expect(url(fetchMock)).toBe('/api/produits/p-1/seuil-alerte')
+    expect(envoi(fetchMock)).toEqual({ methode: 'PUT', corps: { seuilAlerte: 30 } })
+
+    vi.restoreAllMocks()
+    fetchMock = simulerFetch({ seuilAlerte: 20, parDefaut: true })
+    await definirSeuilAlerte('p-1', null)
+    expect(envoi(fetchMock)).toEqual({ methode: 'PUT', corps: { seuilAlerte: null } })
   })
 })

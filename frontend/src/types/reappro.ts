@@ -63,3 +63,12 @@ export interface ReceptionValidee {
   reception: Reception
   commande: CommandeFournisseur
 }
+
+export interface SeuilAlerte {
+  seuilAlerte: number
+  parDefaut: boolean
+}
+
+export interface SeuilAlerteDuProduit extends SeuilAlerte {
+  produitId: string
+}
