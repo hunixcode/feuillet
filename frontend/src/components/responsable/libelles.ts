@@ -1,3 +1,4 @@
+import type { StatutDemande } from '../../types/demande'
 import type { Produit, TypeProduit } from '../../types/produit'
 import type { CommandeFournisseur, StatutCommandeFournisseur } from '../../types/reappro'
 import type { IssueRetour } from '../../types/retour'
@@ -60,6 +61,14 @@ export function restantARecevoir(commande: CommandeFournisseur): number {
 
 export function enRetard(commande: CommandeFournisseur, aujourdhui: string): boolean {
   return commande.statut !== 'recue' && commande.dateArriveePrevue < aujourdhui
+}
+
+export const LIBELLES_STATUT_DEMANDE: Record<StatutDemande, string> = {
+  en_attente: 'En attente',
+  mise_de_cote: 'Mise de côté',
+  honoree: 'Commandée',
+  expiree: 'Expirée',
+  annulee: 'Annulée',
 }
 
 export const LIBELLES_STATUT_VENTE: Record<StatutVente, string> = {

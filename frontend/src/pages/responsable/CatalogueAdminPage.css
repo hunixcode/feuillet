@@ -224,22 +224,6 @@ td .catalogue-pastille {
   font-size: 1.0625rem;
 }
 
-.formulaire-produit {
-  display: grid;
-  gap: 16px;
-}
-
-.formulaire-produit-grille {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: start;
-  gap: 16px;
-}
-
-.formulaire-produit-grille--3 {
-  grid-template-columns: minmax(0, 0.7fr) repeat(2, minmax(0, 1fr));
-}
-
 .catalogue-promotions,
 .catalogue-categories {
   display: grid;
@@ -389,9 +373,7 @@ td .catalogue-pastille {
 }
 
 @media (max-width: 640px) {
-  .catalogue-filtres,
-  .formulaire-produit-grille,
-  .formulaire-produit-grille--3 {
+  .catalogue-filtres {
     grid-template-columns: minmax(0, 1fr);
   }
 }

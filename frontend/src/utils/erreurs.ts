@@ -132,3 +132,13 @@ export function messageErreurRetour(erreur: unknown): string {
       return erreur.message
   }
 }
+
+export function messageErreurDemande(erreur: unknown): string {
+  if (!(erreur instanceof ApiRequestError)) {
+    return messageErreur(erreur)
+  }
+  if (erreur.code === 'DEMANDE_NON_RATTACHABLE') {
+    return 'Cette demande ne peut plus être rattachée : elle vise déjà un article du catalogue, ou elle n’est plus en attente. La liste a été rechargée.'
+  }
+  return erreur.message
+}
