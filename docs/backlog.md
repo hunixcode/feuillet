@@ -464,7 +464,8 @@ Fait :
 
 Fait :
 - `GET /api/seuils-alerte` (responsable) : seuil d'alerte de chaque produit, actif ou archivé, avec `parDefaut` quand il suit le seuil des paramètres ; avant, on ne le voyait que pour les produits déjà sous le seuil (`GET /api/reapprovisionnement`)
-- Contrat dans `docs/api.md` ; 322 tests backend
+- `GET /api/produits/:id/seuil-alerte` (responsable) : seuil d'un seul produit, même réponse que le `PUT` (`{ seuilAlerte, parDefaut }`), `404` si le produit n'existe pas
+- Contrat dans `docs/api.md` ; 323 tests backend
 
 Reste à faire :
 - Front : colonne seuil d'alerte du catalogue du responsable (#46)
