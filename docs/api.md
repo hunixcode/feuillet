@@ -168,7 +168,7 @@ Les champs d'un autre type sont ignorés.
 
 ### `GET /api/produits`
 
-Liste triée par désignation. Paramètres facultatifs : `q` (recherche sans tenir compte de la casse dans la désignation, la référence, l'auteur, l'ISBN, l'ISSN et la marque ; accents exacts), `type`, `categorie` (identifiant), `archive=true` pour lister **seulement** les produits archivés (par défaut : seulement les non archivés).
+Liste triée par désignation. Paramètres facultatifs : `q` (recherche sans tenir compte de la casse ni des accents dans la désignation, la référence, l'auteur, l'ISBN, l'ISSN et la marque : « ile » trouve « L'Île », « coeur » trouve « cœur »), `type`, `categorie` (identifiant), `archive=true` pour lister **seulement** les produits archivés (par défaut : seulement les non archivés).
 
 Réponse `200` : `Produit[]`. Erreur : `400 VALIDATION` si `type` est inconnu (une catégorie sans produit donne une liste vide).
 

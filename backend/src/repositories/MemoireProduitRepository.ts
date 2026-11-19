@@ -1,4 +1,5 @@
 import { CHAMPS_RECHERCHE, type FiltresProduits, type NouveauProduit, type Produit } from "../modeles/produit.js";
+import { sansAccents } from "../modeles/recherche.js";
 import { ReferenceDejaUtiliseeErreur, type ProduitRepository } from "./ProduitRepository.js";
 
 export class MemoireProduitRepository implements ProduitRepository {
@@ -13,14 +14,14 @@ export class MemoireProduitRepository implements ProduitRepository {
   }
 
   async lister({ type, categorie, recherche, archive }: FiltresProduits): Promise<Produit[]> {
-    const texte = recherche?.toLowerCase();
+    const texte = recherche === undefined ? undefined : sansAccents(recherche);
     return [...this.produits.values()]
       .filter(
         (p) =>
           p.archive === archive &&
           (type === undefined || p.type === type) &&
           (categorie === undefined || p.categorie === categorie) &&
-          (texte === undefined || CHAMPS_RECHERCHE.some((c) => p[c]?.toLowerCase().includes(texte))),
+          (texte === undefined || CHAMPS_RECHERCHE.some((c) => sansAccents(p[c] ?? "").includes(texte))),
       )
       .sort((a, b) => a.designation.localeCompare(b.designation))
       .map((p) => structuredClone(p));
