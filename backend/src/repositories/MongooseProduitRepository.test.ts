@@ -80,6 +80,20 @@ describe("MongooseProduitRepository", () => {
     await expect(repository.lister({ archive: false, recherche: ".*" })).resolves.toHaveLength(0);
   });
 
+  it("recherche sans tenir compte des accents ni des ligatures", async () => {
+    await repository.creer(livre);
+    await repository.creer({ ...cahier, reference: "PAP-002", designation: "Carnet Cœur ÉTÉ" });
+
+    const chercher = async (recherche: string) =>
+      (await repository.lister({ archive: false, recherche })).map((p) => p.reference);
+
+    expect(await chercher("ile au tresor")).toEqual(["LIV-001"]);
+    expect(await chercher("ÎLE")).toEqual(["LIV-001"]);
+    expect(await chercher("coeur ete")).toEqual(["PAP-002"]);
+    expect(await chercher("cœur")).toEqual(["PAP-002"]);
+    expect(await chercher("tresors")).toEqual([]);
+  });
+
   it("remplace un produit en entier : les champs absents disparaissent", async () => {
     const cree = await repository.creer(livre);
     const { auteur: _, ...sansAuteur } = cree;

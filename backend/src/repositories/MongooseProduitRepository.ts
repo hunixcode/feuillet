@@ -7,6 +7,7 @@ import {
   type NouveauProduit,
   type Produit,
 } from "../modeles/produit.js";
+import { motifSansAccents } from "../modeles/recherche.js";
 import { ReferenceDejaUtiliseeErreur, type ProduitRepository } from "./ProduitRepository.js";
 
 const produitSchema = new Schema<NouveauProduit>(
@@ -61,7 +62,7 @@ export class MongooseProduitRepository implements ProduitRepository {
   }
 
   async lister({ type, categorie, recherche, archive }: FiltresProduits): Promise<Produit[]> {
-    const motif = recherche?.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const motif = recherche === undefined ? undefined : motifSansAccents(recherche);
     const documents = await ProduitModel.find({
       archive,
       ...(type === undefined ? {} : { type }),
