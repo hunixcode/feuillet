@@ -481,3 +481,13 @@ Fait :
 Fait :
 - Décision notée dans `docs/rapport.md` (section Session) : le token JWT reste dans `localStorage`, protégé par la CSP sans script inline ni externe, React qui échappe le texte affiché et la durée de 8 h ; cookie `httpOnly` écarté (changement du back et du front, route de déconnexion, protection CSRF)
 - En-têtes de sécurité, CORS et taille des requêtes déjà faits (#60) : #51 est terminée
+
+18/11/2026 - Vérification de la démo avant le rendu
+
+Fait :
+- PR #83, #85, #88, #89 et #90 fusionnées ; #44 et #51 fermées
+- Démo relancée depuis `main` avec `docker compose up --build` puis `npm run seed` : 36 produits (31 livres avec ISBN pour les couvertures), 13 ventes, 2 fournisseurs et 2 commandes fournisseur
+- Vérifié à travers le proxy du front : santé de l'API, accueil, catalogue, recherche sans accents, meilleures ventes, connexion du responsable, stock, ventes, demandes, réapprovisionnement, commandes fournisseur, paramètres et seuils d'alerte
+
+Reste à faire :
+- Design Feuillet de l'espace client (#86, conflit du backlog à régler) et colonne seuil d'alerte du catalogue du responsable (#46)
