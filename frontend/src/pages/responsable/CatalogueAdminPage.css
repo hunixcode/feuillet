@@ -335,6 +335,12 @@ td .catalogue-pastille {
   color: var(--gris-clair);
 }
 
+.catalogue-par-defaut {
+  display: block;
+  color: var(--gris);
+  font-size: 0.75rem;
+}
+
 .catalogue-disponibilite {
   color: var(--ok);
   white-space: nowrap;

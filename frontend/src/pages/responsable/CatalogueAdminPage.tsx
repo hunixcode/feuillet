@@ -9,6 +9,7 @@ import EnteteInfo from '../../components/responsable/EnteteInfo.tsx'
 import FormulaireProduit from '../../components/responsable/FormulaireProduit.tsx'
 import GestionCategories from '../../components/responsable/GestionCategories.tsx'
 import PromotionsProduit from '../../components/responsable/PromotionsProduit.tsx'
+import SeuilAlerteProduit from '../../components/responsable/SeuilAlerteProduit.tsx'
 import { LIBELLES_TYPE, libelleDisponibilite } from '../../components/responsable/libelles'
 import {
   changerArchivage,
@@ -19,8 +20,10 @@ import {
   supprimerProduit,
 } from '../../services/catalogueAdminService'
 import { listerCategories } from '../../services/categorieService'
+import { listerSeuilsAlerte } from '../../services/reapproService'
 import type { Categorie } from '../../types/categorie'
 import type { FicheProduit, Produit, TypeProduit } from '../../types/produit'
+import type { SeuilAlerte } from '../../types/reappro'
 import { messageErreur } from '../../utils/erreurs'
 import { formatXPF } from '../../utils/format'
 import './CatalogueAdminPage.css'
@@ -37,6 +40,7 @@ function CatalogueAdminPage() {
   const [categorie, setCategorie] = useState('')
   const [produits, setProduits] = useState<Produit[] | null>(null)
   const [categories, setCategories] = useState<Categorie[]>([])
+  const [seuils, setSeuils] = useState<Map<string, SeuilAlerte>>(new Map())
   const [erreur, setErreur] = useState('')
   const [annonce, setAnnonce] = useState('')
   const [panneau, setPanneau] = useState<Panneau | null>(null)
@@ -82,6 +86,24 @@ function CatalogueAdminPage() {
       actif = false
     }
   }, [recherche, type, categorie, archives, version])
+
+  useEffect(() => {
+    let actif = true
+    listerSeuilsAlerte()
+      .then((liste) => {
+        if (actif) {
+          setSeuils(new Map(liste.map(({ produitId, ...seuil }) => [produitId, seuil])))
+        }
+      })
+      .catch(() => {
+        if (actif) {
+          setSeuils(new Map())
+        }
+      })
+    return () => {
+      actif = false
+    }
+  }, [version])
 
   const panneauOuvert = panneau ? `${panneau.mode}-${'produit' in panneau ? panneau.produit.id : ''}` : ''
 
@@ -275,6 +297,12 @@ function CatalogueAdminPage() {
                       aDroite
                     />
                     <EnteteInfo
+                      libelle="Seuil d’alerte"
+                      info="Quand le stock vendable passe sous ce pourcentage de la quantité achetée à l’origine, l’article apparaît dans « À recommander ». « par défaut » : l’article suit le seuil des paramètres. Le seuil se change dans la fiche de l’article."
+                      className="catalogue-nombre catalogue-secondaire"
+                      aDroite
+                    />
+                    <EnteteInfo
                       libelle="Promotion"
                       info="Remise en cours sur l’article. Les promotions se programment avec des dates de début et de fin dans la fiche."
                     />
@@ -318,6 +346,18 @@ function CatalogueAdminPage() {
                         )}
                       </td>
                       <td className="catalogue-nombre catalogue-secondaire">{produit.tauxTva} %</td>
+                      <td className="catalogue-nombre catalogue-secondaire">
+                        {seuils.has(produit.id) ? (
+                          <>
+                            {seuils.get(produit.id)?.seuilAlerte} %
+                            {seuils.get(produit.id)?.parDefaut && (
+                              <span className="catalogue-par-defaut">par défaut</span>
+                            )}
+                          </>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
                       <td>
                         {produit.promotion ? (
                           <span className="catalogue-pastille">−{produit.promotion.remise} %</span>
@@ -404,6 +444,11 @@ function CatalogueAdminPage() {
                   key={`promotions-${panneau.produit.id}`}
                   produit={panneau.produit}
                   onChangement={() => actualiserProduit(panneau.produit)}
+                />
+                <SeuilAlerteProduit
+                  key={`seuil-${panneau.produit.id}`}
+                  produit={panneau.produit}
+                  onChangement={rafraichir}
                 />
                 <CourbePrix
                   produitId={panneau.produit.id}
