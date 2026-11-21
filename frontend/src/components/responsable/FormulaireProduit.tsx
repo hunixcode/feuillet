@@ -7,6 +7,7 @@ import type { Categorie } from '../../types/categorie'
 import type { FicheProduit, TypeProduit } from '../../types/produit'
 import { erreursDesChamps, messageErreur } from '../../utils/erreurs'
 import { LIBELLES_TYPE } from './libelles'
+import './FormulaireProduit.css'
 
 interface Saisie {
   reference: string
@@ -23,14 +24,14 @@ interface Saisie {
   marque: string
 }
 
-function saisieDepuis(fiche?: FicheProduit): Saisie {
+function saisieDepuis(fiche?: Partial<FicheProduit>): Saisie {
   return {
     reference: fiche?.reference ?? '',
     designation: fiche?.designation ?? '',
     type: fiche?.type ?? 'livre',
     categorie: fiche?.categorie ?? '',
-    prix: fiche ? String(fiche.prix) : '',
-    tauxTva: fiche ? String(fiche.tauxTva) : '',
+    prix: fiche?.prix === undefined ? '' : String(fiche.prix),
+    tauxTva: fiche?.tauxTva === undefined ? '' : String(fiche.tauxTva),
     isbn: fiche?.isbn ?? '',
     auteur: fiche?.auteur ?? '',
     issn: fiche?.issn ?? '',
@@ -72,6 +73,7 @@ function ficheDepuis(saisie: Saisie, archive: boolean): FicheProduit {
 
 interface FormulaireProduitProps {
   fiche?: FicheProduit
+  brouillon?: Partial<FicheProduit>
   categories: Categorie[]
   libelleEnvoi: string
   onEnregistrer: (fiche: FicheProduit) => Promise<void>
@@ -80,12 +82,13 @@ interface FormulaireProduitProps {
 
 function FormulaireProduit({
   fiche,
+  brouillon,
   categories,
   libelleEnvoi,
   onEnregistrer,
   onAnnuler,
 }: FormulaireProduitProps) {
-  const [saisie, setSaisie] = useState(() => saisieDepuis(fiche))
+  const [saisie, setSaisie] = useState(() => saisieDepuis(fiche ?? brouillon))
   const [erreurs, setErreurs] = useState<Record<string, string>>({})
   const [message, setMessage] = useState('')
   const [envoi, setEnvoi] = useState(false)

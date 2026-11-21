@@ -7,6 +7,8 @@ import type {
   Reception,
   ReceptionValidee,
   SaisieReception,
+  SeuilAlerte,
+  SeuilAlerteDuProduit,
   StatutCommandeFournisseur,
 } from '../types/reappro'
 import { get, post, put } from './api'
@@ -70,4 +72,16 @@ export function enregistrerReception(
 
 export function validerReception(receptionId: string): Promise<ReceptionValidee> {
   return post<ReceptionValidee>(`/receptions/${encodeURIComponent(receptionId)}/validation`, {})
+}
+
+export function listerSeuilsAlerte(): Promise<SeuilAlerteDuProduit[]> {
+  return get<SeuilAlerteDuProduit[]>('/seuils-alerte')
+}
+
+export function lireSeuilAlerte(produitId: string): Promise<SeuilAlerte> {
+  return get<SeuilAlerte>(`/produits/${produitId}/seuil-alerte`)
+}
+
+export function definirSeuilAlerte(produitId: string, seuilAlerte: number | null): Promise<SeuilAlerte> {
+  return put<SeuilAlerte>(`/produits/${produitId}/seuil-alerte`, { seuilAlerte })
 }

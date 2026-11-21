@@ -484,3 +484,35 @@ Reste à faire :
 - Après le merge de #84 : relancer le seed sur la base partagée une seule fois, en prévenant l'équipe (il efface les commandes et demandes liées aux produits de démonstration)
 - Sur ce PC, les tests du backend qui lancent MongoDB dépassent le délai de 10 secondes : ils sont vérifiés par la CI
 - docs/ecrans.md dit encore que le catalogue est la première page : à mettre à jour par le chef
+
+18/11/2026 - Back : seuil d'alerte de chaque produit (#46)
+
+Fait :
+- `GET /api/seuils-alerte` (responsable) : seuil d'alerte de chaque produit, actif ou archivé, avec `parDefaut` quand il suit le seuil des paramètres ; avant, on ne le voyait que pour les produits déjà sous le seuil (`GET /api/reapprovisionnement`)
+- `GET /api/produits/:id/seuil-alerte` (responsable) : seuil d'un seul produit, même réponse que le `PUT` (`{ seuilAlerte, parDefaut }`), `404` si le produit n'existe pas
+- Contrat dans `docs/api.md` ; 323 tests backend
+
+Reste à faire :
+- Front : colonne seuil d'alerte du catalogue du responsable (#46)
+
+18/11/2026 - Back : recherche sans tenir compte des accents
+
+Fait :
+- `?q=` du catalogue ne tient plus compte des accents ni des ligatures : « ile » trouve « L'Île », « tresor » trouve « trésor », « coeur » trouve « cœur » (`modeles/recherche.ts`, repositories Mongoose et en mémoire)
+- Profite au catalogue client et à celui du responsable sans changer le front ; `docs/api.md` à jour ; 321 tests backend
+
+18/11/2026 - Sécurité : stockage du token (#51)
+
+Fait :
+- Décision notée dans `docs/rapport.md` (section Session) : le token JWT reste dans `localStorage`, protégé par la CSP sans script inline ni externe, React qui échappe le texte affiché et la durée de 8 h ; cookie `httpOnly` écarté (changement du back et du front, route de déconnexion, protection CSRF)
+- En-têtes de sécurité, CORS et taille des requêtes déjà faits (#60) : #51 est terminée
+
+18/11/2026 - Vérification de la démo avant le rendu
+
+Fait :
+- PR #83, #85, #88, #89 et #90 fusionnées ; #44 et #51 fermées
+- Démo relancée depuis `main` avec `docker compose up --build` puis `npm run seed` : 36 produits (31 livres avec ISBN pour les couvertures), 13 ventes, 2 fournisseurs et 2 commandes fournisseur
+- Vérifié à travers le proxy du front : santé de l'API, accueil, catalogue, recherche sans accents, meilleures ventes, connexion du responsable, stock, ventes, demandes, réapprovisionnement, commandes fournisseur, paramètres et seuils d'alerte
+
+Reste à faire :
+- Design Feuillet de l'espace client (#86, conflit du backlog à régler) et colonne seuil d'alerte du catalogue du responsable (#46)

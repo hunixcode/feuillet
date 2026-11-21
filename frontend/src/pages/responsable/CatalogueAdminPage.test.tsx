@@ -49,6 +49,15 @@ function reponseParDefaut(requete: Requete): Response {
   if (url === '/api/categories') {
     return json(categories)
   }
+  if (url === '/api/seuils-alerte') {
+    return json([
+      { produitId: 'p-1', seuilAlerte: 20, parDefaut: true },
+      { produitId: 'p-3', seuilAlerte: 35, parDefaut: false },
+    ])
+  }
+  if (url.endsWith('/seuil-alerte')) {
+    return json({ seuilAlerte: 20, parDefaut: true })
+  }
   if (url.endsWith('/promotions')) {
     return json([livre.promotion])
   }
@@ -148,6 +157,58 @@ describe('page catalogue du responsable', () => {
     expect(courbe).toHaveTextContent('sept.')
     expect(within(panneau).getByText('Prix catalogue')).toBeInTheDocument()
     expect(within(panneau).getByText('Promotion', { selector: 'span' })).toBeInTheDocument()
+  })
+
+  it('affiche le seuil d alerte de chaque article et signale le seuil par défaut', async () => {
+    simulerApi((requete) =>
+      requete.url === '/api/produits'
+        ? json([
+            livre,
+            { ...magazineArchive, id: 'p-3', archive: false, designation: 'Seuil propre' },
+            { ...magazineArchive, id: 'p-4', archive: false, designation: 'Seuil inconnu' },
+          ])
+        : undefined,
+    )
+    render(<CatalogueAdminPage />)
+
+    const ligne = async (nom: string) =>
+      (await screen.findByRole('button', { name: nom })).closest('tr') as HTMLElement
+    const cellule = (rangee: HTMLElement) => rangee.querySelectorAll('td')[6]
+    await waitFor(async () => expect(cellule(await ligne("L'Île au trésor"))).toHaveTextContent('20 %par défaut'))
+    expect(cellule(await ligne('Seuil propre'))).toHaveTextContent(/^35 %$/)
+    expect(cellule(await ligne('Seuil inconnu'))).toHaveTextContent('—')
+    expect(screen.getByText('Seuil d’alerte', { selector: '.info-terme' })).toHaveAccessibleDescription(
+      /se change dans la fiche/,
+    )
+  })
+
+  it('garde le catalogue si les seuils ne se chargent pas', async () => {
+    simulerApi((requete) =>
+      requete.url === '/api/seuils-alerte' ? json({ code: 'ERREUR_SERVEUR', message: 'Erreur.' }, 500) : undefined,
+    )
+    render(<CatalogueAdminPage />)
+
+    const designation = await screen.findByRole('button', { name: "L'Île au trésor" })
+    expect((designation.closest('tr') as HTMLElement).querySelectorAll('td')[6]).toHaveTextContent('—')
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('met à jour la colonne après un changement de seuil dans la fiche', async () => {
+    const requetes = simulerApi((requete) =>
+      requete.methode === 'PUT' && requete.url.endsWith('/seuil-alerte')
+        ? json({ seuilAlerte: 40, parDefaut: false })
+        : undefined,
+    )
+    render(<CatalogueAdminPage />)
+    const panneau = await ouvrirLivre()
+    const chargements = () => requetes.filter((requete) => requete.url === '/api/seuils-alerte').length
+    const avant = chargements()
+
+    fireEvent.change(await within(panneau).findByLabelText('Seuil d’alerte (%)'), { target: { value: '40' } })
+    fireEvent.click(within(panneau).getByRole('button', { name: 'Enregistrer le seuil' }))
+
+    expect(await within(panneau).findByText('Seuil d’alerte enregistré : 40 %.')).toBeInTheDocument()
+    await waitFor(() => expect(chargements()).toBeGreaterThan(avant))
   })
 
   it('explique les colonnes du catalogue', async () => {
@@ -257,6 +318,8 @@ describe('page catalogue du responsable', () => {
     expect(within(panneau).getByLabelText('Référence')).toHaveValue('LIV-001')
     expect(await within(panneau).findByText('En cours')).toBeInTheDocument()
     expect(await within(panneau).findByRole('img', { name: /2 prix enregistrés/ })).toBeInTheDocument()
+    expect(within(panneau).getByRole('heading', { name: 'Seuil d’alerte' })).toBeInTheDocument()
+    expect(await within(panneau).findByText(/Seuil actuel/)).toHaveTextContent('20 %, celui par défaut')
 
     fireEvent.click(within(panneau).getByRole('button', { name: 'Archiver' }))
 
@@ -353,7 +416,11 @@ describe('page catalogue du responsable', () => {
     )
 
     await waitFor(() => expect(screen.getByLabelText('Catégorie')).toHaveValue(''))
-    await waitFor(() => expect(requetes.at(-1)?.url).toBe('/api/produits'))
+    await waitFor(() =>
+      expect(requetes.filter((requete) => requete.url.startsWith('/api/produits')).at(-1)?.url).toBe(
+        '/api/produits',
+      ),
+    )
   })
 
   it('gère les catégories et affiche le refus de suppression', async () => {

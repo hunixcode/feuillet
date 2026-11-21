@@ -44,6 +44,10 @@ Créées par les services métier, vérifiables dans les tests, persistantes. Un
 
 Le sujet ne demande pas de paiement : la validation du panier enregistre la vente. Pour la démonstration, une étape de paiement fictive précède la confirmation (#57) : le front envoie seulement le résultat simulé (`accepte` ou `refuse`), sans aucune donnée de carte, et un refus n'enregistre rien (`402 PAIEMENT_REFUSE`). La vente garde le mode `demo`, le statut et la date du paiement. Alternative écartée : un prestataire en mode test (Stripe), qui demande un compte, des clés secrètes et un formulaire de carte pour un besoin que le sujet n'a pas.
 
+### Session : **token JWT dans `localStorage`**
+
+Après la connexion, le front garde le token JWT (8 h) dans `localStorage` et l'envoie dans l'en-tête `Authorization`. Le risque est qu'un script injecté lise le token ; il est limité par la Content Security Policy (`script-src 'self'`, aucun script inline ni externe), par React qui échappe tout le texte affiché (aucun `dangerouslySetInnerHTML` dans le front) et par la durée de 8 h. Comme le token ne part jamais tout seul avec une requête, il n'y a pas de risque CSRF. Alternative écartée : un cookie `httpOnly`, `Secure`, `SameSite=Strict`, que JavaScript ne peut pas lire, mais qui demande de changer l'authentification du back et du front, d'ajouter une route de déconnexion et de se protéger du CSRF, pour un projet de classe démontré en local (#51).
+
 ### CI — **GitHub Actions**
 
 Deux workflows dans `.github/workflows/` (`backend.yml`, `frontend.yml`), lancés sur chaque PR qui touche leur dossier et sur `main` : `npm ci`, `npm audit` (bloquant sur une vulnérabilité haute d'une dépendance de production), typecheck ou lint, tests et build. Un troisième (`e2e.yml`) construit l'application et lance les tests Playwright sur chaque PR qui touche le back, le front ou `e2e/`, avec les captures et les traces en artefact quand un test échoue. Dependabot propose chaque lundi les mises à jour des dépendances et des actions. Gratuit et intégré au dépôt. Alternative écartée : Jenkins (serveur dédié, trop lourd).
@@ -189,7 +193,7 @@ Source **Prof** : réponse de l'enseignant (notes dans `questions-prof.md`). Sou
 
 ## 4. Périmètre des écrans et traçabilité
 
-Le détail de chaque écran est dans [`ecrans.md`](./ecrans.md). Les routes responsable sont créées sous `/admin`, réservées au rôle responsable ; leurs pages restent à remplir.
+Le détail de chaque écran est dans [`ecrans.md`](./ecrans.md). Les pages du responsable sont sous `/admin`, réservées au rôle responsable. Tous les écrans sont faits.
 
 | # | Écran | Route | Exigences |
 |---|---|---|---|
@@ -207,7 +211,7 @@ Le détail de chaque écran est dans [`ecrans.md`](./ecrans.md). Les routes resp
 | 12 | Réapprovisionnement et rapports | `/admin/rapports` | EX06, EX08 |
 | 13 | Paramètres | `/admin/parametres` | RG06, RG09, RG13 |
 
-| Exigence | Service prévu | Diagramme |
+| Exigence | Service | Diagramme |
 |---|---|---|
 | EX01 | `ProduitService` | Classes |
 | EX02 | `StockService` | Classes |
