@@ -55,6 +55,15 @@ export const LIBELLES_STATUT_COMMANDE: Record<StatutCommandeFournisseur, string>
   recue: 'Reçue',
 }
 
+export function commandeEnCours(
+  demande: { produitId?: string },
+  commandes: CommandeFournisseur[],
+): CommandeFournisseur | undefined {
+  return commandes.find(
+    (commande) => commande.produitId === demande.produitId && commande.statut !== 'recue',
+  )
+}
+
 export function restantARecevoir(commande: CommandeFournisseur): number {
   return commande.quantiteCommandee - commande.quantiteRecue
 }

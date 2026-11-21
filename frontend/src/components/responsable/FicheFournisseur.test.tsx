@@ -1,36 +1,35 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import GestionFournisseurs from './GestionFournisseurs.tsx'
+import type { CommandeFournisseur } from '../../types/reappro'
+import FicheFournisseur from './FicheFournisseur.tsx'
 
-const fournisseurs = [
-  { id: 'f-1', nom: 'Diffusion Océanie', contact: 'commandes@do.pf' },
-  { id: 'f-2', nom: 'Éditions du Récif' },
-]
+const fournisseur = { id: 'f-1', nom: 'Diffusion Océanie', contact: 'commandes@do.pf' }
+
+const commande: CommandeFournisseur = {
+  id: 'cf-1',
+  fournisseur: { id: 'f-1', nom: 'Diffusion Océanie' },
+  produitId: 'p-1',
+  reference: 'LIV-001',
+  designation: "L'Île au trésor",
+  quantiteCommandee: 10,
+  quantiteRecue: 4,
+  date: '2026-11-02T20:00:00.000Z',
+  dateArriveePrevue: '2026-11-20',
+  statut: 'partiellement_recue',
+}
 
 function json(corps: unknown, status = 200) {
   return new Response(JSON.stringify(corps), { status })
 }
 
-function afficher(onEnregistre = vi.fn()) {
-  render(<GestionFournisseurs fournisseurs={fournisseurs} onEnregistre={onEnregistre} />)
-  return onEnregistre
-}
-
-describe('GestionFournisseurs', () => {
+describe('FicheFournisseur', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
   })
 
-  it('liste les fournisseurs avec leur contact', () => {
-    afficher()
-
-    expect(screen.getByText('Diffusion Océanie').closest('tr')).toHaveTextContent('commandes@do.pf')
-    expect(screen.getByText('Éditions du Récif').closest('tr')).toHaveTextContent('Non renseigné')
-  })
-
   it('exige un nom', () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch')
-    afficher()
+    render(<FicheFournisseur onEnregistre={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Ajouter le fournisseur' }))
 
@@ -39,30 +38,38 @@ describe('GestionFournisseurs', () => {
   })
 
   it('ajoute un fournisseur', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(json({ id: 'f-3' }, 201))
-    const onEnregistre = afficher()
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(json({ id: 'f-3', nom: 'Papeterie du Lagon' }, 201))
+    const onEnregistre = vi.fn()
+    render(<FicheFournisseur onEnregistre={onEnregistre} />)
 
     fireEvent.change(screen.getByLabelText('Nom'), { target: { value: '  Papeterie du Lagon ' } })
     fireEvent.click(screen.getByRole('button', { name: 'Ajouter le fournisseur' }))
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Papeterie du Lagon a été ajouté.')
-    expect(onEnregistre).toHaveBeenCalled()
+    await waitFor(() =>
+      expect(onEnregistre).toHaveBeenCalledWith(
+        { id: 'f-3', nom: 'Papeterie du Lagon' },
+        'Papeterie du Lagon a été ajouté.',
+      ),
+    )
     expect(String(fetchMock.mock.calls[0][0])).toBe('/api/fournisseurs')
     expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({ nom: 'Papeterie du Lagon' })
   })
 
-  it('modifie un fournisseur existant', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(json({ id: 'f-1' }))
-    afficher()
+  it('modifie un fournisseur existant et liste ses commandes', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(json({ ...fournisseur, contact: '40 50 60 70' }))
+    const onEnregistre = vi.fn()
+    render(<FicheFournisseur fournisseur={fournisseur} commandes={[commande]} onEnregistre={onEnregistre} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Modifier Diffusion Océanie' }))
-
-    expect(screen.getByRole('heading', { name: 'Modifier Diffusion Océanie' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Diffusion Océanie' })).toBeInTheDocument()
     expect(screen.getByLabelText('Nom')).toHaveValue('Diffusion Océanie')
     expect(screen.getByLabelText('Contact (facultatif)')).toHaveValue('commandes@do.pf')
+    expect(screen.getByText("L'Île au trésor").closest('li')).toHaveTextContent('4 reçus sur 10')
+    expect(screen.getByText('Reçue en partie')).toHaveClass('statut-partielle')
 
     fireEvent.change(screen.getByLabelText('Contact (facultatif)'), { target: { value: '40 50 60 70' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer les modifications' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }))
 
     await waitFor(() => expect(String(fetchMock.mock.calls[0][0])).toBe('/api/fournisseurs/f-1'))
     expect(fetchMock.mock.calls[0][1]?.method).toBe('PUT')
@@ -70,7 +77,7 @@ describe('GestionFournisseurs', () => {
       nom: 'Diffusion Océanie',
       contact: '40 50 60 70',
     })
-    expect(await screen.findByRole('heading', { name: 'Ajouter un fournisseur' })).toBeInTheDocument()
+    await waitFor(() => expect(onEnregistre).toHaveBeenCalledWith(expect.objectContaining({ id: 'f-1' }), 'Diffusion Océanie a été modifié.'))
   })
 
   it('place les erreurs du serveur sous les champs', async () => {
@@ -84,7 +91,7 @@ describe('GestionFournisseurs', () => {
         400,
       ),
     )
-    afficher()
+    render(<FicheFournisseur onEnregistre={vi.fn()} />)
 
     fireEvent.change(screen.getByLabelText('Nom'), { target: { value: 'Papeterie du Lagon' } })
     fireEvent.click(screen.getByRole('button', { name: 'Ajouter le fournisseur' }))

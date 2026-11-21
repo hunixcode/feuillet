@@ -88,8 +88,10 @@ describe('PanneauCommandeFournisseur', () => {
     afficher()
 
     expect(screen.getByRole('heading', { name: "L'Île au trésor" })).toBeInTheDocument()
-    expect(screen.getByText('4 reçus sur 10 commandés')).toBeInTheDocument()
-    expect(screen.getByText('Encore attendus').closest('div')).toHaveTextContent('6 exemplaires')
+    expect(screen.getByText('Commandés').nextElementSibling).toHaveTextContent('10')
+    expect(screen.getByText('Reçus').nextElementSibling).toHaveTextContent('4')
+    expect(screen.getByText('Attendus').nextElementSibling).toHaveTextContent('6')
+    expect(screen.getByText('Reçue en partie')).toHaveClass('statut-partielle')
     expect(screen.getByText(/Il reste 6 exemplaires à recevoir/)).toBeInTheDocument()
     await screen.findByText('4 exemplaires en bon état, 1 abîmé')
   })
@@ -215,7 +217,8 @@ describe('PanneauCommandeFournisseur', () => {
     await screen.findByRole('list')
 
     expect(screen.queryByRole('button', { name: 'Saisir la réception' })).not.toBeInTheDocument()
-    expect(screen.getByText('Entièrement reçue le').closest('div')).toHaveTextContent('12 novembre 2026')
-    expect(screen.getByText('Encore attendus').closest('div')).toHaveTextContent('Rien')
+    expect(screen.getByText('Entièrement reçue le 12 novembre 2026.')).toBeInTheDocument()
+    expect(screen.getByText('Attendus').nextElementSibling).toHaveTextContent('0')
+    expect(screen.getByText('Reçue')).toHaveClass('statut-recue')
   })
 })

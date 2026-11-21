@@ -9,12 +9,18 @@ import {
   supprimerPromotion,
 } from '../../services/catalogueAdminService'
 import type { Produit, Promotion } from '../../types/produit'
+import { dateLongue } from '../../utils/datesAdmin'
 import { erreursDesChamps, messageErreur } from '../../utils/erreurs'
-import { formatDate } from '../../utils/format'
+import { formatDate, formatXPF } from '../../utils/format'
+import IconeAdmin from './IconeAdmin.tsx'
 
 interface PromotionsProduitProps {
   produit: Produit
   onChangement: () => void
+}
+
+function libelleSuppression(promotion: Promotion): string {
+  return `Supprimer la promotion de ${promotion.remise} % du ${formatDate(promotion.debut)}`
 }
 
 function PromotionsProduit({ produit, onChangement }: PromotionsProduitProps) {
@@ -85,28 +91,49 @@ function PromotionsProduit({ produit, onChangement }: PromotionsProduitProps) {
     }
   }
 
+  const enCours = produit.promotion
+  const autres = (promotions ?? []).filter((promotion) => promotion.id !== enCours?.id)
+
   return (
-    <section className="catalogue-bloc" aria-labelledby="titre-promotions">
-      <h3 id="titre-promotions">Promotions</h3>
+    <section className="tiroir-section" aria-labelledby="titre-promotions">
+      <h3 id="titre-promotions">Promotion</h3>
+      {enCours && (
+        <div className="encart encart-sombre">
+          <IconeAdmin nom="info" />
+          <span>
+            <strong>{`−${enCours.remise} %`}</strong>
+            {` du ${dateLongue(enCours.debut)} au ${dateLongue(enCours.fin)}. L’article est vendu ${formatXPF(produit.prixApplique)}.`}
+            {promotions?.some((promotion) => promotion.id === enCours.id) && (
+              <button
+                type="button"
+                className="action-ligne"
+                onClick={() => retirer(enCours)}
+                aria-label={libelleSuppression(enCours)}
+              >
+                Retirer
+              </button>
+            )}
+          </span>
+        </div>
+      )}
       {erreurChargement && <ErrorMessage>{erreurChargement}</ErrorMessage>}
       {!erreurChargement && promotions === null && <Loader />}
-      {promotions?.length === 0 && <p className="catalogue-vide">Aucune promotion programmée.</p>}
-      {promotions && promotions.length > 0 && (
-        <ul className="catalogue-promotions">
-          {promotions.map((promotion) => (
+      {promotions && !enCours && autres.length === 0 && (
+        <p className="tiroir-note">Aucune promotion programmée.</p>
+      )}
+      {autres.length > 0 && (
+        <ul className="tiroir-liste">
+          {autres.map((promotion) => (
             <li key={promotion.id}>
               <span>
-                <strong>−{promotion.remise} %</strong> du {formatDate(promotion.debut)} au{' '}
-                {formatDate(promotion.fin)}
-                {produit.promotion?.id === promotion.id && (
-                  <span className="catalogue-pastille catalogue-pastille--ok">En cours</span>
-                )}
+                <strong>{`−${promotion.remise} %`}</strong>
+                {` du ${dateLongue(promotion.debut)} au ${dateLongue(promotion.fin)}`}
               </span>
               <button
                 type="button"
-                className="catalogue-lien"
+                className="action-ligne"
                 onClick={() => retirer(promotion)}
-                aria-label={`Supprimer la promotion de ${promotion.remise} % du ${formatDate(promotion.debut)}`}
+                aria-label={libelleSuppression(promotion)}
               >
                 Supprimer
               </button>
@@ -114,9 +141,9 @@ function PromotionsProduit({ produit, onChangement }: PromotionsProduitProps) {
           ))}
         </ul>
       )}
-      <form className="formulaire-produit" onSubmit={programmer} noValidate>
+      <form onSubmit={programmer} noValidate>
         {message && <ErrorMessage>{message}</ErrorMessage>}
-        <div className="formulaire-produit-grille formulaire-produit-grille--3">
+        <div className="grille-champs">
           <Input
             label="Remise (%)"
             name="remise"
@@ -125,10 +152,12 @@ function PromotionsProduit({ produit, onChangement }: PromotionsProduitProps) {
             min={1}
             max={100}
             step={1}
+            placeholder="10"
             value={remise}
             onChange={(evenement) => setRemise(evenement.target.value)}
             error={erreurs.remise}
           />
+          <div aria-hidden="true" />
           <Input
             label="Début"
             name="debut"
@@ -146,11 +175,12 @@ function PromotionsProduit({ produit, onChangement }: PromotionsProduitProps) {
             error={erreurs.fin}
           />
         </div>
-        <div className="catalogue-actions">
+        <div className="tiroir-actions">
           <Button type="submit" variant="secondary" loading={envoi}>
             Programmer la promotion
           </Button>
         </div>
+        <p className="tiroir-note">Une seule promotion par article à une même date.</p>
       </form>
     </section>
   )

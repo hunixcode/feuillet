@@ -1,61 +1,79 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import ErrorMessage from '../../components/common/ErrorMessage.tsx'
 import Loader from '../../components/common/Loader.tsx'
 import type { PointVentes } from '../../components/responsable/CourbeVentes.tsx'
-import GraphiqueVentes from '../../components/responsable/GraphiqueVentes.tsx'
+import Histogramme from '../../components/responsable/Histogramme.tsx'
+import IconeAdmin from '../../components/responsable/IconeAdmin.tsx'
 import InfoBulle from '../../components/responsable/InfoBulle.tsx'
 import SuiviVentes from '../../components/responsable/SuiviVentes.tsx'
 import TableauVentesProduits from '../../components/responsable/TableauVentesProduits.tsx'
+import Vignette from '../../components/responsable/Vignette.tsx'
 import { listerCategories } from '../../services/categorieService'
 import { listerDemandes } from '../../services/demandeAdminService'
+import { listerProduits } from '../../services/produitService'
 import { lireRapport } from '../../services/rapportService'
 import {
   listerCommandesFournisseur,
   listerProduitsAReapprovisionner,
 } from '../../services/reapproService'
+import { listerVentes } from '../../services/venteAdminService'
 import type { Categorie } from '../../types/categorie'
 import type { Demande } from '../../types/demande'
+import type { Produit } from '../../types/produit'
 import type { Rapport } from '../../types/rapport'
 import type { CommandeFournisseur, ProduitAReapprovisionner } from '../../types/reappro'
+import type { Vente } from '../../types/vente'
+import {
+  ajouterJours,
+  dans,
+  dateCourte,
+  dateLongue,
+  dateRelative,
+  ecartJours,
+  heure,
+  jourDe,
+  majuscule,
+  moisCourt,
+  nombre,
+  nomJour,
+  numeroJour,
+} from '../../utils/datesAdmin'
 import { messageErreur } from '../../utils/erreurs'
-import { formatDate, formatJour, formatJourCourt, formatXPF, jourIso } from '../../utils/format'
+import { formatJour, formatXPF, jourIso } from '../../utils/format'
 import './TableauDeBordPage.css'
-
-const UN_JOUR = 24 * 60 * 60 * 1000
-const SEPT_JOURS = 7 * UN_JOUR
-
-interface Donnees {
-  aRecommander: ProduitAReapprovisionner[]
-  arrivages: CommandeFournisseur[]
-  misesDeCote: Demande[]
-  rapport: Rapport
-  jours: RapportDuJour[]
-  categories: Categorie[]
-}
 
 interface RapportDuJour {
   jour: string
   rapport: Rapport
 }
 
-function pluriel(nombre: number, singulier: string, plurielTexte: string): string {
-  return `${nombre} ${nombre > 1 ? plurielTexte : singulier}`
+interface Donnees {
+  aRecommander: ProduitAReapprovisionner[]
+  arrivages: CommandeFournisseur[]
+  misesDeCote: Demande[]
+  aPreparer: Vente[]
+  produits: Produit[]
+  categories: Categorie[]
+  rapport: Rapport
+  jours: RapportDuJour[]
+  netPrecedent: number
+  precedente: Rapport['periode']
 }
 
-function exemplaires(nombre: number): string {
-  return pluriel(nombre, 'exemplaire', 'exemplaires')
+function pluriel(valeur: number, singulier: string, plurielTexte = `${singulier}s`): string {
+  return `${valeur} ${valeur > 1 ? plurielTexte : singulier}`
 }
 
-function joursDeLaSemaine(debut: string): string[] {
-  const lundi = new Date(`${debut}T00:00:00.000Z`).getTime()
-  return Array.from({ length: 7 }, (_, index) =>
-    new Date(lundi + index * UN_JOUR).toISOString().slice(0, 10),
-  )
+function periodeTexte(debut: string, fin: string): string {
+  const memeMois = moisCourt(debut) === moisCourt(fin)
+  return memeMois
+    ? `${numeroJour(debut)} au ${dateLongue(fin)}`
+    : `${dateLongue(debut)} au ${dateLongue(fin)}`
 }
 
 async function rapportsParJour(debut: string, categorie = ''): Promise<RapportDuJour[]> {
-  const jours = joursDeLaSemaine(debut)
+  const jours = Array.from({ length: 7 }, (_, index) => ajouterJours(debut, index))
   const rapports = await Promise.all(
     jours.map((jour) => lireRapport({ debut: jour, fin: jour, categorie })),
   )
@@ -70,12 +88,43 @@ function totauxParJour(jours: RapportDuJour[]): PointVentes[] {
   }))
 }
 
-function jourLong(jour: string): string {
-  return formatJour(new Date(`${jour}T12:00:00.000Z`))
+function useCompteur(cible: number | null): number | null {
+  const [progres, setProgres] = useState(0)
+  const calme = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? true
+
+  useEffect(() => {
+    if (cible === null || calme || typeof requestAnimationFrame !== 'function') {
+      return
+    }
+    const debut = performance.now()
+    let cadre = 0
+    const etape = (maintenant: number) => {
+      const t = Math.min(1, (maintenant - debut) / 1300)
+      setProgres(t)
+      if (t < 1) {
+        cadre = requestAnimationFrame(etape)
+      }
+    }
+    cadre = requestAnimationFrame(etape)
+    return () => cancelAnimationFrame(cadre)
+  }, [cible, calme])
+
+  if (cible === null) {
+    return null
+  }
+  if (calme || progres >= 1) {
+    return cible
+  }
+  return Math.round((cible * (1 - Math.pow(1 - progres, 4))) / 10) * 10
+}
+
+function entree(index: number): CSSProperties {
+  return { ['--i' as string]: index }
 }
 
 function TableauDeBordPage() {
-  const [jour] = useState(() => formatJour(new Date()))
+  const [aujourdhui] = useState(() => jourIso(new Date()))
+  const [miseAJour] = useState(() => heure(new Date()))
   const [donnees, setDonnees] = useState<Donnees | null>(null)
   const [erreur, setErreur] = useState('')
   const [jourChoisi, setJourChoisi] = useState('')
@@ -83,32 +132,43 @@ function TableauDeBordPage() {
   const [courbesCategorie, setCourbesCategorie] = useState<Record<string, PointVentes[]>>({})
   const [erreurCourbe, setErreurCourbe] = useState('')
   const suivi = useRef<HTMLElement>(null)
+  const detailSection = useRef<HTMLElement>(null)
 
   useEffect(() => {
     let actif = true
-    const semaineDerniere = jourIso(new Date(Date.now() - SEPT_JOURS))
     Promise.all([
       listerProduitsAReapprovisionner(),
       listerCommandesFournisseur(),
       listerDemandes('mise_de_cote'),
+      listerVentes('a_preparer'),
+      listerProduits().catch(() => [] as Produit[]),
       listerCategories(),
-      lireRapport({ semaine: semaineDerniere }).then(async (rapport) => ({
+      lireRapport({ semaine: aujourdhui }).then(async (rapport) => ({
         rapport,
         jours: await rapportsParJour(rapport.periode.debut),
       })),
+      lireRapport({ semaine: ajouterJours(aujourdhui, -7) }),
     ])
-      .then(([aRecommander, commandes, demandes, categories, semaine]) => {
+      .then(([aRecommander, commandes, demandes, aPreparer, produits, categories, semaine, avant]) => {
         if (actif) {
           setDonnees({
-            aRecommander,
+            aRecommander: [...aRecommander].sort(
+              (a, b) =>
+                a.quantiteVendable / Math.max(1, a.quantiteAcheteeOrigine) -
+                b.quantiteVendable / Math.max(1, b.quantiteAcheteeOrigine),
+            ),
             arrivages: commandes
               .filter((commande) => commande.statut !== 'recue')
               .sort((a, b) => a.dateArriveePrevue.localeCompare(b.dateArriveePrevue)),
-            misesDeCote: demandes.sort((a, b) =>
+            misesDeCote: [...demandes].sort((a, b) =>
               (a.miseDeCote?.dateLimite ?? '').localeCompare(b.miseDeCote?.dateLimite ?? ''),
             ),
+            aPreparer,
+            produits,
             categories,
             ...semaine,
+            netPrecedent: avant.totaux.net,
+            precedente: avant.periode,
           })
         }
       })
@@ -120,10 +180,20 @@ function TableauDeBordPage() {
     return () => {
       actif = false
     }
-  }, [])
+  }, [aujourdhui])
 
-  const detail =
-    donnees?.jours.find((element) => element.jour === jourChoisi)?.rapport ?? donnees?.rapport
+  const jours = donnees?.jours ?? []
+  const passes = jours.filter(({ jour }) => jour <= aujourdhui)
+  const net = passes.reduce((somme, { rapport }) => somme + rapport.totaux.net, 0)
+  const montant = useCompteur(donnees ? net : null)
+
+  const produitDe = (id: string) => donnees?.produits.find((produit) => produit.id === id)
+  const commandeDe = (id: string) => donnees?.arrivages.find((commande) => commande.produitId === id)
+
+  function choisirJour(jour: string) {
+    setJourChoisi((actuel) => (actuel === jour ? '' : jour))
+    detailSection.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+  }
 
   function choisirCourbe(choix: string) {
     setCourbe(choix)
@@ -133,8 +203,8 @@ function TableauDeBordPage() {
       return
     }
     rapportsParJour(donnees.rapport.periode.debut, categorie)
-      .then((jours) =>
-        setCourbesCategorie((courbes) => ({ ...courbes, [categorie]: totauxParJour(jours) })),
+      .then((resultat) =>
+        setCourbesCategorie((courbes) => ({ ...courbes, [categorie]: totauxParJour(resultat) })),
       )
       .catch((probleme: unknown) => setErreurCourbe(messageErreur(probleme)))
   }
@@ -145,15 +215,14 @@ function TableauDeBordPage() {
     suivi.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' })
   }
 
+  const detail = jours.find(({ jour }) => jour === jourChoisi)?.rapport ?? donnees?.rapport
   const evolutions: Record<string, PointVentes[]> = {}
   for (const produit of donnees?.rapport.produits ?? []) {
-    evolutions[produit.produitId] =
-      donnees?.jours.map(({ jour: date, rapport }) => {
-        const ligne = rapport.produits.find((element) => element.produitId === produit.produitId)
-        return { jour: date, quantite: ligne?.quantiteNette ?? 0, montant: ligne?.montantNet ?? 0 }
-      }) ?? []
+    evolutions[produit.produitId] = jours.map(({ jour, rapport }) => {
+      const ligne = rapport.produits.find((element) => element.produitId === produit.produitId)
+      return { jour, quantite: ligne?.quantiteNette ?? 0, montant: ligne?.montantNet ?? 0 }
+    })
   }
-
   const articlesVendus = (donnees?.rapport.produits ?? []).filter(
     (produit) => produit.quantiteVendue > 0 || produit.quantiteRetournee > 0,
   )
@@ -163,14 +232,33 @@ function TableauDeBordPage() {
       ? (evolutions[cibleCourbe] ?? [])
       : genreCourbe === 'categorie'
         ? (courbesCategorie[cibleCourbe] ?? null)
-        : totauxParJour(donnees?.jours ?? [])
+        : totauxParJour(jours)
+
+  const indexAujourdhui = jours.findIndex(({ jour }) => jour === aujourdhui)
+  const meilleur = passes.reduce<RapportDuJour | null>(
+    (choix, jour) => (!choix || jour.rapport.totaux.net > choix.rapport.totaux.net ? jour : choix),
+    null,
+  )
+  const indexMeilleur = meilleur ? jours.indexOf(meilleur) : -1
+  const indexChoisi = jours.findIndex(({ jour }) => jour === jourChoisi)
+  const evolution =
+    donnees && donnees.netPrecedent > 0
+      ? Math.round(((net - donnees.netPrecedent) / donnees.netPrecedent) * 100)
+      : null
 
   return (
-    <div className="tableau-bord">
+    <>
       <title>Tableau de bord · Feuillet</title>
-      <header className="tableau-bord-entete">
-        <h1>Tableau de bord</h1>
-        <p className="tableau-bord-jour">{jour}</p>
+      <header className="tete">
+        <div>
+          <h1>Tableau de bord</h1>
+          <p>{`${majuscule(formatJour(new Date(`${aujourdhui}T12:00:00.000Z`)))}. Mis à jour à ${miseAJour}.`}</p>
+        </div>
+        <div className="tete-actions">
+          <Link className="bouton bouton-petit bouton-contour" to="/admin/rapports">
+            Rapport de la semaine
+          </Link>
+        </div>
       </header>
 
       {erreur && <ErrorMessage>{erreur}</ErrorMessage>}
@@ -178,155 +266,295 @@ function TableauDeBordPage() {
 
       {donnees && (
         <>
-          <div className="tableau-bord-colonnes">
-            <section aria-labelledby="titre-recommander">
-              <div className="tableau-bord-colonne-entete">
-                <h2 id="titre-recommander">À recommander</h2>
-                <span className="tableau-bord-compte">{donnees.aRecommander.length}</span>
+          <section className="vitrine entree" style={entree(0)} aria-labelledby="titre-semaine">
+            <img className="vitrine-photo" src="/images/etagere.jpg" alt="" />
+            <div>
+              <h2 className="vitrine-date" id="titre-semaine">
+                {`Semaine du ${periodeTexte(donnees.rapport.periode.debut, donnees.rapport.periode.fin)}`}
+              </h2>
+              <p className="vitrine-montant">
+                {nombre(montant ?? net)}
+                <span>XPF</span>
+              </p>
+              <p className="vitrine-legende">
+                de ventes cette semaine, retours déduits
+                {evolution !== null && (
+                  <span
+                    className={evolution < 0 ? 'evolution evolution-baisse' : 'evolution'}
+                    data-bulle-titre={`Semaine du ${periodeTexte(donnees.precedente.debut, donnees.precedente.fin)}`}
+                    data-bulle-texte={`${formatXPF(donnees.netPrecedent)} de ventes nettes`}
+                  >
+                    <IconeAdmin nom={evolution < 0 ? 'baisse' : 'hausse'} epaisseur={2.4} />
+                    {`${evolution > 0 ? '+' : ''}${evolution} % sur la semaine dernière`}
+                  </span>
+                )}
+              </p>
+              <div className="vitrine-chiffres">
+                <Link to="/admin/ventes">
+                  <strong>{donnees.aPreparer.length}</strong>
+                  <span>à préparer</span>
+                </Link>
+                <div>
+                  <strong>{passes.reduce((somme, { rapport }) => somme + rapport.statistiques.nombreVentes, 0)}</strong>
+                  <span>commandes</span>
+                </div>
+                <div>
+                  <strong>{passes.reduce((somme, { rapport }) => somme + rapport.totaux.quantiteVendue, 0)}</strong>
+                  <span>articles vendus</span>
+                </div>
+                <div>
+                  <strong>{passes.reduce((somme, { rapport }) => somme + rapport.statistiques.nombreRetours, 0)}</strong>
+                  <span>retours</span>
+                </div>
               </div>
-              {donnees.aRecommander.length === 0 ? (
-                <p className="tableau-bord-vide">Aucun article sous son seuil d’alerte.</p>
-              ) : (
-                <>
-                  <ul className="tableau-bord-liste">
-                    {donnees.aRecommander.map((produit) => (
-                      <li key={produit.produitId}>
-                        <span>
-                          {produit.designation}
-                          <small>
-                            {produit.quantiteVendable === 0
-                              ? 'Épuisé'
-                              : pluriel(produit.quantiteVendable, 'vendable', 'vendables')}
-                            {produit.quantiteEnCommande > 0 &&
-                              `, ${produit.quantiteEnCommande} en commande`}
-                          </small>
+            </div>
+            <div className="verre">
+              <div className="verre-tete">
+                <span>Ventes nettes par jour</span>
+                {meilleur && meilleur.rapport.totaux.net > 0 && (
+                  <span>
+                    Meilleur jour, <strong>{nomJour(meilleur.jour)}</strong>
+                  </span>
+                )}
+              </div>
+              <Histogramme
+                libelle="Ventes nettes par jour"
+                anime
+                jours={jours.map(({ jour, rapport }) => ({
+                  jour,
+                  valeur: rapport.totaux.net,
+                  commandes: rapport.statistiques.nombreVentes,
+                  retours: rapport.statistiques.nombreRetours,
+                  futur: jour > aujourdhui,
+                }))}
+                fort={indexChoisi >= 0 ? indexChoisi : indexAujourdhui}
+                etiquettes={[indexMeilleur, indexAujourdhui]}
+                onChoix={choisirJour}
+              />
+            </div>
+          </section>
+
+          <section className="feuille entree" style={entree(1)} aria-labelledby="titre-recommander">
+            <div className="feuille-tete">
+              <h2 className="feuille-titre" id="titre-recommander">
+                À recommander
+              </h2>
+              <Link className="lien-fleche" to="/admin/stock">
+                Tout le stock
+              </Link>
+              <p className="feuille-note">
+                Le stock vendable est passé sous le seuil d’alerte de la quantité achetée.
+              </p>
+            </div>
+            {donnees.aRecommander.length === 0 ? (
+              <p className="vide-liste">Aucun article sous son seuil d’alerte.</p>
+            ) : (
+              <div className="etagere">
+                {donnees.aRecommander.map((article) => {
+                  const part = Math.round(
+                    (article.quantiteVendable / Math.max(1, article.quantiteAcheteeOrigine)) * 100,
+                  )
+                  const commande = commandeDe(article.produitId)
+                  const fiche = produitDe(article.produitId)
+                  return (
+                    <article className="casier" key={article.produitId}>
+                      <Link
+                        className="casier-visuel"
+                        to="/admin/stock"
+                        aria-label={`Stock de ${article.designation}`}
+                      >
+                        <span className={part === 0 ? 'casier-part casier-part-vide' : 'casier-part'}>
+                          {part === 0 ? 'Épuisé' : `${part} % restant`}
                         </span>
+                        <Vignette key={fiche?.isbn} nu isbn={fiche?.isbn} type={fiche?.type} />
+                      </Link>
+                      <h3 className="casier-titre">{article.designation}</h3>
+                      <p className="casier-meta">
+                        {`${article.quantiteVendable} en vente sur ${article.quantiteAcheteeOrigine} achetés`}
+                      </p>
+                      <span className={part < 10 ? 'jauge jauge-alerte' : 'jauge'}>
+                        <span style={{ width: `${Math.max(2, Math.min(100, part))}%` }} />
+                      </span>
+                      <div className="casier-pied">
+                        {commande ? (
+                          <span className="en-route">
+                            {`${commande.quantiteCommandee - commande.quantiteRecue} en route, `}
+                            <strong>{`arrivée le ${dateCourte(commande.dateArriveePrevue)}`}</strong>
+                          </span>
+                        ) : (
+                          <>
+                            <span className="en-route">Rien en commande</span>
+                            <Link className="bouton bouton-petit" to="/admin/commandes">
+                              Recommander
+                            </Link>
+                          </>
+                        )}
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
+            )}
+          </section>
+
+          <div className="deux">
+            <section className="feuille entree" style={entree(2)} aria-labelledby="titre-preparer">
+              <div className="feuille-tete">
+                <h2 className="feuille-titre" id="titre-preparer">
+                  À préparer
+                </h2>
+                <Link className="lien-fleche" to="/admin/ventes">
+                  Toutes les ventes
+                </Link>
+              </div>
+              {donnees.aPreparer.length === 0 ? (
+                <p className="vide-liste">Aucune commande à préparer.</p>
+              ) : (
+                <ul className="rangees">
+                  {donnees.aPreparer.map((vente) => {
+                    const articles = vente.lignes.reduce((somme, ligne) => somme + ligne.quantite, 0)
+                    const visibles = vente.lignes.slice(0, vente.lignes.length > 3 ? 2 : 3)
+                    return (
+                      <li className="rangee rangee-pile" key={vente.id}>
+                        <span className="pile">
+                          {visibles.map((ligne) => {
+                            const fiche = produitDe(ligne.produitId)
+                            return <Vignette key={ligne.produitId} isbn={fiche?.isbn} type={fiche?.type} />
+                          })}
+                          {vente.lignes.length > visibles.length && (
+                            <span className="pile-plus">{`+${vente.lignes.length - visibles.length}`}</span>
+                          )}
+                        </span>
+                        <div>
+                          <p className="rangee-titre">
+                            <Link to="/admin/ventes">{vente.client.nom}</Link>
+                          </p>
+                          <p className="rangee-meta">
+                            {`${majuscule(dateRelative(jourDe(vente.date), aujourdhui))}, ${heure(vente.date)}, ${pluriel(articles, 'article')}`}
+                          </p>
+                        </div>
+                        <div className="rangee-fin">
+                          {vente.emballageCadeau && (
+                            <span className="etiquette">
+                              <IconeAdmin nom="cadeau" epaisseur={1.7} />
+                              Emballage
+                            </span>
+                          )}
+                          <span className="fort">{formatXPF(vente.total)}</span>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </section>
+
+            <div>
+              <section className="feuille entree" style={entree(3)} aria-labelledby="titre-arrivages">
+                <div className="feuille-tete">
+                  <h2 className="feuille-titre" id="titre-arrivages">
+                    Arrivages prévus
+                  </h2>
+                  <Link className="lien-fleche" to="/admin/commandes">
+                    Commandes
+                  </Link>
+                </div>
+                {donnees.arrivages.length === 0 ? (
+                  <p className="vide-liste">Aucune commande fournisseur en cours.</p>
+                ) : (
+                  <ul className="rangees">
+                    {donnees.arrivages.map((commande) => (
+                      <li className="rangee" key={commande.id}>
+                        <span className="date-tuile">
+                          <strong>{numeroJour(commande.dateArriveePrevue)}</strong>
+                          <span>{moisCourt(commande.dateArriveePrevue)}</span>
+                        </span>
+                        <div>
+                          <p className="rangee-titre">{commande.designation}</p>
+                          <p className="rangee-meta">
+                            {`${commande.fournisseur.nom}, ${commande.quantiteCommandee - commande.quantiteRecue} attendus${
+                              commande.quantiteRecue ? ` sur ${commande.quantiteCommandee}` : ''
+                            }`}
+                          </p>
+                        </div>
                         <span
                           className={
-                            produit.quantiteVendable === 0
-                              ? 'tableau-bord-etat tableau-bord-etat--manque'
-                              : 'tableau-bord-etat'
+                            commande.quantiteRecue ? 'statut statut-partielle' : 'statut statut-attente'
                           }
                         >
-                          {produit.pourcentageVendu} % vendu
+                          {dans(commande.dateArriveePrevue, aujourdhui)}
                         </span>
                       </li>
                     ))}
                   </ul>
-                  <p className="tableau-bord-note">Part vendue de la quantité achetée à l’origine</p>
-                </>
-              )}
-              <div className="tableau-bord-liens">
-                <Link className="tableau-bord-lien" to="/admin/stock">
-                  Voir le stock
-                </Link>
-                <Link className="tableau-bord-lien" to="/admin/rapports">
-                  Voir le réapprovisionnement
-                </Link>
-              </div>
-            </section>
+                )}
+              </section>
 
-            <section aria-labelledby="titre-arrivages">
-              <div className="tableau-bord-colonne-entete">
-                <h2 id="titre-arrivages">Arrivages prévus</h2>
-                <span className="tableau-bord-compte">{donnees.arrivages.length}</span>
-              </div>
-              {donnees.arrivages.length === 0 ? (
-                <p className="tableau-bord-vide">Aucune commande fournisseur en cours.</p>
-              ) : (
-                <ul className="tableau-bord-liste">
-                  {donnees.arrivages.map((commande) => (
-                    <li key={commande.id}>
-                      <span>
-                        {commande.designation}
-                        <small>
-                          {commande.fournisseur.nom}, {commande.quantiteRecue} sur{' '}
-                          {exemplaires(commande.quantiteCommandee)} reçus
-                        </small>
-                      </span>
-                      <span className="tableau-bord-nombre">
-                        {formatJourCourt(commande.dateArriveePrevue)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <Link className="tableau-bord-lien" to="/admin/commandes">
-                Voir les commandes fournisseur
-              </Link>
-            </section>
-
-            <section aria-labelledby="titre-mises">
-              <div className="tableau-bord-colonne-entete">
-                <h2 id="titre-mises">Mises de côté</h2>
-                <span className="tableau-bord-compte">{donnees.misesDeCote.length}</span>
-              </div>
-              {donnees.misesDeCote.length === 0 ? (
-                <p className="tableau-bord-vide">Aucune mise de côté en cours.</p>
-              ) : (
-                <ul className="tableau-bord-liste">
-                  {donnees.misesDeCote.map((demande) => (
-                    <li key={demande.id}>
-                      <span>
-                        {demande.titre}
-                        <small>
-                          {[
-                            demande.client?.nom,
-                            demande.miseDeCote && exemplaires(demande.miseDeCote.quantite),
-                          ]
-                            .filter(Boolean)
-                            .join(', ')}
-                        </small>
-                      </span>
-                      {demande.miseDeCote && (
-                        <span className="tableau-bord-nombre">
-                          {formatJourCourt(demande.miseDeCote.dateLimite)}
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <Link className="tableau-bord-lien" to="/admin/demandes">
-                Voir les demandes
-              </Link>
-            </section>
+              <section className="feuille entree" style={entree(4)} aria-labelledby="titre-mises">
+                <div className="feuille-tete">
+                  <h2 className="feuille-titre" id="titre-mises">
+                    Mises de côté
+                  </h2>
+                  <Link className="lien-fleche" to="/admin/demandes">
+                    Demandes
+                  </Link>
+                </div>
+                {donnees.misesDeCote.length === 0 ? (
+                  <p className="vide-liste">Aucune mise de côté en cours.</p>
+                ) : (
+                  <ul className="rangees">
+                    {donnees.misesDeCote.map((demande) => {
+                      const limite = demande.miseDeCote?.dateLimite ?? demande.date
+                      const fiche = demande.produitId ? produitDe(demande.produitId) : undefined
+                      const proche = ecartJours(aujourdhui, jourDe(limite)) <= 2
+                      return (
+                        <li className="rangee" key={demande.id}>
+                          <Vignette key={fiche?.isbn} isbn={fiche?.isbn ?? demande.isbn} type={fiche?.type} />
+                          <div>
+                            <p className="rangee-titre">{demande.titre}</p>
+                            <p className="rangee-meta">
+                              {[demande.client?.nom, `gardé jusqu’au ${dateLongue(jourDe(limite))}`]
+                                .filter(Boolean)
+                                .join(', ')}
+                            </p>
+                          </div>
+                          <span className={proche ? 'statut statut-cote' : 'statut statut-attente'}>
+                            {dans(jourDe(limite), aujourdhui)}
+                          </span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </section>
+            </div>
           </div>
 
-          <section className="tableau-bord-surface" aria-labelledby="titre-semaine">
-            <div className="tableau-bord-titre-ligne">
-              <h2 id="titre-semaine">Ventes de la semaine dernière</h2>
-              <Link className="tableau-bord-lien" to="/admin/rapports">
-                Voir le rapport complet
-              </Link>
-            </div>
-            <p className="tableau-bord-aide">
-              Du {formatDate(donnees.rapport.periode.debut)} au{' '}
-              {formatDate(donnees.rapport.periode.fin)}
-            </p>
-            <GraphiqueVentes
-              ventes={donnees.jours.map(({ jour: date, rapport }) => ({
-                jour: date,
-                net: rapport.totaux.net,
-              }))}
-              selection={jourChoisi}
-              onSelection={setJourChoisi}
-            />
-
-            {detail && (
-              <div className="tableau-bord-detail">
-                <div className="tableau-bord-titre-ligne">
-                  <h3>{jourChoisi ? `Détail du ${jourLong(jourChoisi)}` : 'Détail de la semaine'}</h3>
-                  {jourChoisi && (
-                    <button
-                      type="button"
-                      className="tableau-bord-lien"
-                      onClick={() => setJourChoisi('')}
-                    >
-                      Revenir à la semaine
-                    </button>
-                  )}
-                </div>
+          {detail && (
+            <section
+              className="feuille entree detail-semaine"
+              style={entree(5)}
+              aria-labelledby="titre-detail"
+              ref={detailSection}
+            >
+              <div className="feuille-tete">
+                <h2 className="feuille-titre" id="titre-detail">
+                  {jourChoisi ? `Détail du ${nomJour(jourChoisi)} ${dateLongue(jourChoisi)}` : 'Détail de la semaine'}
+                </h2>
+                {jourChoisi ? (
+                  <button type="button" className="lien-fleche" onClick={() => setJourChoisi('')}>
+                    Revenir à la semaine
+                  </button>
+                ) : (
+                  <Link className="lien-fleche" to="/admin/rapports">
+                    Voir le rapport complet
+                  </Link>
+                )}
+                <p className="feuille-note">
+                  Cliquez sur un jour du graphique pour voir ses ventes en détail.
+                </p>
+              </div>
+              <div className="detail-semaine-corps">
                 <dl className="tableau-bord-chiffres">
                   <div>
                     <dt>
@@ -339,10 +567,7 @@ function TableauDeBordPage() {
                   </div>
                   <div>
                     <dt>
-                      <InfoBulle
-                        libelle="Articles vendus"
-                        info="Exemplaires vendus moins exemplaires rendus."
-                      />
+                      <InfoBulle libelle="Articles vendus" info="Exemplaires vendus moins exemplaires rendus." />
                     </dt>
                     <dd>{detail.totaux.quantiteNette}</dd>
                   </div>
@@ -373,7 +598,7 @@ function TableauDeBordPage() {
                     </dt>
                     <dd>
                       {detail.statistiques.nombreRetours}
-                      <small>{formatXPF(detail.totaux.retours)} rendus</small>
+                      <small>{`${formatXPF(detail.totaux.retours)} rendus`}</small>
                     </dd>
                   </div>
                 </dl>
@@ -396,11 +621,11 @@ function TableauDeBordPage() {
                   onSelection={choisirProduit}
                 />
               </div>
-            )}
-          </section>
+            </section>
+          )}
         </>
       )}
-    </div>
+    </>
   )
 }
 

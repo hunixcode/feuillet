@@ -1,12 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import Button from '../../components/common/Button.tsx'
 import ErrorMessage from '../../components/common/ErrorMessage.tsx'
-import Input from '../../components/common/Input.tsx'
 import Loader from '../../components/common/Loader.tsx'
+import IconeAdmin from '../../components/responsable/IconeAdmin.tsx'
+import { creerCategorie, listerProduits, supprimerCategorie } from '../../services/catalogueAdminService'
+import { listerCategories } from '../../services/categorieService'
 import { enregistrerParametres, lireParametres } from '../../services/parametreService'
+import type { Categorie } from '../../types/categorie'
 import type { CleParametre, Parametres } from '../../types/parametres'
+import type { Produit } from '../../types/produit'
 import { erreursDesChamps, messageErreur } from '../../utils/erreurs'
-import './ParametresPage.css'
 
 const VALEUR_MAX = 1_000_000
 const POURCENTAGE_MAX = 100
@@ -25,70 +27,48 @@ function exempleSeuil(valeur: string): string {
   return valeur.trim() && Number.isInteger(nombre) && nombre >= 1 && nombre <= POURCENTAGE_MAX ? valeur.trim() : '…'
 }
 
-const GROUPES: { titre: string; champs: Champ[] }[] = [
+const CHAMPS: Champ[] = [
   {
-    titre: 'Mises de côté',
-    champs: [
-      {
-        cle: 'dureeMiseDeCoteJours',
-        libelle: 'Durée d’une mise de côté',
-        unite: 'jours',
-        aide: () =>
-          'Quand un article demandé par un client arrive, il lui est réservé pendant cette durée. Ensuite, il redevient vendable à tous.',
-      },
-    ],
+    cle: 'dureeMiseDeCoteJours',
+    libelle: 'Durée d’une mise de côté',
+    unite: 'jours',
+    aide: () =>
+      'Quand un article demandé par un client arrive, il lui est réservé pendant cette durée. Ensuite, il redevient vendable à tous.',
   },
   {
-    titre: 'Retours',
-    champs: [
-      {
-        cle: 'delaiRetourJours',
-        libelle: 'Délai de retour',
-        unite: 'jours',
-        aide: () => 'Nombre de jours après l’achat pendant lesquels le client peut renvoyer un article.',
-      },
-      {
-        cle: 'delaiRetourCadeauJours',
-        libelle: 'Délai de retour d’un cadeau',
-        unite: 'jours',
-        aide: () =>
-          'Remplace le délai normal pour une commande passée pour une occasion : Noël, anniversaire ou fête.',
-      },
-    ],
+    cle: 'delaiRetourJours',
+    libelle: 'Délai de retour',
+    unite: 'jours',
+    aide: () => 'Nombre de jours après l’achat pendant lesquels le client peut renvoyer un article.',
   },
   {
-    titre: 'Frais',
-    champs: [
-      {
-        cle: 'fraisEmballage',
-        libelle: 'Emballage cadeau',
-        unite: 'XPF',
-        aide: () =>
-          'Ajouté au total quand le client choisit l’emballage cadeau. Il n’est pas remboursé lors d’un retour.',
-      },
-      {
-        cle: 'fraisLivraison',
-        libelle: 'Livraison',
-        unite: 'XPF',
-        aide: () => 'Ajoutée au total de chaque commande. Elle n’est pas remboursée lors d’un retour.',
-      },
-    ],
+    cle: 'delaiRetourCadeauJours',
+    libelle: 'Délai de retour d’un cadeau',
+    unite: 'jours',
+    aide: () => 'Remplace le délai normal pour une commande passée pour une occasion : Noël, anniversaire ou fête.',
   },
   {
-    titre: 'Réapprovisionnement',
-    champs: [
-      {
-        cle: 'seuilAlerteDefaut',
-        libelle: 'Seuil d’alerte par défaut',
-        unite: '%',
-        aide: (valeur) =>
-          `Un article passe « à recommander » quand il en reste ce pourcentage ou moins de la quantité achetée à la dernière commande. Exemple : sur 100 exemplaires achetés, l’alerte se déclenche à ${exempleSeuil(valeur)} restants. S’applique aux articles qui n’ont pas leur propre seuil.`,
-      },
-    ],
+    cle: 'fraisEmballage',
+    libelle: 'Emballage cadeau',
+    unite: 'XPF',
+    aide: () => 'Ajouté au total quand le client choisit l’emballage cadeau. Il n’est pas remboursé lors d’un retour.',
+  },
+  {
+    cle: 'fraisLivraison',
+    libelle: 'Livraison',
+    unite: 'XPF',
+    aide: () => 'Ajoutée au total de chaque commande. Elle n’est pas remboursée lors d’un retour.',
+  },
+  {
+    cle: 'seuilAlerteDefaut',
+    libelle: 'Seuil d’alerte par défaut',
+    unite: '%',
+    aide: (valeur) =>
+      `Un article passe « à recommander » quand il en reste ce pourcentage ou moins de la quantité achetée à la dernière commande. Exemple : sur 100 exemplaires achetés, l’alerte se déclenche à ${exempleSeuil(valeur)} restants. S’applique aux articles qui n’ont pas leur propre seuil.`,
   },
 ]
 
-const CLES = GROUPES.flatMap((groupe) => groupe.champs.map((champ) => champ.cle))
+const CLES = CHAMPS.map((champ) => champ.cle)
 
 function enSaisie(parametres: Parametres): Saisie {
   return Object.fromEntries(CLES.map((cle) => [cle, String(parametres[cle])])) as Saisie
@@ -106,13 +86,152 @@ function verifier(saisie: Saisie): Partial<Record<CleParametre, string>> {
   return erreurs
 }
 
+function pluriel(valeur: number, mot: string): string {
+  return `${valeur} ${mot}${valeur > 1 ? 's' : ''}`
+}
+
+function Categories({ onAnnonce }: { onAnnonce: (texte: string) => void }) {
+  const [categories, setCategories] = useState<Categorie[] | null>(null)
+  const [produits, setProduits] = useState<Produit[]>([])
+  const [nouvelle, setNouvelle] = useState('')
+  const [erreurChamp, setErreurChamp] = useState('')
+  const [erreur, setErreur] = useState('')
+  const [envoi, setEnvoi] = useState(false)
+  const [version, setVersion] = useState(0)
+
+  useEffect(() => {
+    let actif = true
+    listerCategories()
+      .then((liste) => {
+        if (actif) {
+          setCategories(liste)
+        }
+      })
+      .catch((probleme: unknown) => {
+        if (actif) {
+          setErreur(messageErreur(probleme))
+        }
+      })
+    Promise.all([listerProduits(), listerProduits({ archive: true })])
+      .then(([actifs, archives]) => {
+        if (actif) {
+          setProduits([...actifs, ...archives])
+        }
+      })
+      .catch(() => {})
+    return () => {
+      actif = false
+    }
+  }, [version])
+
+  async function ajouter(evenement: FormEvent<HTMLFormElement>) {
+    evenement.preventDefault()
+    setErreurChamp('')
+    setErreur('')
+    if (!nouvelle.trim()) {
+      setErreurChamp('Donnez un nom à la catégorie.')
+      return
+    }
+    setEnvoi(true)
+    try {
+      const creee = await creerCategorie(nouvelle.trim())
+      setNouvelle('')
+      onAnnonce(`Catégorie « ${creee.libelle} » ajoutée.`)
+      setVersion((precedente) => precedente + 1)
+    } catch (probleme) {
+      const champs = erreursDesChamps(probleme)
+      if (champs.libelle) {
+        setErreurChamp(champs.libelle)
+      } else {
+        setErreur(messageErreur(probleme))
+      }
+    } finally {
+      setEnvoi(false)
+    }
+  }
+
+  async function supprimer(categorie: Categorie) {
+    setErreur('')
+    try {
+      await supprimerCategorie(categorie.id)
+      onAnnonce(`Catégorie « ${categorie.libelle} » supprimée.`)
+      setVersion((precedente) => precedente + 1)
+    } catch (probleme) {
+      setErreur(messageErreur(probleme))
+    }
+  }
+
+  return (
+    <section className="feuille" aria-labelledby="titre-categories">
+      <div className="feuille-tete">
+        <h2 className="feuille-titre" id="titre-categories">
+          Catégories
+        </h2>
+        <p className="feuille-note">Elles rangent le catalogue et orientent les clients.</p>
+      </div>
+      <div className="feuille-corps">
+        {erreur && <ErrorMessage>{erreur}</ErrorMessage>}
+        {!categories && !erreur && <Loader />}
+        {categories && (
+          <ul className="categories">
+            {categories.map((categorie) => {
+              const nombre = produits.filter((produit) => produit.categorie === categorie.id).length
+              return (
+                <li key={categorie.id}>
+                  <strong style={{ fontWeight: 600 }}>{categorie.libelle}</strong>
+                  <span>{nombre ? pluriel(nombre, 'article') : 'Vide'}</span>
+                  {nombre ? (
+                    <span
+                      data-bulle-titre="Utilisée"
+                      data-bulle-texte="Une catégorie utilisée par un article ne peut pas être supprimée."
+                    >
+                      Utilisée
+                    </span>
+                  ) : (
+                    <button
+                      className="action-ligne"
+                      type="button"
+                      aria-label={`Supprimer ${categorie.libelle}`}
+                      onClick={() => supprimer(categorie)}
+                    >
+                      Supprimer
+                    </button>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        )}
+        <form className="ajout-ligne" onSubmit={ajouter} noValidate>
+          <input
+            placeholder="Nouvelle catégorie"
+            aria-label="Nouvelle catégorie"
+            value={nouvelle}
+            aria-invalid={erreurChamp ? true : undefined}
+            aria-describedby={erreurChamp ? 'erreur-categorie' : undefined}
+            onChange={(evenement) => setNouvelle(evenement.target.value)}
+          />
+          <button className="bouton bouton-petit" type="submit" disabled={envoi}>
+            Ajouter
+          </button>
+        </form>
+        {erreurChamp && (
+          <p className="champ-erreur" id="erreur-categorie" style={{ marginTop: 8 }}>
+            {erreurChamp}
+          </p>
+        )}
+      </div>
+    </section>
+  )
+}
+
 function ParametresPage() {
   const [enregistres, setEnregistres] = useState<Parametres | null>(null)
   const [saisie, setSaisie] = useState<Saisie | null>(null)
   const [erreurChargement, setErreurChargement] = useState('')
   const [erreurs, setErreurs] = useState<Partial<Record<CleParametre, string>>>({})
   const [erreur, setErreur] = useState('')
-  const [succes, setSucces] = useState('')
+  const [annonce, setAnnonce] = useState('')
   const [envoi, setEnvoi] = useState(false)
 
   useEffect(() => {
@@ -134,13 +253,21 @@ function ParametresPage() {
     }
   }, [])
 
-  const modifie = Boolean(
-    enregistres && saisie && CLES.some((cle) => saisie[cle].trim() !== String(enregistres[cle])),
-  )
+  useEffect(() => {
+    if (!annonce) {
+      return
+    }
+    const minuteur = window.setTimeout(() => setAnnonce(''), 4000)
+    return () => window.clearTimeout(minuteur)
+  }, [annonce])
+
+  const modifies = enregistres && saisie ? CLES.filter((cle) => saisie[cle].trim() !== String(enregistres[cle])) : []
+  const modifie = modifies.length > 0
+  const valide = saisie ? Object.keys(verifier(saisie)).length === 0 : false
 
   function changer(cle: CleParametre, valeur: string) {
     setSaisie((precedente) => (precedente ? { ...precedente, [cle]: valeur } : precedente))
-    setSucces('')
+    setAnnonce('')
   }
 
   function annuler() {
@@ -159,7 +286,7 @@ function ParametresPage() {
     const verification = verifier(saisie)
     setErreurs(verification)
     setErreur('')
-    setSucces('')
+    setAnnonce('')
     if (Object.keys(verification).length > 0) {
       return
     }
@@ -170,7 +297,7 @@ function ParametresPage() {
       )
       setEnregistres(parametres)
       setSaisie(enSaisie(parametres))
-      setSucces('Paramètres enregistrés.')
+      setAnnonce('Paramètres enregistrés.')
     } catch (probleme) {
       const champs = erreursDesChamps(probleme)
       if (Object.keys(champs).length > 0) {
@@ -184,65 +311,109 @@ function ParametresPage() {
   }
 
   return (
-    <div className="parametres-page">
+    <>
       <title>Paramètres · Feuillet</title>
-      <header className="parametres-entete">
-        <h1>Paramètres</h1>
-        <p>Les règles de la librairie : durées, délais, frais et seuil d’alerte.</p>
+      <header className="tete">
+        <div>
+          <h1>Paramètres</h1>
+          <p>Les règles de la librairie. Une modification vaut pour les prochaines commandes et demandes.</p>
+        </div>
       </header>
 
       {erreurChargement && <ErrorMessage>{erreurChargement}</ErrorMessage>}
-      {!saisie && !erreurChargement && <Loader />}
 
-      {saisie && (
-        <form className="parametres-formulaire" onSubmit={enregistrer} noValidate>
-          {GROUPES.map((groupe, rang) => (
-            <section key={groupe.titre} className="parametres-surface" aria-labelledby={`groupe-${rang}`}>
-              <h2 id={`groupe-${rang}`}>{groupe.titre}</h2>
-              {groupe.champs.map((champ) => (
-                <div key={champ.cle} className="parametres-champ">
-                  <div className="parametres-saisie">
-                    <Input
-                      label={`${champ.libelle} (${champ.unite})`}
-                      type="number"
-                      inputMode="numeric"
-                      min={1}
-                      max={champ.cle === 'seuilAlerteDefaut' ? POURCENTAGE_MAX : VALEUR_MAX}
-                      value={saisie[champ.cle]}
-                      error={erreurs[champ.cle]}
-                      aria-describedby={`aide-${champ.cle}`}
-                      onChange={(evenement) => changer(champ.cle, evenement.target.value)}
-                    />
-                  </div>
-                  <p className="parametres-aide" id={`aide-${champ.cle}`}>
-                    {champ.aide(saisie[champ.cle])}
-                  </p>
-                </div>
-              ))}
-            </section>
-          ))}
-
-          <div className="parametres-barre">
+      <div className="deux">
+        <form className="feuille" id="reglages" onSubmit={enregistrer} noValidate aria-labelledby="titre-regles">
+          <div className="feuille-tete">
+            <h2 className="feuille-titre" id="titre-regles">
+              Règles
+            </h2>
+          </div>
+          <div className="feuille-corps">
             {erreur && <ErrorMessage>{erreur}</ErrorMessage>}
-            {succes && (
-              <p className="parametres-succes" role="status">
-                {succes}
-              </p>
-            )}
-            <div className="parametres-actions">
-              <Button type="submit" loading={envoi} disabled={!modifie}>
-                Enregistrer
-              </Button>
-              {modifie && (
-                <Button type="button" variant="secondary" onClick={annuler} disabled={envoi}>
-                  Annuler les changements
-                </Button>
-              )}
-            </div>
+            {!saisie && !erreurChargement && <Loader />}
+            {saisie &&
+              CHAMPS.map((champ) => {
+                const erreurChamp = erreurs[champ.cle]
+                return (
+                  <div key={champ.cle} className={erreurChamp ? 'reglage erreur' : 'reglage'}>
+                    <div>
+                      <label htmlFor={`r-${champ.cle}`}>{champ.libelle}</label>
+                      <p id={`aide-${champ.cle}`}>{champ.aide(saisie[champ.cle])}</p>
+                    </div>
+                    <span className="unite">
+                      <input
+                        id={`r-${champ.cle}`}
+                        type="number"
+                        inputMode="numeric"
+                        min={1}
+                        max={champ.cle === 'seuilAlerteDefaut' ? POURCENTAGE_MAX : VALEUR_MAX}
+                        aria-label={`${champ.libelle} (${champ.unite})`}
+                        aria-invalid={erreurChamp ? true : undefined}
+                        aria-describedby={[`aide-${champ.cle}`, erreurChamp ? `erreur-${champ.cle}` : '']
+                          .filter(Boolean)
+                          .join(' ')}
+                        value={saisie[champ.cle]}
+                        onChange={(evenement) => changer(champ.cle, evenement.target.value)}
+                      />
+                      <span>{champ.unite}</span>
+                    </span>
+                    {erreurChamp && (
+                      <p className="champ-erreur" id={`erreur-${champ.cle}`}>
+                        {erreurChamp}
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
           </div>
         </form>
+
+        <Categories onAnnonce={setAnnonce} />
+      </div>
+
+      {saisie && (
+        <section className={modifie ? 'barre-enregistrer visible' : 'barre-enregistrer'} aria-label="Modifications">
+          <span>
+            {!modifie
+              ? 'Aucune modification'
+              : valide
+                ? `${pluriel(modifies.length, 'réglage')} modifié${modifies.length > 1 ? 's' : ''}`
+                : 'Corrigez les valeurs signalées'}
+          </span>
+          <span style={{ display: 'flex', gap: 8 }}>
+            {modifie && (
+              <button
+                className="bouton bouton-petit"
+                type="button"
+                aria-label="Annuler les changements"
+                style={{ background: 'transparent', border: '1px solid rgba(255,255,255,.3)', color: 'inherit' }}
+                disabled={envoi}
+                onClick={annuler}
+              >
+                Annuler
+              </button>
+            )}
+            <button
+              className="bouton bouton-petit bouton-blanc"
+              type="submit"
+              form="reglages"
+              disabled={!modifie || envoi}
+              aria-busy={envoi || undefined}
+            >
+              Enregistrer
+            </button>
+          </span>
+        </section>
       )}
-    </div>
+
+      {annonce && (
+        <div className="message-admin visible" role="status">
+          <IconeAdmin nom="coche" epaisseur={3} />
+          <span>{annonce}</span>
+        </div>
+      )}
+    </>
   )
 }
 

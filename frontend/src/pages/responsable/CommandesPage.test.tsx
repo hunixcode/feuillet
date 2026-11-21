@@ -66,6 +66,9 @@ function simulerApi(reponse: (requete: Requete) => Response | undefined = () => 
     if (requete.url.includes('/receptions')) {
       return json([])
     }
+    if (requete.url.startsWith('/api/demandes')) {
+      return json([])
+    }
     if (requete.url === '/api/commandes-fournisseur?statut=recue') {
       return json([recue])
     }
@@ -75,7 +78,18 @@ function simulerApi(reponse: (requete: Requete) => Response | undefined = () => 
 }
 
 function tableau() {
-  return within(screen.getByRole('region', { name: /Encore attendues|Commandes fournisseur/ }))
+  return within(screen.getByRole('region', { name: 'Commandes fournisseur' }))
+}
+
+function titres() {
+  return Array.from(document.querySelectorAll('.liste tbody .article .article-titre')).map(
+    (titre) => titre.textContent,
+  )
+}
+
+async function ligne(titre: string) {
+  const element = await tableau().findByText(titre, { selector: '.article-titre' })
+  return element.closest('tr') as HTMLElement
 }
 
 describe('page des commandes fournisseur', () => {
@@ -93,53 +107,93 @@ describe('page des commandes fournisseur', () => {
     const requetes = simulerApi()
     render(<CommandesPage />)
 
-    await tableau().findByRole('button', { name: 'Sakamoto Days' })
-    const lignes = tableau().getAllByRole('row').slice(1)
-    expect(lignes).toHaveLength(2)
-    expect(lignes[0]).toHaveTextContent('Sakamoto Days')
-    expect(lignes[1]).toHaveTextContent('Mutismes')
-    expect(tableau().queryByText('Casino Royale')).not.toBeInTheDocument()
-    expect(tableau().getByText('2', { selector: '.commandes-compte' })).toBeInTheDocument()
+    await ligne('Sakamoto Days')
+    expect(titres()).toEqual(['Sakamoto Days', 'Mutismes'])
+    expect(within(await ligne('Sakamoto Days')).getByText('Reçue en partie')).toHaveClass('statut-partielle')
+    expect(within(await ligne('Sakamoto Days')).getByText('Dans 3 jours')).toBeInTheDocument()
+    expect(within(await ligne('Mutismes')).getByText('Dans 11 jours')).toBeInTheDocument()
+    expect(within(await ligne('Sakamoto Days')).getByText('4 sur 10')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Attendues/ })).toHaveTextContent('Attendues2')
+    expect(screen.getByRole('button', { name: /^Reçues/ })).toHaveTextContent('Reçues1')
+    expect(screen.getByText('16 exemplaires attendus')).toBeInTheDocument()
     expect(requetes.map((requete) => requete.url)).toEqual(
       expect.arrayContaining(['/api/commandes-fournisseur', '/api/fournisseurs', '/api/produits']),
     )
     expect(document.title).toBe('Fournisseurs, commandes et réceptions · Feuillet')
   })
 
-  it('filtre par statut et par fournisseur côté serveur', async () => {
-    const requetes = simulerApi()
-    render(<CommandesPage />)
-    await tableau().findByRole('button', { name: 'Sakamoto Days' })
-
-    fireEvent.change(screen.getByLabelText('Statut'), { target: { value: 'recue' } })
-
-    expect(await tableau().findByRole('button', { name: 'Casino Royale' })).toBeInTheDocument()
-    expect(tableau().queryByRole('button', { name: 'Mutismes' })).not.toBeInTheDocument()
-
-    fireEvent.change(screen.getAllByLabelText('Fournisseur')[0], { target: { value: 'f-1' } })
-
-    await waitFor(() =>
-      expect(requetes.map((requete) => requete.url)).toContain(
-        '/api/commandes-fournisseur?statut=recue&fournisseurId=f-1',
-      ),
+  it('montre les commandes reçues, toutes les commandes et filtre par fournisseur', async () => {
+    simulerApi(({ url }) =>
+      url === '/api/commandes-fournisseur'
+        ? json([
+            tardive,
+            proche,
+            recue,
+            commande('e', 'Dune', { fournisseur: { id: 'f-2', nom: 'Éditions du Récif' } }),
+          ])
+        : url.startsWith('/api/fournisseurs')
+          ? json([
+              { id: 'f-1', nom: 'Diffusion Océanie' },
+              { id: 'f-2', nom: 'Éditions du Récif' },
+            ])
+          : undefined,
     )
+    render(<CommandesPage />)
+    await ligne('Sakamoto Days')
+
+    fireEvent.click(screen.getByRole('button', { name: /^Reçues/ }))
+    expect(titres()).toEqual(['Casino Royale'])
+    expect(within(await ligne('Casino Royale')).getByText('Arrivée')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /^Toutes/ }))
+    expect(titres()).toHaveLength(4)
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Fournisseur' }), { target: { value: 'f-2' } })
+    expect(titres()).toEqual(['Dune'])
   })
 
   it('ouvre le détail d une commande avec ses réceptions', async () => {
     const requetes = simulerApi()
     render(<CommandesPage />)
 
-    fireEvent.click(await tableau().findByRole('button', { name: 'Sakamoto Days' }))
+    fireEvent.click(await ligne('Sakamoto Days'))
 
-    expect(screen.getByRole('heading', { name: 'Sakamoto Days' })).toBeInTheDocument()
-    expect(screen.getByText('4 reçus sur 10 commandés')).toBeInTheDocument()
+    const volet = within(screen.getByRole('complementary', { name: 'Commande choisie' }))
+    expect(volet.getByRole('heading', { name: 'Sakamoto Days' })).toBeInTheDocument()
+    expect(volet.getByText('Commande du 8 novembre, Diffusion Océanie')).toBeInTheDocument()
+    expect(volet.getByText('Attendus').nextElementSibling).toHaveTextContent('6')
     await waitFor(() =>
       expect(requetes.map((requete) => requete.url)).toContain('/api/commandes-fournisseur/b/receptions'),
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Fermer le panneau' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer le volet' }))
 
     expect(screen.queryByRole('heading', { name: 'Sakamoto Days' })).not.toBeInTheDocument()
+  })
+
+  it('rappelle les demandes des clients qui attendent l article commandé', async () => {
+    simulerApi(({ url }) =>
+      url.startsWith('/api/demandes')
+        ? json([
+            {
+              id: 'd-1',
+              titre: 'Sakamoto Days',
+              produitId: 'p-b',
+              quantiteSouhaitee: 2,
+              statut: 'en_attente',
+              date: '2026-11-10T20:00:00.000Z',
+              client: { id: 'c-1', nom: 'Teva', email: 'teva@test.local' },
+            },
+          ])
+        : undefined,
+    )
+    render(<CommandesPage />)
+
+    fireEvent.click(await ligne('Sakamoto Days'))
+
+    expect(
+      await within(screen.getByRole('complementary')).findByText(/1 demande attend ce livre/),
+    ).toHaveTextContent('2 exemplaires à mettre de côté à la validation de la réception, pour Teva.')
   })
 
   it('passe une nouvelle commande, recharge la liste et l ouvre', async () => {
@@ -148,23 +202,21 @@ describe('page des commandes fournisseur', () => {
       url === '/api/commandes-fournisseur' && methode === 'POST' ? json(nouvelle, 201) : undefined,
     )
     render(<CommandesPage />)
-    await tableau().findByRole('button', { name: 'Sakamoto Days' })
+    await ligne('Sakamoto Days')
     const chargements = () =>
       requetes.filter((requete) => requete.url === '/api/commandes-fournisseur' && requete.methode === 'GET').length
     const avant = chargements()
 
     fireEvent.click(screen.getByRole('button', { name: 'Nouvelle commande' }))
-    const panneau = within(screen.getByRole('complementary'))
-    fireEvent.change(panneau.getByLabelText('Fournisseur'), { target: { value: 'f-1' } })
-    fireEvent.change(panneau.getByLabelText('Article'), { target: { value: 'p-d' } })
-    fireEvent.change(panneau.getByLabelText('Quantité'), { target: { value: '12' } })
-    fireEvent.change(panneau.getByLabelText('Arrivée prévue'), { target: { value: '2026-11-20' } })
-    fireEvent.click(panneau.getByRole('button', { name: 'Passer la commande' }))
+    const volet = within(screen.getByRole('complementary', { name: 'Nouvelle commande' }))
+    fireEvent.change(volet.getByLabelText('Fournisseur'), { target: { value: 'f-1' } })
+    fireEvent.change(volet.getByLabelText('Article'), { target: { value: 'p-d' } })
+    fireEvent.change(volet.getByLabelText('Quantité'), { target: { value: '12' } })
+    fireEvent.change(volet.getByLabelText('Arrivée prévue'), { target: { value: '2026-11-20' } })
+    fireEvent.click(volet.getByRole('button', { name: 'Passer la commande' }))
 
     expect(
-      await within(screen.getByRole('complementary')).findByText(
-        'Commande passée : 12 × Le Petit Prince chez Diffusion Océanie.',
-      ),
+      await screen.findByText('Commande passée : 12 × Le Petit Prince chez Diffusion Océanie.'),
     ).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Le Petit Prince' })).toBeInTheDocument()
     await waitFor(() => expect(chargements()).toBeGreaterThan(avant))
@@ -173,26 +225,72 @@ describe('page des commandes fournisseur', () => {
   it('referme le formulaire de nouvelle commande', async () => {
     simulerApi()
     render(<CommandesPage />)
-    await tableau().findByRole('button', { name: 'Sakamoto Days' })
-
+    await ligne('Sakamoto Days')
     fireEvent.click(screen.getByRole('button', { name: 'Nouvelle commande' }))
+
     fireEvent.click(within(screen.getByRole('complementary')).getByRole('button', { name: 'Annuler' }))
 
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
   })
 
-  it('ferme le panneau avec Échap ou en cliquant à côté', async () => {
+  it('ferme le volet avec Échap ou en cliquant à côté, et l ouvre au clavier', async () => {
     simulerApi()
-    const { container } = render(<CommandesPage />)
-    fireEvent.click(await tableau().findByRole('button', { name: 'Sakamoto Days' }))
-    expect(screen.getByRole('button', { name: 'Fermer le panneau' })).toHaveFocus()
+    render(<CommandesPage />)
+    const rangee = await ligne('Sakamoto Days')
 
+    fireEvent.keyDown(rangee, { key: 'Enter' })
+    expect(screen.getByRole('button', { name: 'Fermer le volet' })).toHaveFocus()
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Nouvelle commande' }))
-    fireEvent.click(container.querySelector('.commandes-voile') as Element)
+    fireEvent.click(rangee)
+    fireEvent.click(document.querySelector('.tiroir-fond') as Element)
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
+  })
+
+  it('liste les fournisseurs et ouvre leur fiche', async () => {
+    simulerApi(({ url }) =>
+      url.startsWith('/api/fournisseurs')
+        ? json([{ id: 'f-1', nom: 'Diffusion Océanie', contact: 'commandes@do.pf' }])
+        : undefined,
+    )
+    render(<CommandesPage />)
+    await ligne('Sakamoto Days')
+
+    fireEvent.click(screen.getByRole('button', { name: /^Fournisseurs/ }))
+
+    const rangee = screen.getByText('Diffusion Océanie', { selector: '.article-titre' }).closest('tr') as HTMLElement
+    expect(within(rangee).getAllByRole('cell').map((cellule) => cellule.textContent)).toEqual([
+      'Diffusion Océanie',
+      'commandes@do.pf',
+      '2',
+      '8 novembre',
+      '',
+    ])
+
+    fireEvent.click(rangee)
+
+    const volet = within(screen.getByRole('complementary', { name: 'Fournisseur choisi' }))
+    expect(volet.getByLabelText('Nom')).toHaveValue('Diffusion Océanie')
+    expect(volet.getByRole('heading', { name: /^Commandes/ })).toHaveTextContent('Commandes3')
+  })
+
+  it('ajoute un fournisseur depuis l en-tête et ouvre sa fiche', async () => {
+    simulerApi(({ url, methode }) =>
+      url === '/api/fournisseurs' && methode === 'POST'
+        ? json({ id: 'f-3', nom: 'Papeterie du Lagon' }, 201)
+        : undefined,
+    )
+    render(<CommandesPage />)
+    await ligne('Sakamoto Days')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Nouveau fournisseur' }))
+    const volet = within(screen.getByRole('complementary', { name: 'Nouveau fournisseur' }))
+    fireEvent.change(volet.getByLabelText('Nom'), { target: { value: 'Papeterie du Lagon' } })
+    fireEvent.click(volet.getByRole('button', { name: 'Ajouter le fournisseur' }))
+
+    expect(await screen.findByText('Papeterie du Lagon a été ajouté.')).toBeInTheDocument()
+    expect(screen.getByRole('complementary', { name: 'Fournisseur choisi' })).toBeInTheDocument()
   })
 
   it('affiche une erreur de chargement', async () => {

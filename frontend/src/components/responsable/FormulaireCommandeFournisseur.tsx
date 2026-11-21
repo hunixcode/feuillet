@@ -88,52 +88,63 @@ function FormulaireCommandeFournisseur({
 
   if (fournisseurs.length === 0) {
     return (
-      <div className="commandes-bloc">
-        <h2>Nouvelle commande</h2>
-        <p className="commandes-aide">
-          Ajoutez d’abord un fournisseur dans la section « Fournisseurs » plus bas.
+      <>
+        <h2 className="tiroir-titre" style={{ marginTop: 4 }}>
+          Nouvelle commande
+        </h2>
+        <p className="tiroir-meta">
+          Ajoutez d’abord un fournisseur avec le bouton « Nouveau fournisseur ».
         </p>
-        <Button type="button" variant="secondary" onClick={onAnnuler}>
-          Fermer
-        </Button>
-      </div>
+        <div className="tiroir-actions">
+          <Button type="button" variant="secondary" onClick={onAnnuler}>
+            Fermer
+          </Button>
+        </div>
+      </>
     )
   }
 
   return (
-    <form className="commandes-bloc" onSubmit={envoyer} noValidate>
-      <h2>Nouvelle commande</h2>
-      <p className="commandes-aide">
-        Une commande porte sur un seul article chez un seul fournisseur.
+    <form onSubmit={envoyer} noValidate>
+      <h2 className="tiroir-titre" style={{ marginTop: 4 }}>
+        Nouvelle commande
+      </h2>
+      <p className="tiroir-meta">
+        Une commande porte sur un seul article chez un seul fournisseur. L’arrivée prévue s’affiche
+        aux clients sur la fiche d’un article épuisé.
       </p>
       {erreur && <ErrorMessage>{erreur}</ErrorMessage>}
-      <Select
-        label="Fournisseur"
-        value={fournisseurId}
-        error={erreurs.fournisseurId}
-        onChange={(evenement) => setFournisseurId(evenement.target.value)}
-      >
-        <option value="">Choisir un fournisseur</option>
-        {fournisseurs.map((fournisseur) => (
-          <option key={fournisseur.id} value={fournisseur.id}>
-            {fournisseur.nom}
-          </option>
-        ))}
-      </Select>
-      <Select
-        label="Article"
-        value={produitId}
-        error={erreurs.produitId}
-        onChange={(evenement) => setProduitId(evenement.target.value)}
-      >
-        <option value="">Choisir un article</option>
-        {produits.map((produit) => (
-          <option key={produit.id} value={produit.id}>
-            {produit.designation} ({produit.reference})
-          </option>
-        ))}
-      </Select>
-      <div className="commandes-deux">
+      <div className="grille-champs">
+        <div className="large">
+          <Select
+            label="Article"
+            value={produitId}
+            error={erreurs.produitId}
+            onChange={(evenement) => setProduitId(evenement.target.value)}
+          >
+            <option value="">Choisir un article</option>
+            {produits.map((produit) => (
+              <option key={produit.id} value={produit.id}>
+                {produit.designation} ({produit.reference})
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="large">
+          <Select
+            label="Fournisseur"
+            value={fournisseurId}
+            error={erreurs.fournisseurId}
+            onChange={(evenement) => setFournisseurId(evenement.target.value)}
+          >
+            <option value="">Choisir un fournisseur</option>
+            {fournisseurs.map((fournisseur) => (
+              <option key={fournisseur.id} value={fournisseur.id}>
+                {fournisseur.nom}
+              </option>
+            ))}
+          </Select>
+        </div>
         <Input
           label="Quantité"
           type="number"
@@ -153,7 +164,7 @@ function FormulaireCommandeFournisseur({
           onChange={(evenement) => setDate(evenement.target.value)}
         />
       </div>
-      <div className="commandes-actions">
+      <div className="tiroir-actions">
         <Button type="submit" loading={envoi}>
           Passer la commande
         </Button>

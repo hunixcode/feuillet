@@ -10,9 +10,14 @@ interface FormulaireInventaireProps {
   ligne: LigneStock
   onChangement: (etat: EtatStock) => void
   onRecharger: () => void
+  integre?: boolean
 }
 
-function FormulaireInventaire({ ligne, onChangement, onRecharger }: FormulaireInventaireProps) {
+function ecartTexte(ecart: number): string {
+  return `${ecart > 0 ? '+' : ecart < 0 ? '−' : ''}${Math.abs(ecart)}`
+}
+
+function FormulaireInventaire({ ligne, onChangement, onRecharger, integre = false }: FormulaireInventaireProps) {
   const [quantiteComptee, setQuantiteComptee] = useState('')
   const [motif, setMotif] = useState('')
   const [erreurs, setErreurs] = useState<Record<string, string>>({})
@@ -48,53 +53,67 @@ function FormulaireInventaire({ ligne, onChangement, onRecharger }: FormulaireIn
     }
   }
 
-  return (
-    <section className="stock-bloc" aria-labelledby="titre-inventaire">
-      <h3 id="titre-inventaire">Correction d’inventaire</h3>
-      <form className="stock-formulaire" onSubmit={enregistrer} noValidate>
-        {message && <ErrorMessage>{message}</ErrorMessage>}
-        {succes && (
-          <p className="stock-succes" role="status">
-            {succes}
-          </p>
-        )}
-        <div className="stock-formulaire-grille">
-          <Input
-            label="Quantité enregistrée"
-            name="quantitePhysique"
-            type="number"
-            value={ligne.quantitePhysique}
-            readOnly
-          />
-          <Input
-            label="Quantité comptée"
-            name="quantiteComptee"
-            type="number"
-            inputMode="numeric"
-            min={0}
-            step={1}
-            value={quantiteComptee}
-            onChange={(evenement) => setQuantiteComptee(evenement.target.value)}
-            error={erreurs.quantiteComptee}
-          />
-        </div>
-        <Input
-          label="Motif"
-          name="motif"
-          placeholder="Comptage annuel, article perdu…"
-          value={motif}
-          onChange={(evenement) => setMotif(evenement.target.value)}
-          error={erreurs.motif}
-        />
-        <p className="stock-aide">
-          La correction est ajoutée au journal avec la quantité avant et après le comptage.
+  const comptee = quantiteComptee.trim() === '' ? Number.NaN : Number(quantiteComptee)
+
+  const formulaire = (
+    <form className="formulaire-tiroir" onSubmit={enregistrer} noValidate>
+      {message && <ErrorMessage>{message}</ErrorMessage>}
+      {succes && (
+        <p className="encart" role="status">
+          {succes}
         </p>
-        <div className="stock-actions">
-          <Button type="submit" loading={envoi}>
-            Enregistrer la correction
-          </Button>
-        </div>
-      </form>
+      )}
+      <div className="grille-champs">
+        <Input
+          label="Quantité enregistrée"
+          name="quantitePhysique"
+          type="number"
+          value={ligne.quantitePhysique}
+          readOnly
+        />
+        <Input
+          label="Quantité comptée"
+          name="quantiteComptee"
+          type="number"
+          inputMode="numeric"
+          min={0}
+          step={1}
+          value={quantiteComptee}
+          onChange={(evenement) => setQuantiteComptee(evenement.target.value)}
+          error={erreurs.quantiteComptee}
+        />
+      </div>
+      <Input
+        label="Motif"
+        name="motif"
+        placeholder="Comptage annuel, article perdu…"
+        value={motif}
+        onChange={(evenement) => setMotif(evenement.target.value)}
+        error={erreurs.motif}
+      />
+      <div className="solde">
+        <span>Écart avec le stock enregistré</span>
+        <strong>{Number.isFinite(comptee) ? ecartTexte(comptee - ligne.quantitePhysique) : '0'}</strong>
+      </div>
+      <p className="tiroir-note">
+        La correction est ajoutée au journal avec la quantité avant et après le comptage.
+      </p>
+      <div className="tiroir-actions">
+        <Button type="submit" loading={envoi}>
+          Enregistrer la correction
+        </Button>
+      </div>
+    </form>
+  )
+
+  if (integre) {
+    return <section aria-label="Correction d’inventaire">{formulaire}</section>
+  }
+
+  return (
+    <section className="tiroir-section" aria-labelledby="titre-inventaire">
+      <h3 id="titre-inventaire">Correction d’inventaire</h3>
+      {formulaire}
     </section>
   )
 }

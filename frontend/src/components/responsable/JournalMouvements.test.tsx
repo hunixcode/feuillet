@@ -61,7 +61,7 @@ describe('JournalMouvements', () => {
     )
 
     expect(cellulesDe('Comptage annuel')).toEqual([
-      '22/10/2026 10:00',
+      '22 oct.10 h 00',
       "L'Île au trésor",
       'Ajustement',
       '12 → 10',
@@ -75,12 +75,13 @@ describe('JournalMouvements', () => {
       <JournalMouvements mouvements={mouvements} articles={articles} filtres={{}} onFiltres={vi.fn()} />,
     )
 
-    expect(screen.getByText('Type', { selector: '.info-terme' })).toHaveAccessibleDescription(
+    expect(screen.getByRole('columnheader', { name: 'Mouvement' }).getAttribute('data-bulle-texte')).toMatch(
       /Ajustement : correction d’inventaire/,
     )
-    expect(screen.getByText('Opérateur', { selector: '.info-terme' })).toHaveAccessibleDescription(
+    expect(screen.getByRole('columnheader', { name: 'Par' }).getAttribute('data-bulle-texte')).toMatch(
       /le responsable, un client \(commande en ligne\) ou le système/,
     )
+    expect(screen.getByText('2 mouvements')).toBeInTheDocument()
   })
 
   it('affiche une vente en ligne faite par le client', () => {
@@ -89,7 +90,7 @@ describe('JournalMouvements', () => {
     )
 
     expect(cellulesDe('Commande en ligne C-0087')).toEqual([
-      '20/10/2026 15:15',
+      '20 oct.15 h 15',
       'Casino Royale',
       'Vente',
       '−1',

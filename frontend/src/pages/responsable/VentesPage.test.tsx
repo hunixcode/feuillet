@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { retoursDeTest, venteDeTest } from '../../components/responsable/ventesDeTest'
 import VentesPage from './VentesPage.tsx'
 
@@ -8,10 +8,20 @@ const aPreparer = venteDeTest({
   date: '2026-11-13T20:00:00.000Z',
   statut: 'a_preparer',
   dateExpedition: undefined,
+  emballageCadeau: true,
   client: { id: 'c-2', nom: 'Teva Bonno', email: 'teva@example.pf' },
 })
 
 const expediee = venteDeTest()
+
+const parametres = {
+  dureeMiseDeCoteJours: 7,
+  delaiRetourJours: 14,
+  delaiRetourCadeauJours: 30,
+  fraisEmballage: 300,
+  fraisLivraison: 800,
+  seuilAlerteDefaut: 20,
+}
 
 interface Requete {
   url: string
@@ -34,68 +44,95 @@ function simulerApi(reponse: (requete: Requete) => Response | undefined = () => 
     if (requete.url.startsWith('/api/produits')) {
       return json([])
     }
+    if (requete.url.startsWith('/api/parametres')) {
+      return json(parametres)
+    }
     if (requete.url.endsWith('/retours')) {
       return json(retoursDeTest())
-    }
-    if (requete.url === '/api/ventes?statut=a_preparer') {
-      return json([aPreparer])
-    }
-    if (requete.url === '/api/ventes?statut=expediee') {
-      return json([expediee])
     }
     return json([aPreparer, expediee])
   })
   return requetes
 }
 
-function liste() {
-  return within(screen.getByRole('region', { name: /À préparer|Expédiées|Toutes les commandes/ }))
+function ligne(nom: string) {
+  return screen.getByText(nom, { selector: '.article-titre' }).closest('tr') as HTMLElement
+}
+
+function panneau() {
+  return within(screen.getByRole('complementary', { name: 'Commande choisie' }))
 }
 
 describe('page des ventes et retours', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-14T20:00:00.000Z'))
   })
 
-  it('montre d abord les commandes à préparer', async () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('montre d abord les commandes à préparer, avec les compteurs de chaque statut', async () => {
     const requetes = simulerApi()
     render(<VentesPage />)
 
-    expect(await liste().findByRole('button', { name: '13/11/2026 10:00' })).toBeInTheDocument()
-    expect(liste().getByText('1', { selector: '.ventes-compte' })).toBeInTheDocument()
-    expect(requetes.map((requete) => requete.url)).toContain('/api/ventes?statut=a_preparer')
+    expect(await screen.findByText('Teva Bonno')).toBeInTheDocument()
+    expect(screen.queryByText('Léa Martin')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^À préparer/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /^À préparer/ })).toHaveTextContent('À préparer1')
+    expect(screen.getByRole('button', { name: /^Toutes/ })).toHaveTextContent('Toutes2')
+    expect(screen.getByText('3 articles à emballer')).toBeInTheDocument()
+    const commande = ligne('Teva Bonno')
+    expect(commande).toHaveTextContent('teva@example.pf')
+    expect(commande).toHaveTextContent('3 articles, emballage cadeau')
+    expect(commande).toHaveTextContent('Hier')
+    expect(commande).toHaveTextContent('4 810 XPF')
+    expect(commande).toHaveTextContent('À préparer')
+    expect(requetes.map((requete) => requete.url)).toContain('/api/ventes')
     expect(document.title).toBe('Ventes et retours · Feuillet')
   })
 
-  it('filtre par statut', async () => {
-    const requetes = simulerApi()
+  it('filtre par statut et cherche un client', async () => {
+    simulerApi()
     render(<VentesPage />)
-    await liste().findByRole('button', { name: '13/11/2026 10:00' })
+    await screen.findByText('Teva Bonno')
 
-    fireEvent.change(screen.getByLabelText('Statut'), { target: { value: '' } })
+    fireEvent.click(screen.getByRole('button', { name: /^Toutes/ }))
+    expect(screen.getByText('Léa Martin')).toBeInTheDocument()
+    expect(ligne('Léa Martin')).toHaveTextContent('Retour jusqu’au 24 nov.')
 
-    expect(await liste().findByRole('button', { name: '10/11/2026 10:00' })).toBeInTheDocument()
-    expect(requetes.map((requete) => requete.url)).toContain('/api/ventes')
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Rechercher un client' }), {
+      target: { value: 'léa' },
+    })
+
+    expect(screen.queryByText('Teva Bonno')).not.toBeInTheDocument()
+    expect(screen.getByText('Léa Martin')).toBeInTheDocument()
   })
 
-  it('marque une commande comme expédiée et recharge la liste', async () => {
+  it('ouvre la commande par son bouton, l expédie puis recharge la liste', async () => {
     const requetes = simulerApi(({ url, methode }) =>
       url === '/api/ventes/v-2/expedition' && methode === 'POST'
         ? json({ ...aPreparer, statut: 'expediee', dateExpedition: '2026-11-14T20:00:00.000Z' })
         : undefined,
     )
     render(<VentesPage />)
-    fireEvent.click(await liste().findByRole('button', { name: '13/11/2026 10:00' }))
-    const chargements = () => requetes.filter((requete) => requete.url === '/api/ventes?statut=a_preparer').length
+    await screen.findByText('Teva Bonno')
+    fireEvent.click(within(ligne('Teva Bonno')).getByRole('button'))
+
+    expect(panneau().getByRole('heading', { name: 'Teva Bonno' })).toBeInTheDocument()
+    expect(panneau().getAllByRole('row').find((element) => element.textContent?.includes("L'Île au trésor"))).toBeDefined()
+    const chargements = () => requetes.filter((requete) => requete.url === '/api/ventes').length
     const avant = chargements()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Marquer comme expédiée' }))
+    fireEvent.click(panneau().getByRole('button', { name: 'Marquer comme expédiée' }))
 
-    expect(await screen.findByText('La commande de Teva Bonno est marquée comme expédiée.')).toBeInTheDocument()
-    const panneau = within(screen.getByRole('complementary'))
-    expect(panneau.getByText('Expédiée le 14/11/2026 10:00')).toBeInTheDocument()
-    fireEvent.click(panneau.getByRole('tab', { name: 'Retours' }))
-    expect(await panneau.findByText(/Retour possible jusqu’au/)).toBeInTheDocument()
+    expect(await panneau().findByRole('status')).toHaveTextContent(
+      'La commande de Teva Bonno est marquée comme expédiée.',
+    )
+    expect(panneau().getByText(/^Expédiée le/)).toHaveTextContent('Expédiée le 14 novembre.')
+    expect(panneau().getByText(/Le colis vient de partir/)).toBeInTheDocument()
     await waitFor(() => expect(chargements()).toBeGreaterThan(avant))
   })
 
@@ -110,90 +147,81 @@ describe('page des ventes et retours', () => {
       return undefined
     })
     render(<VentesPage />)
-    fireEvent.click(await liste().findByRole('button', { name: '13/11/2026 10:00' }))
+    await screen.findByText('Teva Bonno')
+    fireEvent.click(ligne('Teva Bonno'))
 
-    fireEvent.click(screen.getByRole('button', { name: 'Marquer comme expédiée' }))
+    fireEvent.click(panneau().getByRole('button', { name: 'Marquer comme expédiée' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Cette commande a déjà été marquée comme expédiée.',
     )
-    expect(await screen.findByText('Expédiée le 14/11/2026 09:00')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Marquer comme expédiée' })).not.toBeInTheDocument()
+    expect(await panneau().findByText('Expédiée le 14 novembre.')).toBeInTheDocument()
+    expect(panneau().queryByRole('button', { name: 'Marquer comme expédiée' })).not.toBeInTheDocument()
   })
 
-  it('ouvre une commande expédiée avec ses retours puis la ferme', async () => {
+  it('ouvre une commande expédiée avec son suivi et ses retours, puis la ferme', async () => {
     simulerApi()
     render(<VentesPage />)
-    await liste().findByRole('button', { name: '13/11/2026 10:00' })
-    fireEvent.change(screen.getByLabelText('Statut'), { target: { value: 'expediee' } })
+    await screen.findByText('Teva Bonno')
+    fireEvent.click(screen.getByRole('button', { name: /^Expédiées/ }))
 
-    fireEvent.click(await liste().findByRole('button', { name: '10/11/2026 10:00' }))
+    fireEvent.click(ligne('Léa Martin'))
 
-    const panneau = within(screen.getByRole('complementary'))
-    expect(panneau.getByRole('heading', { name: 'Léa Martin' })).toBeInTheDocument()
-    expect(panneau.getByRole('tab', { name: 'Commande' })).toHaveAttribute('aria-selected', 'true')
-    expect(panneau.getByRole('tabpanel', { name: 'Commande' })).toHaveTextContent('Total payé')
+    expect(panneau().getByRole('heading', { name: 'Léa Martin' })).toBeInTheDocument()
+    expect(panneau().getByText('Livraison au BP 12, Papeete')).toBeInTheDocument()
+    expect(panneau().getByText('Colis expédié')).toBeInTheDocument()
+    expect(panneau().getByText('Fin du délai de retour')).toBeInTheDocument()
+    expect(panneau().getByText('Total TTC').nextElementSibling).toHaveTextContent('4 810 XPF')
 
-    fireEvent.click(panneau.getByRole('tab', { name: 'Retours' }))
-
-    fireEvent.click(await panneau.findByRole('button', { name: 'J’ai reçu un colis de retour' }))
-    expect(panneau.getByRole('form', { name: 'Enregistrer un retour reçu par colis' })).toBeInTheDocument()
-    expect(panneau.queryByRole('tabpanel', { name: 'Commande' })).not.toBeInTheDocument()
+    fireEvent.click(await panneau().findByRole('button', { name: 'J’ai reçu un colis de retour' }))
+    expect(panneau().getByRole('form', { name: 'Enregistrer un retour reçu par colis' })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Fermer la commande' }))
 
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
   })
 
-  it('n affiche rien à côté de la liste tant qu aucune commande n est ouverte', async () => {
+  it('n affiche aucun panneau tant qu aucune commande n est ouverte', async () => {
     simulerApi()
     render(<VentesPage />)
-
-    await liste().findByRole('button', { name: '13/11/2026 10:00' })
+    await screen.findByText('Teva Bonno')
 
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
   })
 
   it('ferme la commande avec Échap ou en cliquant à côté', async () => {
     simulerApi()
-    const { container } = render(<VentesPage />)
-    fireEvent.click(await liste().findByRole('button', { name: '13/11/2026 10:00' }))
-    expect(screen.getByRole('button', { name: 'Fermer la commande' })).toHaveFocus()
+    render(<VentesPage />)
+    await screen.findByText('Teva Bonno')
 
+    fireEvent.click(ligne('Teva Bonno'))
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
 
-    fireEvent.click(liste().getByRole('button', { name: '13/11/2026 10:00' }))
-    const voile = container.querySelector('.ventes-voile')
-    expect(voile).not.toBeNull()
-    fireEvent.click(voile as Element)
+    fireEvent.keyDown(ligne('Teva Bonno'), { key: 'Enter' })
+    expect(screen.getByRole('complementary', { name: 'Commande choisie' })).toBeInTheDocument()
+    fireEvent.click(document.querySelector('.tiroir-fond') as HTMLElement)
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
   })
 
-  it('revient sur l onglet Commande en ouvrant une autre commande', async () => {
-    simulerApi()
+  it('expédie d un coup les commandes cochées', async () => {
+    const requetes = simulerApi(({ url, methode }) =>
+      url === '/api/ventes/v-2/expedition' && methode === 'POST'
+        ? json({ ...aPreparer, statut: 'expediee', dateExpedition: '2026-11-14T20:00:00.000Z' })
+        : undefined,
+    )
     render(<VentesPage />)
-    await liste().findByRole('button', { name: '13/11/2026 10:00' })
-    fireEvent.change(screen.getByLabelText('Statut'), { target: { value: '' } })
-    fireEvent.click(await liste().findByRole('button', { name: '10/11/2026 10:00' }))
-    fireEvent.click(screen.getByRole('tab', { name: 'Retours' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Fermer la commande' }))
+    await screen.findByText('Teva Bonno')
 
-    fireEvent.click(liste().getByRole('button', { name: '13/11/2026 10:00' }))
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Sélectionner la commande de Teva Bonno' }))
+    const barre = within(screen.getByRole('region', { name: 'Commandes sélectionnées' }))
+    expect(barre.getByText('1 commande sélectionnée')).toBeInTheDocument()
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
 
-    expect(screen.getByRole('heading', { name: 'Teva Bonno' })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Commande' })).toHaveAttribute('aria-selected', 'true')
-  })
+    fireEvent.click(barre.getByRole('button', { name: 'Marquer expédiées' }))
 
-  it('passe d un onglet à l autre avec les flèches du clavier', async () => {
-    simulerApi()
-    render(<VentesPage />)
-    fireEvent.click(await liste().findByRole('button', { name: '13/11/2026 10:00' }))
-
-    fireEvent.keyDown(screen.getByRole('tab', { name: 'Commande' }), { key: 'ArrowRight' })
-
-    expect(screen.getByRole('tab', { name: 'Retours' })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('tab', { name: 'Retours' })).toHaveFocus()
+    expect(await screen.findByText('1 commande expédiée')).toBeInTheDocument()
+    expect(requetes).toContainEqual({ url: '/api/ventes/v-2/expedition', methode: 'POST' })
   })
 
   it('affiche une erreur de chargement', async () => {

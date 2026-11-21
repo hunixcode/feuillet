@@ -82,6 +82,9 @@ function simulerApi(simulation: Simulation = {}) {
         { id: 'papeterie', libelle: 'Papeterie' },
       ])
     }
+    if (url.startsWith('/api/produits') || url.startsWith('/api/commandes-fournisseur')) {
+      return json([])
+    }
     if (url.startsWith('/api/reapprovisionnement')) {
       return simulation.reappro?.clone() ?? json([casino])
     }
@@ -107,7 +110,11 @@ function afficher() {
 }
 
 function zoneRapport() {
-  return within(screen.getByRole('region', { name: 'Rapport d’activité' }))
+  return within(screen.getByRole('region', { name: 'Résultats de la période' }))
+}
+
+function zoneArticles() {
+  return within(screen.getByRole('region', { name: 'Par article' }))
 }
 
 describe('page des rapports', () => {
@@ -125,48 +132,60 @@ describe('page des rapports', () => {
     const urls = simulerApi()
     afficher()
 
-    await screen.findByText('Du 9 novembre 2026 au 15 novembre 2026, toutes catégories')
+    expect(await zoneRapport().findByText('Semaine du 9 au 15 novembre')).toBeInTheDocument()
     expect(urls).toEqual(
       expect.arrayContaining([
-        '/api/categories',
-        '/api/reapprovisionnement',
         '/api/rapports?semaine=2026-11-14',
+        '/api/reapprovisionnement',
+        '/api/categories',
+        '/api/rapports?debut=2026-11-02&fin=2026-11-08',
+        '/api/rapports?debut=2026-11-14&fin=2026-11-14',
       ]),
     )
+    expect(urls).not.toContain('/api/rapports?debut=2026-11-15&fin=2026-11-15')
+    expect(screen.getByRole('button', { name: 'Semaine suivante' })).toBeDisabled()
     expect(document.title).toBe('Réapprovisionnement et rapports · Feuillet')
   })
 
-  it('liste les articles à recommander avec leur nombre', async () => {
+  it('pose l équation des ventes, des retours et du net, avec les quantités', async () => {
     simulerApi()
     afficher()
 
-    const section = within(await screen.findByRole('region', { name: /À recommander/ }))
-    await section.findByText('Casino Royale')
-    expect(section.getByText('1', { selector: '.rapports-compte' })).toBeInTheDocument()
-    expect(section.getByText('Casino Royale').closest('tr')).toHaveTextContent('100 %')
+    const net = await zoneRapport().findByText('Net', { selector: 'dt' })
+    expect(net.nextElementSibling).toHaveTextContent('8 700XPF')
+    expect(zoneRapport().getByText('Ventes brutes', { selector: 'dt' }).nextElementSibling).toHaveTextContent('10 500XPF')
+    expect(zoneRapport().getByText('Retours', { selector: 'dt' }).nextElementSibling).toHaveTextContent('1 800XPF')
+    expect(
+      zoneRapport().getByText(/^7 articles vendus, 1 retourné, 6 nets, sur 2 commandes\. Panier moyen 5 250 XPF, 2 retours enregistrés/),
+    ).toBeInTheDocument()
+    expect(zoneRapport().getByText('Ventes brutes', { selector: 'dt' })).toHaveAttribute(
+      'data-bulle-texte',
+      expect.stringMatching(/sans les frais d’emballage cadeau/),
+    )
+    expect((await zoneRapport().findAllByText('0 % sur la semaine précédente')).length).toBe(3)
+  })
+
+  it('dessine les ventes nettes jour par jour', async () => {
+    simulerApi()
+    afficher()
+
+    expect(
+      await zoneRapport().findByRole('img', { name: 'Ventes nettes par jour, du 9 au 15 novembre' }),
+    ).toBeInTheDocument()
+    expect(zoneRapport().getByText('Meilleur jour,')).toBeInTheDocument()
+  })
+
+  it('liste les articles à recommander avec leur part vendue et leur commande en route', async () => {
+    simulerApi()
+    afficher()
+
+    const section = within(screen.getByRole('region', { name: 'À recommander' }))
+    const rangee = (await section.findByText('Casino Royale')).closest('li') as HTMLElement
+    expect(rangee).toHaveTextContent('100 % vendu, 0 en vente sur 8, seuil à 20 %')
+    expect(within(rangee).getByText('5 en commande')).toBeInTheDocument()
     expect(section.getByRole('link', { name: 'Passer une commande fournisseur' })).toHaveAttribute(
       'href',
       '/admin/commandes',
-    )
-  })
-
-  it('sépare les statistiques des ventes, des retours et le net', async () => {
-    simulerApi()
-    afficher()
-
-    await screen.findByText(/Du 9 novembre 2026/)
-    const ventes = within(screen.getByRole('region', { name: 'Ventes' }))
-    expect(ventes.getByText('Ventes brutes').closest('dt')?.nextElementSibling).toHaveTextContent('10 500 XPF')
-    expect(ventes.getByText('Commandes').closest('dt')?.nextElementSibling).toHaveTextContent('2')
-    expect(ventes.getByText('Panier moyen').closest('dt')?.nextElementSibling).toHaveTextContent('5 250 XPF')
-    const retours = within(screen.getByRole('region', { name: 'Retours' }))
-    expect(retours.getByText('Montant des retours').closest('dt')?.nextElementSibling).toHaveTextContent('1 800 XPF')
-    expect(retours.getByText('Retours enregistrés').closest('dt')?.nextElementSibling).toHaveTextContent('2')
-    const net = within(screen.getByRole('region', { name: 'Net' }))
-    expect(net.getByText('Vente nette').closest('dt')?.nextElementSibling).toHaveTextContent('8 700 XPF')
-    expect(net.getByText('Articles nets').closest('dt')?.nextElementSibling).toHaveTextContent('6')
-    expect(ventes.getByText('Panier moyen')).toHaveAccessibleDescription(
-      'Montant moyen d’une commande : montant des articles divisé par le nombre de commandes.',
     )
   })
 
@@ -174,69 +193,70 @@ describe('page des rapports', () => {
     simulerApi()
     afficher()
 
-    await zoneRapport().findByText("L'Île au trésor")
-    expect(zoneRapport().queryByText('Gomme blanche')).not.toBeInTheDocument()
-
-    fireEvent.click(
-      screen.getByRole('checkbox', { name: 'Afficher aussi les articles sans vente ni retour' }),
+    const ligne = (await zoneArticles().findByText("L'Île au trésor")).closest('tr') as HTMLElement
+    expect(within(ligne).getAllByRole('cell').map((cellule) => cellule.textContent)).toEqual([
+      "L'Île au trésor5 400 XPF nets",
+      '4',
+      '1',
+      '3',
+      '6',
+    ])
+    expect(within(ligne).getAllByRole('cell')[3]).toHaveAttribute(
+      'data-bulle-texte',
+      'Ventes 7 200 XPF, retours 1 800 XPF, 1 remplacement, 30 % de l’achat vendu.',
     )
+    expect(zoneArticles().queryByText('Gomme blanche')).not.toBeInTheDocument()
 
-    expect(zoneRapport().getByText('Gomme blanche').closest('tr')).toHaveTextContent('30')
+    fireEvent.click(zoneArticles().getByRole('checkbox', { name: 'Afficher aussi les articles sans vente ni retour' }))
+
+    expect(zoneArticles().getByText('Gomme blanche').closest('tr')).toHaveTextContent('30')
   })
 
-  it('demande une autre semaine filtrée par catégorie', async () => {
+  it('passe à la semaine précédente et filtre par catégorie', async () => {
     const urls = simulerApi()
     afficher()
-    await screen.findByText(/Du 9 novembre 2026/)
+    await zoneRapport().findByText('Semaine du 9 au 15 novembre')
 
-    fireEvent.change(screen.getByLabelText('Un jour de la semaine'), {
-      target: { value: '2026-11-04' },
-    })
-    fireEvent.change(screen.getByRole('combobox', { name: 'Catégorie' }), {
-      target: { value: 'roman' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Afficher' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Semaine précédente' }))
+    await waitFor(() => expect(urls).toContain('/api/rapports?semaine=2026-11-07'))
 
-    await screen.findByText(/catégorie Roman/)
-    expect(urls).toContain('/api/rapports?semaine=2026-11-04&categorie=roman')
+    fireEvent.change(await screen.findByRole('combobox', { name: 'Catégorie' }), { target: { value: 'roman' } })
+    await waitFor(() => expect(urls).toContain('/api/rapports?semaine=2026-11-07&categorie=roman'))
   })
 
-  it('vérifie les dates d une période libre sous chaque champ', async () => {
+  it('vérifie les dates d une période libre avant de la demander', async () => {
     const urls = simulerApi()
     afficher()
-    await screen.findByText(/Du 9 novembre 2026/)
+    await zoneRapport().findByText('Semaine du 9 au 15 novembre')
+    fireEvent.click(screen.getByRole('button', { name: 'Période libre' }))
 
-    fireEvent.click(screen.getByRole('radio', { name: 'Période libre' }))
     fireEvent.click(screen.getByRole('button', { name: 'Afficher' }))
 
     expect(screen.getByLabelText('Du')).toHaveAccessibleDescription('Choisissez la date de début.')
     expect(screen.getByLabelText('Au')).toHaveAccessibleDescription('Choisissez la date de fin.')
 
     fireEvent.change(screen.getByLabelText('Du'), { target: { value: '2026-11-10' } })
-    fireEvent.change(screen.getByLabelText('Au'), { target: { value: '2026-11-01' } })
+    fireEvent.change(screen.getByLabelText('Au'), { target: { value: '2026-11-05' } })
     fireEvent.click(screen.getByRole('button', { name: 'Afficher' }))
 
     expect(screen.getByLabelText('Du')).not.toHaveAttribute('aria-invalid')
     expect(screen.getByLabelText('Au')).toHaveAccessibleDescription(
       'La date de fin doit être après la date de début.',
     )
-    expect(urls.filter((url) => url.startsWith('/api/rapports?'))).toHaveLength(1)
+    expect(urls).not.toContain('/api/rapports?debut=2026-11-10&fin=2026-11-05')
 
     fireEvent.change(screen.getByLabelText('Au'), { target: { value: '2026-11-30' } })
     fireEvent.click(screen.getByRole('button', { name: 'Afficher' }))
-
     await waitFor(() => expect(urls).toContain('/api/rapports?debut=2026-11-10&fin=2026-11-30'))
   })
 
   it('explique une période refusée par le serveur', async () => {
     simulerApi({
-      rapport: json({ code: 'VALIDATION', message: 'La période ne peut pas dépasser 366 jours.' }, 400),
+      rapport: json({ code: 'PERIODE_INVALIDE', message: 'La période demandée est invalide.' }, 400),
     })
     afficher()
 
-    expect(await zoneRapport().findByRole('alert')).toHaveTextContent(
-      'La période ne peut pas dépasser 366 jours.',
-    )
+    expect(await zoneRapport().findByRole('alert')).toHaveTextContent('La période demandée est invalide.')
     expect(screen.getByRole('button', { name: 'Exporter en CSV' })).toBeDisabled()
   })
 
@@ -245,18 +265,17 @@ describe('page des rapports', () => {
     const creer = vi.fn(() => 'blob:rapport')
     const liberer = vi.fn()
     Object.assign(URL, { createObjectURL: creer, revokeObjectURL: liberer })
-    const clic = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
-      this: HTMLAnchorElement,
-    ) {
+    const clic = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
       expect(this.download).toBe('rapport-2026-11-09-2026-11-15.csv')
       expect(this.href).toBe('blob:rapport')
     })
     afficher()
-    await screen.findByText(/Du 9 novembre 2026/)
+    await zoneRapport().findByText('Semaine du 9 au 15 novembre')
 
     fireEvent.click(screen.getByRole('button', { name: 'Exporter en CSV' }))
 
     await waitFor(() => expect(clic).toHaveBeenCalledTimes(1))
+    expect(creer).toHaveBeenCalled()
     expect(urls).toContain('/api/rapports/export.csv?semaine=2026-11-14')
     expect(liberer).toHaveBeenCalledWith('blob:rapport')
   })
@@ -264,18 +283,18 @@ describe('page des rapports', () => {
   it('explique un export refusé', async () => {
     simulerApi({ csv: json({ code: 'INTERDIT', message: 'Accès réservé au responsable.' }, 403) })
     afficher()
-    await screen.findByText(/Du 9 novembre 2026/)
+    await zoneRapport().findByText('Semaine du 9 au 15 novembre')
 
     fireEvent.click(screen.getByRole('button', { name: 'Exporter en CSV' }))
 
-    expect(await zoneRapport().findByRole('alert')).toHaveTextContent('Accès réservé au responsable.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Accès réservé au responsable.')
   })
 
   it('signale une erreur de chargement des articles à recommander', async () => {
     simulerApi({ reappro: json({ code: 'INTERDIT', message: 'Accès réservé au responsable.' }, 403) })
     afficher()
 
-    const section = within(await screen.findByRole('region', { name: /À recommander/ }))
+    const section = within(screen.getByRole('region', { name: 'À recommander' }))
     expect(await section.findByRole('alert')).toHaveTextContent('Accès réservé au responsable.')
   })
 })
