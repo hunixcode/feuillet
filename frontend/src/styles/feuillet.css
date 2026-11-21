@@ -269,6 +269,16 @@
   grid-template-columns: repeat(4, 1fr);
 }
 
+.espace-client .catalogue-produits {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+@media (max-width: 1280px) {
+  .espace-client .catalogue-produits {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
 .espace-client .produit-visuel {
   position: relative;
 }
@@ -1500,7 +1510,21 @@
   }
 
   .espace-client .filtres-droite {
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    justify-items: start;
+    gap: 12px 14px;
+  }
+
+  .espace-client .filtres-droite .segment {
+    width: 100%;
+  }
+
+  .espace-client .filtres-droite .segment button {
+    flex: 1;
+    padding: 0 8px;
+    font-size: 13px;
+    white-space: nowrap;
   }
 
   .espace-client .ligne {
@@ -1572,16 +1596,6 @@
 .espace-client .fiche-prix,
 .espace-client .coeur-prix {
   font-variant-numeric: tabular-nums;
-}
-
-.espace-client .catalogue-produits {
-  grid-template-columns: repeat(5, 1fr);
-}
-
-@media (max-width: 1280px) {
-  .espace-client .catalogue-produits {
-    grid-template-columns: repeat(4, 1fr);
-  }
 }
 
 .espace-client .avis {
