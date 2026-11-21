@@ -26,6 +26,95 @@ réapprovisionnement), Projet de Génie Logiciel, à rendre <b>fin novembre</b>.
 
 Le détail (exigences EX01–EX11, règles RG01–RG15, décisions de cadrage issues des réponses de l'enseignant) est dans [`docs/rapport.md`](docs/rapport.md).
 
+## Captures d'écran
+
+Prises sur la démo Docker avec les données du seed. Toutes les images sont dans [`docs/captures/`](docs/captures/).
+
+<p align="center"><img src="docs/captures/parcours-achat.gif" alt="Parcours d'achat : accueil, catalogue, fiche du livre, ajout au panier" width="900"></p>
+<p align="center"><i>De l'accueil au panier</i></p>
+
+### Espace client
+
+<table>
+  <tr>
+    <td><img src="docs/captures/accueil.jpg" alt="Accueil"></td>
+    <td><img src="docs/captures/accueil-plus-vendus.jpg" alt="Accueil, rayons et meilleures ventes"></td>
+  </tr>
+  <tr>
+    <td align="center">Accueil</td>
+    <td align="center">Rayons et meilleures ventes</td>
+  </tr>
+  <tr>
+    <td><img src="docs/captures/catalogue.jpg" alt="Catalogue"></td>
+    <td><img src="docs/captures/fiche-produit.jpg" alt="Fiche d'un livre"></td>
+  </tr>
+  <tr>
+    <td align="center">Catalogue avec filtres et tri</td>
+    <td align="center">Fiche d'un livre</td>
+  </tr>
+  <tr>
+    <td><img src="docs/captures/panier.png" alt="Panier et paiement de démonstration"></td>
+    <td><img src="docs/captures/mes-commandes.png" alt="Mes commandes"></td>
+  </tr>
+  <tr>
+    <td align="center">Panier, options et paiement de démonstration</td>
+    <td align="center">Mes commandes</td>
+  </tr>
+  <tr>
+    <td><img src="docs/captures/mes-demandes.png" alt="Mes demandes"></td>
+    <td><img src="docs/captures/connexion.jpg" alt="Connexion et inscription"></td>
+  </tr>
+  <tr>
+    <td align="center">Demander un livre absent ou épuisé</td>
+    <td align="center">Connexion et inscription</td>
+  </tr>
+</table>
+
+### Espace responsable
+
+<table>
+  <tr>
+    <td><img src="docs/captures/admin-tableau-de-bord.png" alt="Tableau de bord"></td>
+    <td><img src="docs/captures/admin-catalogue.png" alt="Catalogue et prix"></td>
+  </tr>
+  <tr>
+    <td align="center">Tableau de bord</td>
+    <td align="center">Catalogue et prix, avec le seuil d'alerte</td>
+  </tr>
+  <tr>
+    <td><img src="docs/captures/admin-stock.png" alt="Stock et mouvements"></td>
+    <td><img src="docs/captures/admin-ventes.png" alt="Ventes et retours"></td>
+  </tr>
+  <tr>
+    <td align="center">Stock et mouvements</td>
+    <td align="center">Ventes et retours</td>
+  </tr>
+  <tr>
+    <td><img src="docs/captures/admin-demandes.png" alt="Demandes et mises de côté"></td>
+    <td><img src="docs/captures/admin-commandes.png" alt="Fournisseurs, commandes et réceptions"></td>
+  </tr>
+  <tr>
+    <td align="center">Demandes et mises de côté</td>
+    <td align="center">Fournisseurs, commandes et réceptions</td>
+  </tr>
+  <tr>
+    <td><img src="docs/captures/admin-rapports.png" alt="Réapprovisionnement et rapports"></td>
+    <td><img src="docs/captures/admin-parametres.png" alt="Paramètres"></td>
+  </tr>
+  <tr>
+    <td align="center">Réapprovisionnement et rapports</td>
+    <td align="center">Paramètres</td>
+  </tr>
+</table>
+
+### Sur téléphone
+
+<p align="center">
+  <img src="docs/captures/mobile-accueil.jpg" alt="Accueil sur téléphone" width="280">
+  &nbsp;&nbsp;
+  <img src="docs/captures/mobile-catalogue.jpg" alt="Catalogue sur téléphone" width="280">
+</p>
+
 ## Stack
 - Front : React + Vite + TypeScript
 - Back : Node.js + Express + TypeScript, API REST décrite dans [`docs/api.md`](docs/api.md)
