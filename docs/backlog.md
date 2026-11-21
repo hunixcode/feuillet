@@ -540,3 +540,17 @@ Fait :
 - Section « Captures d'écran » dans le README : un GIF du parcours d'achat (accueil, catalogue, fiche, panier), 8 écrans client, les 8 écrans du responsable et 2 captures sur téléphone
 - Prises avec Playwright sur la démo Docker après `npm run seed` (1440 × 900, et 390 × 844 pour le téléphone), images dans `docs/captures/` (4,3 Mo en tout)
 - En les prenant, on a vu le catalogue déborder sur téléphone : corrigé dans la PR #94 avant les captures
+
+21/11/2026 - Design Feuillet de l'espace responsable (#96)
+
+Fait :
+- Les 8 pages du responsable reprennent la maquette Feuillet : menu latéral avec le nombre de ventes à préparer et de demandes en attente, apparence claire, sombre ou celle du système, info-bulles, et un tiroir à droite pour le détail d'une commande, d'une demande, d'un article, d'une commande fournisseur ou d'un fournisseur
+- Toutes les fonctions déjà faites sont gardées : promotions, historique des prix, seuil d'alerte, archivage et suppression, catégories, inventaire et défectueux, réceptions saisies puis validées, retours, rattachement d'une demande, rapports par semaine ou période libre avec export CSV, paramètres
+- Recherche Ctrl K (ou touche /) : pages, articles, commandes clients, demandes, fournisseurs et actions rapides ; le résultat choisi s'ouvre directement dans sa page
+- Styles de la maquette dans `frontend/src/styles/feuillet-admin.css`, limités à `.espace-responsable` ; les anciens fichiers CSS des pages du responsable sont supprimés
+- Les noms utilisés par le test Playwright du responsable sont gardés : liens du menu, « Commande choisie », « Journal des mouvements », « Stock par article »
+- Captures du responsable dans le README refaites (1440 × 900)
+- Vérifié : 570 tests front dans deux fuseaux horaires, lint, build et les 3 parcours Playwright
+
+À noter :
+- La colonne « En vente » du catalogue compare au stock en rayon, pas à la quantité achetée à l'origine : l'API ne donne cette quantité que pour les articles à recommander
