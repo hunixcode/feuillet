@@ -47,7 +47,13 @@ function simulerApi(reponse: (requete: Requete) => Response) {
 
 function afficher(demande = demandeHorsCatalogue(), produits: Produit[] = [], onChangement = vi.fn()) {
   render(
-    <PanneauDemande demande={demande} produits={produits} categories={categories} onChangement={onChangement} />,
+    <PanneauDemande
+      demande={demande}
+      produits={produits}
+      categories={categories}
+      aujourdhui="2026-11-14"
+      onChangement={onChangement}
+    />,
   )
   return onChangement
 }
@@ -69,27 +75,29 @@ describe('PanneauDemande', () => {
 
     expect(screen.getByRole('heading', { name: 'L’Île au trésor' })).toBeInTheDocument()
     expect(screen.getByText(/Une demande n’est pas une vente : le client n’a rien payé/)).toBeInTheDocument()
-    expect(screen.getByText('Article épuisé')).toBeInTheDocument()
+    expect(screen.getByText('En attente')).toHaveClass('statut-attente')
+    expect(screen.getByText('Aucune commande fournisseur en cours pour ce livre.')).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Ajouter ce livre au catalogue' })).not.toBeInTheDocument()
   })
 
   it('donne la quantité mise de côté et la date limite', () => {
     afficher(demandeMiseDeCote({ quantiteSouhaitee: 3 }))
 
-    expect(screen.getByText('Mis de côté').nextElementSibling).toHaveTextContent('1 exemplaire sur 3')
-    expect(screen.getByText('Date limite').nextElementSibling).toHaveTextContent('15 novembre 2026 inclus')
+    expect(screen.getByText(/1 exemplaire sur 3 gardé jusqu’au/)).toBeInTheDocument()
+    expect(screen.getByText('15 novembre 2026 inclus')).toBeInTheDocument()
   })
 
   it('donne la date de fin d une demande terminée', () => {
     afficher(demandeDeTest({ statut: 'expiree', dateFin: '2026-11-12T20:00:00.000Z' }))
 
-    expect(screen.getByText('Expirée le').nextElementSibling).toHaveTextContent('12 novembre 2026')
+    expect(screen.getByText('Expirée le 12 novembre 2026.')).toBeInTheDocument()
   })
 
   it('pré-remplit la fiche du livre hors catalogue avec ce que le client a saisi', () => {
     afficher()
 
-    expect(screen.getByText('Absent du catalogue')).toBeInTheDocument()
+    expect(screen.getByText(/Ce livre n’est pas au catalogue/)).toBeInTheDocument()
+    expect(screen.getByText('Livre', { selector: 'dt' }).nextElementSibling).toHaveTextContent('Hors catalogue, ISBN 978-2-07-041311-0')
     expect(screen.getByLabelText('Désignation')).toHaveValue('Le Rouge et le Noir')
     expect(screen.getByLabelText('Auteur')).toHaveValue('Stendhal')
     expect(screen.getByLabelText('ISBN')).toHaveValue('978-2-07-041311-0')
@@ -211,6 +219,6 @@ describe('PanneauDemande', () => {
     afficher(demandeHorsCatalogue({ statut: 'annulee', dateFin: '2026-11-10T20:00:00.000Z' }))
 
     expect(screen.queryByRole('heading', { name: 'Ajouter ce livre au catalogue' })).not.toBeInTheDocument()
-    expect(screen.getByText('Annulée le')).toBeInTheDocument()
+    expect(screen.getByText('Annulée le 10 novembre 2026.')).toBeInTheDocument()
   })
 })

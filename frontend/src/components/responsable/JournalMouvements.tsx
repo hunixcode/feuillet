@@ -1,31 +1,36 @@
-import Select from '../common/Select.tsx'
 import type { FiltresMouvements } from '../../services/stockService'
+import type { Produit } from '../../types/produit'
 import type { LigneStock, Mouvement, TypeMouvement } from '../../types/stock'
-import { formatDateHeure } from '../../utils/format'
-import {
-  LIBELLES_MOUVEMENT,
-  LIBELLES_OPERATEUR,
-  libelleQuantiteMouvement,
-} from './libelles'
-import EnteteInfo from './EnteteInfo.tsx'
+import { dateCourte, heure, jourDe } from '../../utils/datesAdmin'
+import { LIBELLES_MOUVEMENT, LIBELLES_OPERATEUR, libelleQuantiteMouvement } from './libelles'
+import Vignette from './Vignette.tsx'
 
 interface JournalMouvementsProps {
   mouvements: Mouvement[]
   articles: LigneStock[]
+  produits?: Map<string, Produit>
   filtres: FiltresMouvements
   onFiltres: (filtres: FiltresMouvements) => void
 }
 
-function JournalMouvements({ mouvements, articles, filtres, onFiltres }: JournalMouvementsProps) {
+function classeQuantite(mouvement: Mouvement): string {
+  if (mouvement.quantiteAvant !== undefined && mouvement.quantiteApres !== undefined) {
+    return 'num'
+  }
+  return mouvement.quantite > 0 ? 'num signe-plus' : 'num signe-moins'
+}
+
+function JournalMouvements({ mouvements, articles, produits, filtres, onFiltres }: JournalMouvementsProps) {
   function designation(produitId: string): string {
     return articles.find((article) => article.produitId === produitId)?.designation ?? 'Article archivé'
   }
 
   return (
-    <div className="stock-journal">
-      <div className="stock-filtres">
-        <Select
-          label="Article"
+    <>
+      <div className="outils">
+        <select
+          className="choix-liste"
+          aria-label="Article"
           value={filtres.produit ?? ''}
           onChange={(evenement) => onFiltres({ ...filtres, produit: evenement.target.value })}
         >
@@ -35,74 +40,92 @@ function JournalMouvements({ mouvements, articles, filtres, onFiltres }: Journal
               {article.designation}
             </option>
           ))}
-        </Select>
-        <Select
-          label="Type de mouvement"
+        </select>
+        <select
+          className="choix-liste"
+          aria-label="Type de mouvement"
           value={filtres.type ?? ''}
-          onChange={(evenement) =>
-            onFiltres({ ...filtres, type: evenement.target.value as TypeMouvement | '' })
-          }
+          onChange={(evenement) => onFiltres({ ...filtres, type: evenement.target.value as TypeMouvement | '' })}
         >
-          <option value="">Tous les types</option>
+          <option value="">Tous les mouvements</option>
           {Object.entries(LIBELLES_MOUVEMENT).map(([valeur, libelle]) => (
             <option key={valeur} value={valeur}>
               {libelle}
             </option>
           ))}
-        </Select>
+        </select>
+        <span className="outils-droite">
+          {`${mouvements.length} mouvement${mouvements.length > 1 ? 's' : ''}`}
+        </span>
       </div>
 
       {mouvements.length === 0 ? (
-        <p className="stock-vide">Aucun mouvement ne correspond.</p>
+        <p className="vide-liste">Aucun mouvement ne correspond.</p>
       ) : (
-        <div className="stock-tableau-cadre">
-          <table className="stock-tableau">
-            <thead>
-              <tr>
-                <EnteteInfo
-                  libelle="Date"
-                  info="Jour et heure du mouvement, à l’heure de Tahiti."
-                />
-                <EnteteInfo
-                  libelle="Article"
-                  info="Article dont le stock a changé."
-                />
-                <EnteteInfo
-                  libelle="Type"
-                  info="Entrée : réception fournisseur. Vente : commande d’un client. Retour : article rendu. Remplacement : défectueux échangé contre un neuf. Ajustement : correction d’inventaire ou article déclaré abîmé."
-                />
-                <EnteteInfo
-                  libelle="Quantité"
-                  info="Exemplaires ajoutés (+) ou retirés (−) du stock. Pour une correction d’inventaire : la quantité avant → après le comptage."
-                  className="stock-nombre"
-                  aDroite
-                />
-                <EnteteInfo
-                  libelle="Motif"
-                  info="Raison du mouvement, par exemple la commande ou la réception concernée."
-                />
-                <EnteteInfo
-                  libelle="Opérateur"
-                  info="Qui a provoqué le mouvement : le responsable, un client (commande en ligne) ou le système (opération automatique, sans intervention de personne)."
-                />
-              </tr>
-            </thead>
-            <tbody>
-              {mouvements.map((mouvement) => (
+        <table className="liste">
+          <thead>
+            <tr>
+              <th scope="col" data-bulle-titre="Date" data-bulle-texte="Jour et heure du mouvement, à l’heure de Tahiti.">
+                Date
+              </th>
+              <th scope="col">Article</th>
+              <th
+                scope="col"
+                className="optionnel"
+                data-bulle-titre="Mouvement"
+                data-bulle-texte="Entrée : réception fournisseur. Vente : commande d’un client. Retour : article rendu. Remplacement : défectueux échangé contre un neuf. Ajustement : correction d’inventaire ou article déclaré abîmé."
+              >
+                Mouvement
+              </th>
+              <th
+                scope="col"
+                className="num"
+                data-bulle-titre="Quantité"
+                data-bulle-texte="Exemplaires ajoutés (+) ou retirés (−). Pour une correction d’inventaire : la quantité avant → après le comptage."
+              >
+                Quantité
+              </th>
+              <th scope="col" className="optionnel-large">
+                Motif
+              </th>
+              <th
+                scope="col"
+                className="optionnel"
+                data-bulle-titre="Par"
+                data-bulle-texte="Qui a provoqué le mouvement : le responsable, un client (commande en ligne) ou le système (opération automatique)."
+              >
+                Par
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {mouvements.map((mouvement) => {
+              const produit = produits?.get(mouvement.produitId)
+              return (
                 <tr key={mouvement.id}>
-                  <td>{formatDateHeure(mouvement.date)}</td>
-                  <td>{designation(mouvement.produitId)}</td>
-                  <td>{LIBELLES_MOUVEMENT[mouvement.type]}</td>
-                  <td className="stock-nombre">{libelleQuantiteMouvement(mouvement)}</td>
-                  <td>{mouvement.motif}</td>
-                  <td>{LIBELLES_OPERATEUR[mouvement.operateur]}</td>
+                  <td>
+                    <span className="article-titre" style={{ fontWeight: 500 }}>
+                      {dateCourte(jourDe(mouvement.date))}
+                    </span>
+                    <span className="article-meta">{heure(mouvement.date)}</span>
+                  </td>
+                  <td>
+                    <span className="article">
+                      <Vignette key={produit?.isbn} isbn={produit?.isbn} type={produit?.type} />
+                      <span className="article-titre">{designation(mouvement.produitId)}</span>
+                    </span>
+                  </td>
+                  <td className="optionnel">{LIBELLES_MOUVEMENT[mouvement.type]}</td>
+                  <td className={classeQuantite(mouvement)}>{libelleQuantiteMouvement(mouvement)}</td>
+                  <td className="optionnel-large gris">{mouvement.motif}</td>
+                  <td className="optionnel">{LIBELLES_OPERATEUR[mouvement.operateur]}</td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              )
+            })}
+          </tbody>
+        </table>
       )}
-    </div>
+    </>
   )
 }
 

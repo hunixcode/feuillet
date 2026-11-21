@@ -3,11 +3,12 @@ import Button from '../common/Button.tsx'
 import ErrorMessage from '../common/ErrorMessage.tsx'
 import Input from '../common/Input.tsx'
 import Select from '../common/Select.tsx'
+import Segment from '../client/Segment.tsx'
 import { declarerDefectueux, sortirDefectueux } from '../../services/stockService'
 import type { EtatStock, LigneStock } from '../../types/stock'
 import { erreursDesChamps, messageErreurStock, stockModifie } from '../../utils/erreurs'
 
-type Mode = 'declaration' | 'sortie'
+export type ModeDefectueux = 'declaration' | 'sortie'
 
 type Issue = 'Renvoi fournisseur' | 'Destruction'
 
@@ -15,10 +16,12 @@ interface FormulaireDefectueuxProps {
   ligne: LigneStock
   onChangement: (etat: EtatStock) => void
   onRecharger: () => void
+  modeImpose?: ModeDefectueux
 }
 
-function FormulaireDefectueux({ ligne, onChangement, onRecharger }: FormulaireDefectueuxProps) {
-  const [mode, setMode] = useState<Mode>('declaration')
+function FormulaireDefectueux({ ligne, onChangement, onRecharger, modeImpose }: FormulaireDefectueuxProps) {
+  const [modeChoisi, setMode] = useState<ModeDefectueux>('declaration')
+  const mode = modeImpose ?? modeChoisi
   const [quantite, setQuantite] = useState('')
   const [motif, setMotif] = useState('')
   const [issue, setIssue] = useState<Issue>('Renvoi fournisseur')
@@ -29,7 +32,7 @@ function FormulaireDefectueux({ ligne, onChangement, onRecharger }: FormulaireDe
 
   const sortieImpossible = mode === 'sortie' && ligne.quantiteDefectueuse === 0
 
-  function changerMode(nouveau: Mode) {
+  function changerMode(nouveau: ModeDefectueux) {
     setMode(nouveau)
     setErreurs({})
     setMessage('')
@@ -80,39 +83,20 @@ function FormulaireDefectueux({ ligne, onChangement, onRecharger }: FormulaireDe
     }
   }
 
-  return (
-    <section className="stock-bloc" aria-labelledby="titre-defectueux">
-      <h3 id="titre-defectueux">Stock défectueux</h3>
-      <div className="stock-onglets" role="group" aria-label="Action sur le stock défectueux">
-        <button
-          type="button"
-          aria-pressed={mode === 'declaration'}
-          onClick={() => changerMode('declaration')}
-        >
-          Déclarer abîmé
-        </button>
-        <button
-          type="button"
-          aria-pressed={mode === 'sortie'}
-          onClick={() => changerMode('sortie')}
-        >
-          Sortir du stock défectueux
-        </button>
-      </div>
-      <p className="stock-aide">
-        {ligne.quantiteVendable} vendable{ligne.quantiteVendable > 1 ? 's' : ''},{' '}
-        {ligne.quantiteDefectueuse} défectueux.
+  const formulaire = (
+    <form className="formulaire-tiroir" onSubmit={enregistrer} noValidate>
+      {message && <ErrorMessage>{message}</ErrorMessage>}
+      {succes && (
+        <p className="encart" role="status">
+          {succes}
+        </p>
+      )}
+      <p className="tiroir-note">
+        {ligne.quantiteVendable} vendable{ligne.quantiteVendable > 1 ? 's' : ''}, {ligne.quantiteDefectueuse}{' '}
+        défectueux.
       </p>
-      <form className="stock-formulaire" onSubmit={enregistrer} noValidate>
-        {message && <ErrorMessage>{message}</ErrorMessage>}
-        {succes && (
-          <p className="stock-succes" role="status">
-            {succes}
-          </p>
-        )}
-        {sortieImpossible && (
-          <p className="stock-aide">Aucun exemplaire défectueux à sortir.</p>
-        )}
+      {sortieImpossible && <p className="tiroir-note">Aucun exemplaire défectueux à sortir.</p>}
+      <div className="grille-champs">
         <Input
           label="Quantité"
           name="quantite"
@@ -135,20 +119,51 @@ function FormulaireDefectueux({ ligne, onChangement, onRecharger }: FormulaireDe
             <option value="Destruction">Destruction</option>
           </Select>
         )}
-        <Input
-          label={mode === 'sortie' ? 'Précision (facultatif)' : 'Motif'}
-          name="motif"
-          placeholder={mode === 'sortie' ? 'Bon de retour, remarque…' : 'Couverture déchirée…'}
-          value={motif}
-          onChange={(evenement) => setMotif(evenement.target.value)}
-          error={erreurs.motif}
+      </div>
+      <Input
+        label={mode === 'sortie' ? 'Précision (facultatif)' : 'Motif'}
+        name="motif"
+        placeholder={mode === 'sortie' ? 'Bon de retour, remarque…' : 'Couverture pliée, page déchirée…'}
+        value={motif}
+        onChange={(evenement) => setMotif(evenement.target.value)}
+        error={erreurs.motif}
+      />
+      {mode === 'declaration' && (
+        <p className="texte-issue">
+          L’exemplaire passe en stock défectueux : il n’est plus jamais proposé comme disponible.
+        </p>
+      )}
+      <div className="tiroir-actions">
+        <Button type="submit" loading={envoi} disabled={sortieImpossible}>
+          {mode === 'sortie' ? 'Enregistrer la sortie' : 'Passer en défectueux'}
+        </Button>
+      </div>
+    </form>
+  )
+
+  if (modeImpose) {
+    return (
+      <section aria-label={modeImpose === 'sortie' ? 'Sortie du stock défectueux' : 'Stock défectueux'}>
+        {formulaire}
+      </section>
+    )
+  }
+
+  return (
+    <section className="tiroir-section" aria-labelledby="titre-defectueux">
+      <h3 id="titre-defectueux">Stock défectueux</h3>
+      <div className="formulaire-stock-choix">
+        <Segment
+          libelle="Action sur le stock défectueux"
+          valeur={mode}
+          onChange={(valeur) => changerMode(valeur as ModeDefectueux)}
+          options={[
+            { valeur: 'declaration', libelle: 'Déclarer abîmé' },
+            { valeur: 'sortie', libelle: 'Sortir du stock défectueux' },
+          ]}
         />
-        <div className="stock-actions">
-          <Button type="submit" loading={envoi} disabled={sortieImpossible}>
-            {mode === 'sortie' ? 'Enregistrer la sortie' : 'Passer en défectueux'}
-          </Button>
-        </div>
-      </form>
+      </div>
+      {formulaire}
     </section>
   )
 }

@@ -11,18 +11,25 @@ import {
   messageErreur,
   messageErreurReception,
 } from '../../utils/erreurs'
-import { formatDate, formatDateHeure, formatJourTahiti } from '../../utils/format'
+import type { Demande } from '../../types/demande'
+import type { Produit } from '../../types/produit'
+import { dateCourte, dateLongue, heure, jourDe } from '../../utils/datesAdmin'
+import { formatJourTahiti } from '../../utils/format'
 import Button from '../common/Button.tsx'
 import ErrorMessage from '../common/ErrorMessage.tsx'
 import Input from '../common/Input.tsx'
 import Loader from '../common/Loader.tsx'
-import InfoBulle from './InfoBulle.tsx'
-import { LIBELLES_STATUT_COMMANDE, enRetard, restantARecevoir } from './libelles'
+import IconeAdmin from './IconeAdmin.tsx'
+import { enRetard, restantARecevoir } from './libelles'
+import { StatutCommande } from './StatutCommande.tsx'
+import Vignette from './Vignette.tsx'
 
 interface PanneauCommandeFournisseurProps {
   commande: CommandeFournisseur
   aujourdhui: string
   onChangement: (commande?: CommandeFournisseur) => void
+  produit?: Produit
+  demandes?: Demande[]
 }
 
 type Champ = 'quantiteRecue' | 'quantiteAbimee'
@@ -35,6 +42,8 @@ function PanneauCommandeFournisseur({
   commande,
   aujourdhui,
   onChangement,
+  produit,
+  demandes = [],
 }: PanneauCommandeFournisseurProps) {
   const [receptions, setReceptions] = useState<Reception[] | null>(null)
   const [erreurListe, setErreurListe] = useState('')
@@ -155,66 +164,54 @@ function PanneauCommandeFournisseur({
 
   const restant = restantARecevoir(commande)
   const retard = enRetard(commande, aujourdhui)
-  const part = commande.quantiteCommandee > 0 ? (commande.quantiteRecue / commande.quantiteCommandee) * 100 : 0
 
   return (
-    <div className="commandes-detail">
-      <div className="commandes-bloc">
-        <p className="commandes-surtitre">Commande chez {commande.fournisseur.nom}</p>
-        <h2>{commande.designation}</h2>
-        <p className="commandes-reference">{commande.reference}</p>
-        <span className={`commandes-statut commandes-statut--${commande.statut}`}>
-          {LIBELLES_STATUT_COMMANDE[commande.statut]}
-        </span>
-
-        <div className="commandes-progression">
-          <div className="commandes-progression-barre" aria-hidden="true">
-            <span style={{ width: `${part}%` }} />
-          </div>
-          <p>
-            {commande.quantiteRecue} reçu{commande.quantiteRecue > 1 ? 's' : ''} sur{' '}
-            {commande.quantiteCommandee} commandé{commande.quantiteCommandee > 1 ? 's' : ''}
-          </p>
-        </div>
-
-        <dl className="commandes-infos">
-          <div>
-            <dt>
-              <InfoBulle
-                libelle="Encore attendus"
-                info="Exemplaires que le fournisseur doit encore livrer. Les exemplaires abîmés à la livraison restent attendus."
-              />
-            </dt>
-            <dd>{restant > 0 ? exemplaires(restant) : 'Rien'}</dd>
-          </div>
-          <div>
-            <dt>Arrivée prévue</dt>
-            <dd className={retard ? 'commandes-date--retard' : undefined}>
-              {formatDate(commande.dateArriveePrevue)}
-              {retard && <span className="commandes-retard">En retard</span>}
-            </dd>
-          </div>
-          <div>
-            <dt>Commandée le</dt>
-            <dd>{formatJourTahiti(commande.date)}</dd>
-          </div>
-          {commande.dateReceptionComplete && (
-            <div>
-              <dt>Entièrement reçue le</dt>
-              <dd>{formatJourTahiti(commande.dateReceptionComplete)}</dd>
-            </div>
-          )}
-        </dl>
+    <>
+      <div className="scene">
+        <StatutCommande commande={commande} />
+        <Vignette key={produit?.isbn} nu isbn={produit?.isbn} type={produit?.type} />
       </div>
+      <h2 className="tiroir-titre">{commande.designation}</h2>
+      <p className="tiroir-meta">{`${commande.reference}, chez ${commande.fournisseur.nom}`}</p>
+      <dl className="chiffres">
+        <div>
+          <dt>Commandés</dt>
+          <dd>{commande.quantiteCommandee}</dd>
+        </div>
+        <div>
+          <dt>Reçus</dt>
+          <dd>{commande.quantiteRecue}</dd>
+        </div>
+        <div
+          className="chiffre-fort"
+          data-bulle-titre="Encore attendus"
+          data-bulle-texte="Exemplaires que le fournisseur doit encore livrer. Les exemplaires abîmés à la livraison restent attendus."
+        >
+          <dt>Attendus</dt>
+          <dd>{restant}</dd>
+        </div>
+        <div>
+          <dt>Arrivée prévue</dt>
+          <dd style={{ fontSize: 20, paddingTop: 4 }}>{dateCourte(commande.dateArriveePrevue)}</dd>
+        </div>
+      </dl>
+      {retard && (
+        <div className="encart encart-sombre">
+          <IconeAdmin nom="horloge" />
+          <span>
+            <strong>En retard</strong>
+            {` : l’arrivée était prévue le ${dateLongue(commande.dateArriveePrevue)}.`}
+          </span>
+        </div>
+      )}
+      {commande.dateReceptionComplete && (
+        <p className="tiroir-note">{`Entièrement reçue le ${formatJourTahiti(commande.dateReceptionComplete)}.`}</p>
+      )}
 
       {commande.statut !== 'recue' && (
-        <form className="commandes-bloc" onSubmit={saisir} noValidate>
-          <h3>Enregistrer une réception</h3>
-          <p className="commandes-aide">
-            Comptez les exemplaires du colis. Une réception peut être partielle : le reste reste
-            attendu. Il reste {exemplaires(restant)} à recevoir.
-          </p>
-          <div className="commandes-deux">
+        <form className="tiroir-section" onSubmit={saisir} noValidate aria-labelledby="titre-saisie">
+          <h3 id="titre-saisie">Enregistrer une réception</h3>
+          <div className="grille-champs">
             <Input
               label="Reçus en bon état"
               type="number"
@@ -234,56 +231,66 @@ function PanneauCommandeFournisseur({
               onChange={(evenement) => setAbimes(evenement.target.value)}
             />
           </div>
-          <p className="commandes-aide">
-            Les exemplaires abîmés n’entrent pas en stock et restent attendus du fournisseur.
-          </p>
-          <div className="commandes-actions">
+          {demandes.length > 0 && (
+            <div className="encart">
+              <IconeAdmin nom="demandes" />
+              <span>
+                {`${demandes.length} demande${demandes.length > 1 ? 's attendent' : ' attend'} ce livre : `}
+                <strong>{exemplaires(demandes.reduce((total, demande) => total + demande.quantiteSouhaitee, 0))}</strong>
+                {` à mettre de côté à la validation de la réception, pour ${demandes.map((demande) => demande.client?.nom ?? 'un client').join(' et ')}.`}
+              </span>
+            </div>
+          )}
+          <div className="tiroir-actions">
             <Button type="submit" loading={envoi}>
               Saisir la réception
             </Button>
           </div>
+          <p className="tiroir-note">
+            {`Il reste ${exemplaires(restant)} à recevoir. Une réception peut être partielle ; les exemplaires abîmés n’entrent pas en stock et restent attendus du fournisseur.`}
+          </p>
           {erreur && <ErrorMessage>{erreur}</ErrorMessage>}
           {succes && (
-            <p className="commandes-succes" role="status">
+            <p className="encart" role="status">
               {succes}
             </p>
           )}
         </form>
       )}
 
-      <section className="commandes-bloc" aria-labelledby="titre-receptions">
-        <h3 id="titre-receptions">Réceptions</h3>
-        <p className="commandes-aide">
-          Une réception saisie n’entre en stock qu’après sa validation.
-        </p>
+      <section className="tiroir-section" aria-labelledby="titre-receptions">
+        <h3 id="titre-receptions">
+          Réceptions
+          {receptions && <small>{receptions.length || 'aucune'}</small>}
+        </h3>
+        <p className="tiroir-note">Une réception saisie n’entre en stock qu’après sa validation.</p>
         {commande.statut === 'recue' && erreur && <ErrorMessage>{erreur}</ErrorMessage>}
         {erreurValidation && <ErrorMessage>{erreurValidation}</ErrorMessage>}
         {succesValidation && (
-          <p className="commandes-succes" role="status">
+          <p className="encart" role="status">
             {succesValidation}
           </p>
         )}
         {erreurListe && <ErrorMessage>{erreurListe}</ErrorMessage>}
         {!erreurListe && !receptions && <Loader />}
-        {receptions?.length === 0 && <p className="commandes-aide">Aucune réception pour l’instant.</p>}
+        {receptions?.length === 0 && <p className="tiroir-note">Rien n’est encore arrivé pour cette commande.</p>}
         {receptions && receptions.length > 0 && (
-          <ul className="commandes-receptions">
+          <ul className="journal">
             {receptions.map((reception) => (
               <li key={reception.id}>
-                <div>
-                  <strong>
-                    {exemplaires(reception.quantiteRecue)} en bon état
-                    {reception.quantiteAbimee > 0 && `, ${reception.quantiteAbimee} abîmé${reception.quantiteAbimee > 1 ? 's' : ''}`}
-                  </strong>
-                  <span className="commandes-discret">
-                    Saisie le {formatDateHeure(reception.date)}
-                    {reception.validee &&
-                      reception.dateValidation &&
-                      `, validée le ${formatDateHeure(reception.dateValidation)}`}
-                  </span>
-                </div>
+                <time dateTime={reception.date}>{dateCourte(jourDe(reception.date))}</time>
+                <span>
+                  {`${exemplaires(reception.quantiteRecue)} en bon état`}
+                  {reception.quantiteAbimee > 0 &&
+                    `, ${reception.quantiteAbimee} abîmé${reception.quantiteAbimee > 1 ? 's' : ''}`}
+                  <small>
+                    {reception.validee
+                      ? `Validée${reception.dateValidation ? ` le ${dateLongue(jourDe(reception.dateValidation))} à ${heure(reception.dateValidation)}` : ''}`
+                      : `Saisie le ${dateLongue(jourDe(reception.date))} à ${heure(reception.date)}, à valider`}
+                  </small>
+                </span>
                 {reception.validee ? (
-                  <span className="commandes-statut commandes-statut--recue">Validée</span>
+                  <span className="signe-plus">{`+${reception.quantiteRecue}`}</span>
                 ) : (
                   <Button
                     type="button"
@@ -299,7 +306,7 @@ function PanneauCommandeFournisseur({
           </ul>
         )}
       </section>
-    </div>
+    </>
   )
 }
 

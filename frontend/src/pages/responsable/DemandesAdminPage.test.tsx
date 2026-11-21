@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   demandeDeTest,
   demandeHorsCatalogue,
@@ -31,79 +31,95 @@ function simulerApi(reponse: (requete: Requete) => Response | undefined = () => 
     if (particuliere) {
       return particuliere
     }
-    if (requete.url.startsWith('/api/produits') || requete.url.startsWith('/api/categories')) {
+    if (
+      requete.url.startsWith('/api/produits') ||
+      requete.url.startsWith('/api/categories') ||
+      requete.url.startsWith('/api/commandes-fournisseur')
+    ) {
       return json([])
-    }
-    if (requete.url === '/api/demandes?statut=mise_de_cote') {
-      return json([demandeMiseDeCote(), proche])
-    }
-    if (requete.url === '/api/demandes?statut=en_attente') {
-      return json([demandeDeTest(), demandeHorsCatalogue()])
     }
     return json([demandeDeTest(), demandeHorsCatalogue(), demandeMiseDeCote(), proche])
   })
   return requetes
 }
 
-function section(nom: RegExp) {
-  return within(screen.getByRole('region', { name: nom }))
+function titres() {
+  return Array.from(document.querySelectorAll('.liste tbody .article-titre')).map((titre) => titre.textContent)
+}
+
+function ligne(titre: string) {
+  return screen.getByText(titre, { selector: '.article-titre' }).closest('tr') as HTMLElement
 }
 
 describe('page des demandes et mises de côté', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-12T20:00:00.000Z'))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('liste d abord les demandes en attente, avec les compteurs de chaque onglet', async () => {
+    const requetes = simulerApi()
+    render(<DemandesAdminPage />)
+
+    await screen.findByText('Le Rouge et le Noir')
+    expect(titres()).toHaveLength(2)
+    expect(screen.getByRole('button', { name: /^En attente/ })).toHaveTextContent('En attente2')
+    expect(screen.getByRole('button', { name: /^Mises de côté/ })).toHaveTextContent('Mises de côté2')
+    expect(screen.getByRole('button', { name: /^Terminées/ })).toHaveTextContent('Terminées0')
+    expect(within(ligne('Le Rouge et le Noir')).getByText('Absent du catalogue')).toBeInTheDocument()
+    expect(within(ligne('L’Île au trésor')).getByText('Épuisé, à commander')).toBeInTheDocument()
+    expect(within(ligne('L’Île au trésor')).getByText('En attente')).toHaveClass('statut-attente')
+    expect(requetes.map((requete) => requete.url)).toContain('/api/demandes')
+    expect(document.title).toBe('Demandes et mises de côté · Feuillet')
   })
 
   it('montre les mises de côté, de la date limite la plus proche à la plus lointaine', async () => {
     simulerApi()
     render(<DemandesAdminPage />)
+    await screen.findByText('Le Rouge et le Noir')
 
-    const misesDeCote = section(/Mises de côté en cours/)
-    await misesDeCote.findByRole('button', { name: 'Vingt mille lieues sous les mers' })
-    const titres = misesDeCote.getAllByRole('button').map((bouton) => bouton.textContent)
-    expect(titres).toEqual(['Vingt mille lieues sous les mers', 'Sakamoto Days, tome 2'])
-    expect(misesDeCote.getByText('2', { selector: '.demandes-compte' })).toBeInTheDocument()
-    expect(document.title).toBe('Demandes et mises de côté · Feuillet')
+    fireEvent.click(screen.getByRole('button', { name: /^Mises de côté/ }))
+
+    expect(titres()).toEqual(['Vingt mille lieues sous les mers', 'Sakamoto Days, tome 2'])
+    expect(within(ligne('Vingt mille lieues sous les mers')).getByText('Gardé, demain')).toHaveClass('statut-cote')
   })
 
-  it('liste d abord les demandes en attente puis filtre par statut', async () => {
-    const requetes = simulerApi()
-    render(<DemandesAdminPage />)
-
-    const demandes = section(/Demandes/)
-    expect(await demandes.findByRole('button', { name: 'Le Rouge et le Noir' })).toBeInTheDocument()
-    expect(requetes.map((requete) => requete.url)).toContain('/api/demandes?statut=en_attente')
-
-    fireEvent.change(screen.getByLabelText('Statut'), { target: { value: '' } })
-
-    await waitFor(() => expect(requetes.map((requete) => requete.url)).toContain('/api/demandes'))
-    expect(await section(/Toutes les demandes/).findAllByRole('button', { name: 'Sakamoto Days, tome 2' })).toHaveLength(1)
-  })
-
-  it('rappelle qu une demande n est pas une vente', async () => {
+  it('cherche une demande par titre ou par client', async () => {
     simulerApi()
     render(<DemandesAdminPage />)
+    await screen.findByText('Le Rouge et le Noir')
 
-    expect(screen.getByText(/Une demande n’est pas une vente : le client ne paie rien/)).toBeInTheDocument()
-    await section(/Demandes/).findByRole('button', { name: 'L’Île au trésor' })
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Rechercher une demande par titre ou client' }), {
+      target: { value: 'rouge' },
+    })
+
+    expect(titres()).toEqual(['Le Rouge et le Noir'])
   })
 
-  it('ouvre une demande dans un volet puis le ferme', async () => {
+  it('ouvre une demande dans un volet, rappelle qu elle n est pas une vente, puis le ferme', async () => {
     simulerApi()
-    const { container } = render(<DemandesAdminPage />)
+    render(<DemandesAdminPage />)
+    await screen.findByText('Le Rouge et le Noir')
 
-    fireEvent.click(await section(/Demandes/).findByRole('button', { name: 'Le Rouge et le Noir' }))
+    fireEvent.click(ligne('Le Rouge et le Noir'))
 
     const volet = within(screen.getByRole('complementary', { name: 'Demande choisie' }))
     expect(volet.getByRole('heading', { name: 'Le Rouge et le Noir' })).toBeInTheDocument()
+    expect(volet.getByText(/Une demande n’est pas une vente : le client n’a rien payé/)).toBeInTheDocument()
     expect(volet.getByRole('heading', { name: 'Ajouter ce livre au catalogue' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Fermer la demande' })).toHaveFocus()
 
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
 
-    fireEvent.click(section(/Mises de côté en cours/).getByRole('button', { name: 'Sakamoto Days, tome 2' }))
-    fireEvent.click(container.querySelector('.demandes-voile') as Element)
+    fireEvent.keyDown(ligne('L’Île au trésor'), { key: 'Enter' })
+    expect(screen.getByRole('complementary', { name: 'Demande choisie' })).toBeInTheDocument()
+    fireEvent.click(document.querySelector('.tiroir-fond') as Element)
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
   })
 
@@ -128,8 +144,9 @@ describe('page des demandes et mises de côté', () => {
           : undefined,
     )
     render(<DemandesAdminPage />)
-    fireEvent.click(await section(/Demandes/).findByRole('button', { name: 'Le Rouge et le Noir' }))
-    const chargements = () => requetes.filter((requete) => requete.url === '/api/demandes?statut=en_attente').length
+    await screen.findByText('Le Rouge et le Noir')
+    fireEvent.click(ligne('Le Rouge et le Noir'))
+    const chargements = () => requetes.filter((requete) => requete.url === '/api/demandes').length
     const avant = chargements()
 
     fireEvent.click(screen.getByRole('radio', { name: 'Il est déjà au catalogue' }))
@@ -141,12 +158,11 @@ describe('page des demandes et mises de côté', () => {
     await waitFor(() => expect(chargements()).toBeGreaterThan(avant))
   })
 
-  it('indique quand il n y a ni mise de côté ni demande', async () => {
+  it('indique quand il n y a aucune demande', async () => {
     simulerApi(({ url }) => (url.startsWith('/api/demandes') ? json([]) : undefined))
     render(<DemandesAdminPage />)
 
-    expect(await screen.findByText('Aucun article n’est mis de côté.')).toBeInTheDocument()
-    expect(await screen.findByText('Aucune demande ne correspond.')).toBeInTheDocument()
+    expect(await screen.findByText('Aucune demande ici.')).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
 

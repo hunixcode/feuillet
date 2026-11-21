@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ParametresPage from './ParametresPage.tsx'
 
@@ -12,20 +12,53 @@ const parametres = {
 }
 
 interface Requete {
+  url: string
   methode: string
   corps?: unknown
+}
+
+const categories = [
+  { id: 'roman', libelle: 'Roman' },
+  { id: 'poesie', libelle: 'Poésie' },
+]
+
+const produit = {
+  id: 'p-1',
+  reference: 'LIV-001',
+  designation: 'Le Petit Prince',
+  type: 'livre',
+  categorie: 'roman',
+  prix: 1200,
+  tauxTva: 5,
+  archive: false,
+  prixApplique: 1200,
 }
 
 function json(corps: unknown, status = 200) {
   return new Response(JSON.stringify(corps), { status })
 }
 
-function simulerApi(enregistrement: (corps: unknown) => Response = (corps) => json(corps)) {
+function simulerApi(
+  enregistrement: (corps: unknown) => Response = (corps) => json(corps),
+  autre: (requete: Requete) => Response | undefined = () => undefined,
+) {
   const requetes: Requete[] = []
-  vi.spyOn(globalThis, 'fetch').mockImplementation(async (_entree, options) => {
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async (entree, options) => {
+    const url = String(entree)
     const methode = options?.method ?? 'GET'
     const corps = options?.body ? JSON.parse(String(options.body)) : undefined
-    requetes.push({ methode, corps })
+    const requete = { url, methode, corps }
+    requetes.push(requete)
+    const particuliere = autre(requete)
+    if (particuliere) {
+      return particuliere
+    }
+    if (url.startsWith('/api/categories')) {
+      return json(categories)
+    }
+    if (url.startsWith('/api/produits')) {
+      return json(url.includes('archive=true') ? [] : [produit])
+    }
     return methode === 'PUT' ? enregistrement(corps) : json(parametres)
   })
   return requetes
@@ -176,11 +209,78 @@ describe('page des paramètres', () => {
   })
 
   it('affiche une erreur de chargement', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async () =>
       json({ code: 'INTERDIT', message: 'Accès réservé au responsable.' }, 403),
     )
     render(<ParametresPage />)
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Accès réservé au responsable.')
+    const alertes = await screen.findAllByRole('alert')
+    expect(alertes.every((alerte) => alerte.textContent === 'Accès réservé au responsable.')).toBe(true)
+  })
+
+  it('liste les catégories avec leurs articles et ne propose de supprimer que les vides', async () => {
+    simulerApi()
+    render(<ParametresPage />)
+
+    const section = within(screen.getByRole('region', { name: 'Catégories' }))
+    const roman = (await section.findByText('Roman')).closest('li') as HTMLElement
+    await waitFor(() => expect(roman).toHaveTextContent('1 article'))
+    expect(within(roman).getByText('Utilisée')).toBeInTheDocument()
+    expect(within(roman).queryByRole('button')).not.toBeInTheDocument()
+    expect(section.getByText('Poésie').closest('li')).toHaveTextContent('Vide')
+  })
+
+  it('ajoute et supprime une catégorie', async () => {
+    const requetes = simulerApi(undefined, ({ url, methode }) => {
+      if (url === '/api/categories' && methode === 'POST') {
+        return json({ id: 'theatre', libelle: 'Théâtre' }, 201)
+      }
+      if (methode === 'DELETE') {
+        return new Response(null, { status: 204 })
+      }
+      return undefined
+    })
+    render(<ParametresPage />)
+    const section = within(screen.getByRole('region', { name: 'Catégories' }))
+    await section.findByText('Poésie')
+
+    fireEvent.click(section.getByRole('button', { name: 'Ajouter' }))
+    expect(section.getByRole('textbox', { name: 'Nouvelle catégorie' })).toHaveAccessibleDescription(
+      'Donnez un nom à la catégorie.',
+    )
+
+    fireEvent.change(section.getByRole('textbox', { name: 'Nouvelle catégorie' }), { target: { value: 'Théâtre' } })
+    fireEvent.click(section.getByRole('button', { name: 'Ajouter' }))
+    expect(await screen.findByText('Catégorie « Théâtre » ajoutée.')).toBeInTheDocument()
+
+    fireEvent.click(section.getByRole('button', { name: 'Supprimer Poésie' }))
+    expect(await screen.findByText('Catégorie « Poésie » supprimée.')).toBeInTheDocument()
+    expect(requetes.find((requete) => requete.methode === 'DELETE')?.url).toBe('/api/categories/poesie')
+  })
+
+  it('explique le refus de suppression d une catégorie', async () => {
+    simulerApi(undefined, ({ methode }) =>
+      methode === 'DELETE'
+        ? json({ code: 'CATEGORIE_UTILISEE', message: 'Cette catégorie est utilisée par un produit.' }, 409)
+        : undefined,
+    )
+    render(<ParametresPage />)
+    const section = within(screen.getByRole('region', { name: 'Catégories' }))
+
+    fireEvent.click(await section.findByRole('button', { name: 'Supprimer Poésie' }))
+
+    expect(await section.findByRole('alert')).toHaveTextContent('Cette catégorie est utilisée par un produit.')
+  })
+
+  it('résume les modifications dans la barre d enregistrement', async () => {
+    simulerApi()
+    render(<ParametresPage />)
+
+    fireEvent.change(await champ('Livraison (XPF)'), { target: { value: '1000' } })
+    const barre = within(screen.getByRole('region', { name: 'Modifications' }))
+    expect(barre.getByText('1 réglage modifié')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Délai de retour (jours)'), { target: { value: '' } })
+    expect(barre.getByText('Corrigez les valeurs signalées')).toBeInTheDocument()
   })
 })

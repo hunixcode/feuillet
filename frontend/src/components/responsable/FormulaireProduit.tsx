@@ -1,4 +1,4 @@
-import { useState, type SubmitEvent } from 'react'
+import { useState, type ReactNode, type SubmitEvent } from 'react'
 import Button from '../common/Button.tsx'
 import ErrorMessage from '../common/ErrorMessage.tsx'
 import Input from '../common/Input.tsx'
@@ -78,6 +78,7 @@ interface FormulaireProduitProps {
   libelleEnvoi: string
   onEnregistrer: (fiche: FicheProduit) => Promise<void>
   onAnnuler?: () => void
+  actions?: ReactNode
 }
 
 function FormulaireProduit({
@@ -87,6 +88,7 @@ function FormulaireProduit({
   libelleEnvoi,
   onEnregistrer,
   onAnnuler,
+  actions,
 }: FormulaireProduitProps) {
   const [saisie, setSaisie] = useState(() => saisieDepuis(fiche ?? brouillon))
   const [erreurs, setErreurs] = useState<Record<string, string>>({})
@@ -244,7 +246,7 @@ function FormulaireProduit({
           error={erreurs.marque}
         />
       )}
-      <div className="catalogue-actions">
+      <div className="tiroir-actions">
         <Button type="submit" loading={envoi}>
           {libelleEnvoi}
         </Button>
@@ -253,6 +255,7 @@ function FormulaireProduit({
             Annuler
           </Button>
         )}
+        {actions}
       </div>
     </form>
   )

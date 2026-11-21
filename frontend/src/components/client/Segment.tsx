@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 interface OptionSegment {
   valeur: string
   libelle: string
+  compte?: number
   to?: string
   state?: unknown
 }
@@ -59,6 +60,7 @@ export default function Segment({ libelle, options, valeur, onChange }: SegmentP
             onClick={() => onChange?.(option.valeur)}
           >
             {option.libelle}
+            {option.compte !== undefined && <span className="compte">{option.compte}</span>}
           </button>
         ),
       )}

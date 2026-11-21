@@ -97,9 +97,9 @@ function SeuilAlerteProduit({ produit, onChangement }: SeuilAlerteProduitProps) 
   }
 
   return (
-    <section className="catalogue-bloc" aria-labelledby="titre-seuil">
+    <section className="tiroir-section" aria-labelledby="titre-seuil">
       <h3 id="titre-seuil">Seuil d’alerte</h3>
-      <p className="catalogue-vide">
+      <p className="tiroir-note">
         Quand le stock vendable passe sous ce pourcentage de la quantité achetée à l’origine,
         l’article apparaît dans « À recommander ».
       </p>
@@ -107,18 +107,18 @@ function SeuilAlerteProduit({ produit, onChangement }: SeuilAlerteProduitProps) 
       {!erreurChargement && actuel === null && <Loader />}
       {actuel && (
         <>
-          <p>
+          <p className="seuil-actuel">
             Seuil actuel : <strong>{actuel.seuilAlerte} %</strong>
             {actuel.parDefaut ? ', celui par défaut des paramètres.' : ', propre à cet article.'}
           </p>
           <form className="formulaire-produit" onSubmit={enregistrer} noValidate>
             {erreur && <ErrorMessage>{erreur}</ErrorMessage>}
             {succes && (
-              <p className="catalogue-annonce" role="status">
+              <p className="encart" role="status">
                 {succes}
               </p>
             )}
-            <div className="formulaire-produit-grille formulaire-produit-grille--3">
+            <div className="formulaire-produit-grille">
               <Input
                 label="Seuil d’alerte (%)"
                 name="seuilAlerte"
@@ -133,7 +133,7 @@ function SeuilAlerteProduit({ produit, onChangement }: SeuilAlerteProduitProps) 
                 error={erreurChamp}
               />
             </div>
-            <div className="catalogue-actions">
+            <div className="tiroir-actions">
               <Button type="submit" variant="secondary" loading={envoi}>
                 Enregistrer le seuil
               </Button>

@@ -71,14 +71,20 @@ function GestionCategories({ categories, onChangement }: GestionCategoriesProps)
   }
 
   return (
-    <section className="catalogue-bloc" aria-labelledby="titre-categories">
-      <h2 id="titre-categories">Catégories</h2>
+    <section aria-labelledby="titre-categories">
+      <h2 className="tiroir-titre" id="titre-categories">
+        Catégories
+      </h2>
+      <p className="tiroir-meta">
+        Les rayons du catalogue. Les clients filtrent le catalogue par catégorie, et une catégorie
+        encore utilisée par un article ne peut pas être supprimée.
+      </p>
       {message && <ErrorMessage>{message}</ErrorMessage>}
-      <ul className="catalogue-categories">
+      <ul className="tiroir-liste">
         {categories.map((categorie) =>
           enEdition === categorie.id ? (
             <li key={categorie.id}>
-              <form className="catalogue-categorie-edition" onSubmit={(evenement) => renommer(evenement, categorie.id)} noValidate>
+              <form onSubmit={(evenement) => renommer(evenement, categorie.id)} noValidate>
                 <Input
                   label={`Nouveau nom de ${categorie.libelle}`}
                   value={libelle}
@@ -86,7 +92,7 @@ function GestionCategories({ categories, onChangement }: GestionCategoriesProps)
                   error={erreurEdition}
                   autoFocus
                 />
-                <div className="catalogue-actions">
+                <div className="tiroir-actions">
                   <Button type="submit">Enregistrer</Button>
                   <Button type="button" variant="secondary" onClick={() => setEnEdition(null)}>
                     Annuler
@@ -97,10 +103,10 @@ function GestionCategories({ categories, onChangement }: GestionCategoriesProps)
           ) : (
             <li key={categorie.id}>
               <span>{categorie.libelle}</span>
-              <span className="catalogue-ligne-actions">
+              <span className="tiroir-liste-actions">
                 <button
                   type="button"
-                  className="catalogue-lien"
+                  className="action-ligne"
                   onClick={() => editer(categorie)}
                   aria-label={`Renommer ${categorie.libelle}`}
                 >
@@ -108,7 +114,7 @@ function GestionCategories({ categories, onChangement }: GestionCategoriesProps)
                 </button>
                 <button
                   type="button"
-                  className="catalogue-lien catalogue-lien--danger"
+                  className="action-ligne action-ligne-danger"
                   onClick={() => supprimer(categorie)}
                   aria-label={`Supprimer ${categorie.libelle}`}
                 >
@@ -119,7 +125,7 @@ function GestionCategories({ categories, onChangement }: GestionCategoriesProps)
           ),
         )}
       </ul>
-      <form className="catalogue-categorie-ajout" onSubmit={ajouter} noValidate>
+      <form className="tiroir-section" onSubmit={ajouter} noValidate>
         <Input
           label="Nouvelle catégorie"
           name="libelle"
@@ -127,9 +133,11 @@ function GestionCategories({ categories, onChangement }: GestionCategoriesProps)
           onChange={(evenement) => setNouveau(evenement.target.value)}
           error={erreurChamp}
         />
-        <Button type="submit" variant="secondary" loading={envoi}>
-          Ajouter
-        </Button>
+        <div className="tiroir-actions">
+          <Button type="submit" variant="secondary" loading={envoi}>
+            Ajouter
+          </Button>
+        </div>
       </form>
     </section>
   )

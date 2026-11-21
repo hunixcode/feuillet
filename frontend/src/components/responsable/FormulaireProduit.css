@@ -14,7 +14,7 @@
   grid-template-columns: minmax(0, 0.7fr) repeat(2, minmax(0, 1fr));
 }
 
-.formulaire-produit .catalogue-actions {
+.formulaire-produit .tiroir-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
