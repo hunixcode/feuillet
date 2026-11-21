@@ -525,3 +525,11 @@ Fait :
 - Vérifié sur la branche avant la fusion : 575 tests front, lint et build ; la CI passe avec les tests Playwright
 - `docs/ecrans.md` et le tableau des écrans de `docs/rapport.md` disent maintenant que l'accueil est sur `/` et le catalogue sur `/catalogue`
 - Plus aucune issue ni PR ouverte
+
+20/11/2026 - Catalogue client sur mobile
+
+Fait :
+- Sur téléphone, `/catalogue` faisait 540 px de large : la grille gardait 4 colonnes (les règles `.catalogue-produits` venaient après les media queries de `feuillet.css`) et la ligne « Type » et « Trier » ne passait pas à la ligne
+- Les règles de colonnes du catalogue sont remontées avant les media queries : 5 colonnes, 4 sous 1280 px, 3 sous 1100 px, 2 sous 640 px
+- Sous 640 px, « Type » et « Trier » sont sur deux lignes et le tri prend toute la largeur
+- Vérifié avec Playwright de 360 à 1440 px : plus aucun débordement (2 px restent à 320 px) ; 92 tests des pages client, lint, build et les 3 parcours de bout en bout passent
