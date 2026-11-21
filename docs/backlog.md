@@ -516,3 +516,12 @@ Fait :
 
 Reste à faire :
 - Design Feuillet de l'espace client (#86, conflit du backlog à régler) et colonne seuil d'alerte du catalogue du responsable (#46)
+
+20/11/2026 - Fin du projet : dernières PR fusionnées
+
+Fait :
+- PR #92 (Hiva) fusionnée : colonne seuil d'alerte dans le catalogue du responsable, et seuil modifiable ou remis par défaut dans la fiche d'un article ; #46 fermée
+- PR #86 (Noah) fusionnée après avoir fusionné `main` dans sa branche (conflit du backlog, les deux entrées gardées) : design Feuillet de l'espace client et page d'accueil ; #81 fermée
+- Vérifié sur la branche avant la fusion : 575 tests front, lint et build ; la CI passe avec les tests Playwright
+- `docs/ecrans.md` et le tableau des écrans de `docs/rapport.md` disent maintenant que l'accueil est sur `/` et le catalogue sur `/catalogue`
+- Plus aucune issue ni PR ouverte

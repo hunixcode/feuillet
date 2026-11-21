@@ -198,7 +198,7 @@ Le détail de chaque écran est dans [`ecrans.md`](./ecrans.md). Les pages du re
 | # | Écran | Route | Exigences |
 |---|---|---|---|
 | 1 | Connexion et inscription | `/connexion`, `/inscription` | EX09 |
-| 2 | Accueil et catalogue | `/catalogue` | EX01, EX04, EX10 |
+| 2 | Accueil et catalogue | `/`, `/catalogue` | EX01, EX04, EX10 |
 | 3 | Fiche produit | `/produits/:id` | EX03, EX04, EX05 |
 | 4 | Panier et commande | `/panier` | EX03 |
 | 5 | Mes demandes | `/demandes` | EX05 |
