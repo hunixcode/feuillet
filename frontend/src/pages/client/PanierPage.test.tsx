@@ -181,8 +181,10 @@ describe('page Panier', () => {
       'href',
       '/produits/p-1',
     )
-    expect(screen.getByText(/1 530 XPF l'unité au lieu de 1 800 XPF/)).toBeInTheDocument()
-    expect(screen.getByText(/Clairefontaine, 650 XPF l'unité/)).toBeInTheDocument()
+    expect(screen.getByText(/1 530 XPF l'unité, au lieu de/)).toBeInTheDocument()
+    expect(screen.getByText('1 800 XPF', { selector: 's' })).toBeInTheDocument()
+    expect(screen.getByText('Clairefontaine', { selector: '.ligne-auteur' })).toBeInTheDocument()
+    expect(screen.getByText('650 XPF l\'unité')).toBeInTheDocument()
     expect(screen.getByLabelText('Quantité de L\'Île au trésor')).toHaveValue('2')
     expect(screen.getByText('3 articles')).toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledWith('/api/produits/p-1', expect.any(Object))
@@ -200,7 +202,7 @@ describe('page Panier', () => {
     expect(recap.getByText('Livraison à domicile').nextElementSibling).toHaveTextContent('800 XPF')
     expect(recap.getByText('dont TVA').nextElementSibling).toHaveTextContent('146 XPF')
     expect(recap.getByText('Emballage cadeau').nextElementSibling).toHaveTextContent('Aucun')
-    expect(screen.getByText('3 060 XPF', { selector: '.ligne-montant' })).toBeInTheDocument()
+    expect(screen.getByText('3 060 XPF', { selector: '.ligne-total' })).toBeInTheDocument()
     const [, options] = appels(fetchMock, '/api/commandes/devis')[0]
     expect(JSON.parse(String(options?.body))).toEqual({
       lignes: [{ produitId: 'p-1', quantite: 2 }],
@@ -217,7 +219,9 @@ describe('page Panier', () => {
 
     fireEvent.click(screen.getByRole('checkbox', { name: /Emballage cadeau/ }))
     fireEvent.click(screen.getByRole('checkbox', { name: /C'est un cadeau/ }))
-    fireEvent.change(screen.getByLabelText('Occasion'), { target: { value: 'noel' } })
+    fireEvent.click(
+      within(screen.getByRole('list', { name: 'Occasion' })).getByRole('button', { name: 'Noël' }),
+    )
 
     expect(await recap.findByText('2 630 XPF')).toBeInTheDocument()
     expect(recap.getByText('Emballage cadeau').nextElementSibling).toHaveTextContent('300 XPF')
@@ -240,7 +244,7 @@ describe('page Panier', () => {
     expect(screen.getByLabelText('Quantité de L\'Île au trésor')).toHaveValue('2')
     expect(screen.getByText('2 articles')).toBeInTheDocument()
     expect(panierEnregistre()).toEqual([{ produitId: 'p-1', quantite: 2 }])
-    expect(await screen.findByText('3 060 XPF', { selector: '.ligne-montant' })).toBeInTheDocument()
+    expect(await screen.findByText('3 060 XPF', { selector: '.ligne-total' })).toBeInTheDocument()
     expect(appels(fetchMock, '/api/produits/p-1')).toHaveLength(1)
   })
 
@@ -529,10 +533,12 @@ describe('page Panier', () => {
     afficher({ utilisateur: client })
     await screen.findByRole('link', { name: 'L\'Île au trésor' })
 
-    expect(screen.queryByLabelText('Occasion')).not.toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Occasion' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('checkbox', { name: /C'est un cadeau/ }))
-    fireEvent.change(screen.getByLabelText('Occasion'), { target: { value: 'noel' } })
-    expect(screen.getByLabelText('Occasion')).toHaveValue('noel')
+    const occasions = within(screen.getByRole('list', { name: 'Occasion' }))
+    fireEvent.click(occasions.getByRole('button', { name: 'Noël' }))
+    expect(occasions.getByRole('button', { name: 'Noël' })).toHaveAttribute('aria-pressed', 'true')
+    expect(occasions.getByRole('button', { name: 'Fête' })).toHaveAttribute('aria-pressed', 'false')
 
     fireEvent.change(screen.getByLabelText('Adresse de livraison'), {
       target: { value: '12 rue des Remparts, Papeete' },

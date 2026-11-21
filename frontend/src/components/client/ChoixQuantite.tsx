@@ -1,12 +1,16 @@
-import './ChoixQuantite.css'
-
 interface ChoixQuantiteProps {
   valeur: number
   onChange: (quantite: number) => void
   libelle: string
+  petit?: boolean
 }
 
-export default function ChoixQuantite({ valeur, onChange, libelle }: ChoixQuantiteProps) {
+export default function ChoixQuantite({
+  valeur,
+  onChange,
+  libelle,
+  petit = false,
+}: ChoixQuantiteProps) {
   function saisir(texte: string) {
     const quantite = Number(texte)
     if (Number.isSafeInteger(quantite) && quantite >= 1) {
@@ -15,7 +19,7 @@ export default function ChoixQuantite({ valeur, onChange, libelle }: ChoixQuanti
   }
 
   return (
-    <div className="quantite">
+    <div className={petit ? 'compteur compteur-petit' : 'compteur'}>
       <button
         type="button"
         aria-label="Retirer un exemplaire"

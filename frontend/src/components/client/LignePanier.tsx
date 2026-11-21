@@ -3,7 +3,6 @@ import type { Produit } from '../../types/produit'
 import { formatXPF } from '../../utils/format'
 import ChoixQuantite from './ChoixQuantite.tsx'
 import Couverture from './Couverture.tsx'
-import './LignePanier.css'
 
 interface LignePanierProps {
   produit: Produit | null
@@ -24,22 +23,21 @@ export default function LignePanier({
 }: LignePanierProps) {
   if (!produit) {
     return (
-      <li className="ligne-probleme">
-        <div className="vignette vignette-vide" aria-hidden="true" />
-        <div className="ligne-infos">
-          <span className="livre-titre">Article retiré du catalogue</span>
+      <li className="ligne ligne-probleme">
+        <span className="tuile tuile-vide" aria-hidden="true" />
+        <div>
+          <p className="ligne-titre">Article retiré du catalogue</p>
           <p className="ligne-message">Cet article n'est plus vendu : retirez-le de votre panier.</p>
-        </div>
-        <span />
-        <div className="ligne-prix">
-          <button
-            type="button"
-            className="lien-action"
-            aria-label="Retirer l'article retiré du catalogue"
-            onClick={onRetirer}
-          >
-            Retirer
-          </button>
+          <div className="ligne-actions">
+            <button
+              type="button"
+              className="retirer"
+              aria-label="Retirer l'article retiré du catalogue"
+              onClick={onRetirer}
+            >
+              Retirer
+            </button>
+          </div>
         </div>
       </li>
     )
@@ -47,21 +45,26 @@ export default function LignePanier({
 
   const epuise = indisponible && produit.disponibilite === 'epuise'
   const sousTitre = produit.auteur ?? produit.marque
+  const fiche = `/produits/${produit.id}`
 
   return (
-    <li className={indisponible ? 'ligne-probleme' : undefined}>
-      <div className="vignette">
+    <li className={indisponible ? 'ligne ligne-probleme' : 'ligne'}>
+      <Link className="tuile" to={fiche} tabIndex={-1} aria-hidden="true">
         <Couverture produit={produit} />
-      </div>
-      <div className="ligne-infos">
-        <Link className="livre-titre" to={`/produits/${produit.id}`}>
+      </Link>
+      <div>
+        <Link className="ligne-titre" to={fiche}>
           {produit.designation}
         </Link>
-        <span className="livre-auteur">
-          {sousTitre ? `${sousTitre}, ` : ''}
+        {sousTitre && <p className="ligne-auteur">{sousTitre}</p>}
+        <p className="ligne-unitaire">
           {formatXPF(produit.prixApplique)} l'unité
-          {produit.promotion && ` au lieu de ${formatXPF(produit.prix)}`}
-        </span>
+          {produit.promotion && (
+            <>
+              , au lieu de <s>{formatXPF(produit.prix)}</s>
+            </>
+          )}
+        </p>
         {epuise && (
           <p className="ligne-message">Cet article est épuisé : retirez-le pour pouvoir commander.</p>
         )}
@@ -70,23 +73,24 @@ export default function LignePanier({
             Cette quantité n'est plus disponible : réduisez-la ou retirez l'article.
           </p>
         )}
+        <div className="ligne-actions">
+          <ChoixQuantite
+            petit
+            valeur={quantite}
+            onChange={onQuantite}
+            libelle={`Quantité de ${produit.designation}`}
+          />
+          <button
+            type="button"
+            className="retirer"
+            aria-label={`Retirer ${produit.designation} du panier`}
+            onClick={onRetirer}
+          >
+            Retirer
+          </button>
+        </div>
       </div>
-      <ChoixQuantite
-        valeur={quantite}
-        onChange={onQuantite}
-        libelle={`Quantité de ${produit.designation}`}
-      />
-      <div className="ligne-prix">
-        {montant !== undefined && <span className="ligne-montant">{formatXPF(montant)}</span>}
-        <button
-          type="button"
-          className="lien-action"
-          aria-label={`Retirer ${produit.designation} du panier`}
-          onClick={onRetirer}
-        >
-          Retirer
-        </button>
-      </div>
+      {montant !== undefined && <p className="ligne-total">{formatXPF(montant)}</p>}
     </li>
   )
 }

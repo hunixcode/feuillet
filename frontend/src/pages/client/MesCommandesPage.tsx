@@ -7,7 +7,6 @@ import { listerCommandes } from '../../services/commandeService'
 import type { Vente } from '../../types/vente'
 import { messageErreur } from '../../utils/erreurs'
 import { formatDate, formatXPF } from '../../utils/format'
-import './MesCommandesPage.css'
 
 function statut(vente: Vente) {
   if (vente.statut === 'expediee') {
@@ -56,7 +55,7 @@ function MesCommandesPage() {
 
     if (!actuel.ventes) {
       return (
-        <div className="panier-erreur">
+        <div className="vide">
           <ErrorMessage>{actuel.erreur ?? ''}</ErrorMessage>
           <Button onClick={() => setEssai(essai + 1)}>Réessayer</Button>
         </div>
@@ -68,7 +67,7 @@ function MesCommandesPage() {
         <section className="vide">
           <h2>Aucune commande pour l'instant.</h2>
           <p>Vos commandes apparaîtront ici dès que vous en aurez passé une.</p>
-          <Link className="common-button common-button--primary" to="/catalogue">
+          <Link className="bouton" to="/catalogue">
             Parcourir le catalogue
           </Link>
         </section>
@@ -76,19 +75,29 @@ function MesCommandesPage() {
     }
 
     return (
-      <ul className="mes-commandes">
+      <ul className="suivi suivi-commandes">
         {actuel.ventes.map((vente) => (
           <li key={vente.id}>
-            <Link to={`/commandes/${vente.id}`}>
-              <span className="mes-commandes-infos">
-                <span className="mes-commandes-titre">{`Commande du ${formatDate(vente.date)}`}</span>
-                <span className="mes-commandes-detail">{articles(vente)}</span>
-              </span>
-              <span className="mes-commandes-fin">
-                <span className="mes-commandes-total">{formatXPF(vente.total)}</span>
-                <span
-                  className={`mes-commandes-statut${vente.statut === 'expediee' ? ' expediee' : ''}`}
+            <Link className="suivi-lien" to={`/commandes/${vente.id}`}>
+              <span className="tuile tuile-vide">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  aria-hidden="true"
                 >
+                  <path d="M6 8h12l-1 12H7L6 8Z" />
+                  <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+                </svg>
+              </span>
+              <span>
+                <span className="suivi-titre">{`Commande du ${formatDate(vente.date)}`}</span>
+                <span className="suivi-meta">{articles(vente)}</span>
+              </span>
+              <span className="suivi-fin">
+                <span className="suivi-total">{formatXPF(vente.total)}</span>
+                <span className={vente.statut === 'expediee' ? 'statut statut-honoree' : 'statut statut-attente'}>
                   {statut(vente)}
                 </span>
               </span>
@@ -102,16 +111,16 @@ function MesCommandesPage() {
   const nombre = actuel?.ventes?.length
 
   return (
-    <div className="commandes-client">
+    <>
       <title>Mes commandes · Feuillet</title>
-      <div className="page-intro">
-        <h1>Mes commandes</h1>
+      <header className="page-tete">
+        <h1 className="page-titre">Mes commandes</h1>
         {nombre !== undefined && nombre > 0 && (
-          <p>{nombre > 1 ? `${nombre} commandes` : '1 commande'}</p>
+          <p className="page-intro">{nombre > 1 ? `${nombre} commandes` : '1 commande'}</p>
         )}
-      </div>
-      {contenu()}
-    </div>
+      </header>
+      <div className="commandes">{contenu()}</div>
+    </>
   )
 }
 

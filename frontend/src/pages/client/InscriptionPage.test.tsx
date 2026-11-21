@@ -53,10 +53,11 @@ describe('page d inscription', () => {
     expect(screen.getByLabelText('Nom complet')).toHaveAttribute('type', 'text')
     expect(screen.getByLabelText('Adresse e-mail')).toHaveAttribute('type', 'email')
     expect(screen.getByLabelText('Mot de passe')).toHaveAttribute('type', 'password')
-    expect(screen.getByRole('link', { name: 'Continuer en tant qu\'invité' })).toHaveAttribute(
-      'href',
-      '/catalogue',
+    expect(screen.getByRole('link', { name: 'Créer un compte' })).toHaveAttribute(
+      'aria-current',
+      'page',
     )
+    expect(screen.getByText('8 caractères minimum.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Se connecter' })).toHaveAttribute(
       'href',
       '/connexion',

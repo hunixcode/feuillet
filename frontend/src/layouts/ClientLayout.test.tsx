@@ -42,7 +42,7 @@ function afficher(url: string, session: Partial<AuthContextValue>) {
       </PanierProvider>
     </AuthContext>,
   )
-  return within(screen.getByRole('navigation', { name: 'Menu principal' }))
+  return within(document.querySelector('header.entete') as HTMLElement)
 }
 
 describe('en-tête de l espace client', () => {
@@ -115,5 +115,14 @@ describe('en-tête de l espace client', () => {
 
     expect(deconnexion).toHaveBeenCalledOnce()
     expect(await screen.findByRole('heading', { name: 'Catalogue' })).toBeInTheDocument()
+  })
+
+  it('présente la librairie en ligne dans le pied de page, sans adresse de magasin', () => {
+    afficher('/catalogue', {})
+    const pied = within(screen.getByRole('contentinfo'))
+
+    expect(pied.getByText('Librairie en ligne')).toBeInTheDocument()
+    expect(pied.getByRole('link', { name: 'Demander un livre' })).toHaveAttribute('href', '/demandes')
+    expect(screen.getByRole('contentinfo')).not.toHaveTextContent(/Papeete/)
   })
 })

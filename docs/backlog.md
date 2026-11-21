@@ -442,7 +442,6 @@ Fait :
 Reste à faire :
 - Merge de la PR #74 (back du paiement) avec ce front
 
-
 15/11/2026 - Tests de bout en bout du parcours d'achat avec Playwright (#56)
 
 Fait :
@@ -459,6 +458,32 @@ Fait :
 - La CSP de production n'autorisait que les images du même domaine : les couvertures Open Library de la #77 étaient bloquées quand l'API sert le front (image Docker), et chaque livre gardait sa couverture dessinée
 - `img-src` autorise `covers.openlibrary.org`, `archive.org` et `*.us.archive.org` (Open Library redirige vers les deux derniers) ; test de la CSP et `docs/api.md` à jour
 - Vérifié dans Chrome sur l'API en production avec une base temporaire : 20 images bloquées avant, les couvertures s'affichent après, sans aucune violation de CSP
+
+16/11/2026 - Noah (front A) : design Feuillet de l'espace client et page d'accueil (issue #81)
+
+Fait :
+- main vérifié après les merges des PR #74, #77 et #78 : 525 tests front, et parcours de bout en bout sur une base MongoDB temporaire locale (paiement, parcours client complet, les 8 pages admin)
+- Feuille de style de la maquette Feuillet reprise telle quelle pour l'espace client (frontend/src/styles/feuillet.css) : l'espace responsable garde son style jusqu'à sa propre issue
+- Toutes les pages client refaites avec le balisage de la maquette : accueil, catalogue, fiche produit, panier, connexion et inscription (un seul écran avec un sélecteur), Mes demandes, Mes commandes et page d'une commande
+- En-tête de la maquette avec recherche en direct, menu mobile et annonce « Ajouté au panier » ; pied de page sans le texte sur Papeete
+- Cartes de livres : vraie couverture Open Library ou une icône, et ajout rapide au panier
+- Page d'accueil sur / : photo plein écran, rayons, plus vendus numérotés, coup de cœur (DEMO-MAN-001, caché tant qu'il n'est pas au catalogue), carrousel des rayons (romans d'abord, BD et manga ensuite) et demande d'un livre
+- Catalogue : les cartes glissent à leur nouvelle place quand on change le tri ou le rayon, comme dans la maquette ; les articles restent affichés pendant le chargement d'un autre rayon
+- Pages comparées une à une avec la maquette sur une base de démonstration temporaire ; correction d'un débordement horizontal sur mobile
+- Cartes du catalogue : le rayon et la mention « Disponible » ou « Épuisé, sur demande » sous le prix, comme le demande docs/ecrans.md (l'accueil reste comme la maquette)
+- 532 tests (heure de Tahiti et UTC), le build et le lint passent
+- Issue #84 (autorisée par le chef) : jeu de démonstration avec 24 livres de plus (dont Sakamoto Days DEMO-MAN-001 et Kuroko's Basket), un ISBN avec couverture Open Library pour chaque livre (édition française quand elle a une couverture) et des ventes de démonstration qui mettent des livres en tête des meilleures ventes ; Le Petit Prince, Orient-Express et la calculatrice gardent leur prix et leur stock pour les tests Playwright
+- Seed testé sur une base locale temporaire : 36 produits, 13 ventes, les 31 livres ont leur couverture
+
+Écarts gardés exprès avec la maquette :
+- Filtre par type et tri par prix dans le catalogue (demandés par docs/ecrans.md)
+- Un seul champ « Adresse de livraison » et l'étape de paiement de démonstration dans le récapitulatif
+- Pas de lien « Panier » dans le pied de page : les tests Playwright trouveraient deux liens « Panier »
+
+Reste à faire :
+- Après le merge de #84 : relancer le seed sur la base partagée une seule fois, en prévenant l'équipe (il efface les commandes et demandes liées aux produits de démonstration)
+- Sur ce PC, les tests du backend qui lancent MongoDB dépassent le délai de 10 secondes : ils sont vérifiés par la CI
+- docs/ecrans.md dit encore que le catalogue est la première page : à mettre à jour par le chef
 
 18/11/2026 - Back : seuil d'alerte de chaque produit (#46)
 

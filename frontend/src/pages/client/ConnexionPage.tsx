@@ -1,9 +1,8 @@
 import { useState, type SubmitEvent } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import AccesCadre from '../../components/client/AccesCadre.tsx'
-import Button from '../../components/common/Button.tsx'
+import Champ from '../../components/client/Champ.tsx'
 import ErrorMessage from '../../components/common/ErrorMessage.tsx'
-import Input from '../../components/common/Input.tsx'
 import { useAuth } from '../../contexts/useAuth'
 import { cheminApresConnexion } from '../../routes/redirection'
 import { erreursDesChamps, messageErreur } from '../../utils/erreurs'
@@ -40,10 +39,11 @@ function ConnexionPage() {
   return (
     <AccesCadre>
       <title>Connexion · Feuillet</title>
+      <h1>Connexion</h1>
+      <p>Retrouvez votre panier et le suivi de vos demandes.</p>
       <form className="formulaire" onSubmit={envoyer} noValidate>
-        <h1>Connexion</h1>
         {message && <ErrorMessage>{message}</ErrorMessage>}
-        <Input
+        <Champ
           label="Adresse e-mail"
           type="email"
           name="email"
@@ -52,7 +52,7 @@ function ConnexionPage() {
           onChange={(evenement) => setEmail(evenement.target.value)}
           error={erreurs.email}
         />
-        <Input
+        <Champ
           label="Mot de passe"
           type="password"
           name="motDePasse"
@@ -61,25 +61,9 @@ function ConnexionPage() {
           onChange={(evenement) => setMotDePasse(evenement.target.value)}
           error={erreurs.motDePasse}
         />
-        <Button type="submit" loading={envoi}>
+        <button className="bouton" type="submit" disabled={envoi} aria-busy={envoi || undefined}>
           Se connecter
-        </Button>
-        <p className="separateur">
-          <span>ou</span>
-        </p>
-        <Link className="common-button common-button--secondary" to="/catalogue">
-          Continuer en tant qu'invité
-        </Link>
-        <p className="aide">
-          Parcourez le catalogue et préparez votre panier. Un compte vous sera demandé pour
-          valider la commande.
-        </p>
-        <p className="acces-bas">
-          Pas encore de compte ?{' '}
-          <Link to="/inscription" state={location.state}>
-            Créer un compte
-          </Link>
-        </p>
+        </button>
       </form>
     </AccesCadre>
   )

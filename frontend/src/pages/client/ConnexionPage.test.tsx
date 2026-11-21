@@ -60,9 +60,9 @@ describe('page de connexion', () => {
     expect(document.title).toBe('Connexion · Feuillet')
     expect(screen.getByLabelText('Adresse e-mail')).toHaveAttribute('type', 'email')
     expect(screen.getByLabelText('Mot de passe')).toHaveAttribute('type', 'password')
-    expect(screen.getByRole('link', { name: 'Continuer en tant qu\'invité' })).toHaveAttribute(
-      'href',
-      '/catalogue',
+    expect(screen.getByRole('link', { name: 'Se connecter' })).toHaveAttribute(
+      'aria-current',
+      'page',
     )
     expect(screen.getByRole('link', { name: 'Créer un compte' })).toHaveAttribute(
       'href',

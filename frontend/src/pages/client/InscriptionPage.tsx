@@ -1,9 +1,8 @@
 import { useState, type SubmitEvent } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import AccesCadre from '../../components/client/AccesCadre.tsx'
-import Button from '../../components/common/Button.tsx'
+import Champ from '../../components/client/Champ.tsx'
 import ErrorMessage from '../../components/common/ErrorMessage.tsx'
-import Input from '../../components/common/Input.tsx'
 import { useAuth } from '../../contexts/useAuth'
 import { cheminApresConnexion } from '../../routes/redirection'
 import type { Utilisateur } from '../../types/utilisateur'
@@ -42,18 +41,13 @@ function InscriptionPage() {
     return (
       <AccesCadre>
         <title>Compte créé · Feuillet</title>
+        <h1>Bienvenue, {inscrit.nom}</h1>
+        <p role="status">
+          <strong>Votre compte est créé.</strong> Vous êtes connecté : vous pouvez suivre vos
+          commandes et vos demandes.
+        </p>
         <div className="formulaire">
-          <h1>Bienvenue, {inscrit.nom}</h1>
-          <div className="acces-succes" role="status">
-            <p>
-              <strong>Votre compte est créé.</strong>
-            </p>
-            <p>Vous êtes connecté : vous pouvez suivre vos commandes et vos demandes.</p>
-          </div>
-          <Link
-            className="common-button common-button--primary"
-            to={cheminApresConnexion(inscrit.role, depuis)}
-          >
+          <Link className="bouton" to={cheminApresConnexion(inscrit.role, depuis)}>
             Continuer
           </Link>
         </div>
@@ -64,10 +58,11 @@ function InscriptionPage() {
   return (
     <AccesCadre>
       <title>Créer un compte · Feuillet</title>
+      <h1>Créer un compte</h1>
+      <p>Pour commander en ligne et suivre vos demandes.</p>
       <form className="formulaire" onSubmit={envoyer} noValidate>
-        <h1>Créer un compte</h1>
         {message && <ErrorMessage>{message}</ErrorMessage>}
-        <Input
+        <Champ
           label="Nom complet"
           type="text"
           name="nom"
@@ -76,7 +71,7 @@ function InscriptionPage() {
           onChange={(evenement) => setNom(evenement.target.value)}
           error={erreurs.nom}
         />
-        <Input
+        <Champ
           label="Adresse e-mail"
           type="email"
           name="email"
@@ -85,34 +80,19 @@ function InscriptionPage() {
           onChange={(evenement) => setEmail(evenement.target.value)}
           error={erreurs.email}
         />
-        <Input
+        <Champ
           label="Mot de passe"
           type="password"
           name="motDePasse"
           autoComplete="new-password"
+          aide="8 caractères minimum."
           value={motDePasse}
           onChange={(evenement) => setMotDePasse(evenement.target.value)}
           error={erreurs.motDePasse}
         />
-        <Button type="submit" loading={envoi}>
+        <button className="bouton" type="submit" disabled={envoi} aria-busy={envoi || undefined}>
           Créer mon compte
-        </Button>
-        <p className="separateur">
-          <span>ou</span>
-        </p>
-        <Link className="common-button common-button--secondary" to="/catalogue">
-          Continuer en tant qu'invité
-        </Link>
-        <p className="aide">
-          Parcourez le catalogue et préparez votre panier. Un compte vous sera demandé pour
-          valider la commande.
-        </p>
-        <p className="acces-bas">
-          Déjà un compte ?{' '}
-          <Link to="/connexion" state={location.state}>
-            Se connecter
-          </Link>
-        </p>
+        </button>
       </form>
     </AccesCadre>
   )

@@ -22,9 +22,12 @@ describe('routes de l espace client', () => {
     vi.restoreAllMocks()
   })
 
-  it('redirige la racine vers le catalogue', async () => {
+  it('affiche la page d accueil à la racine, avec un lien vers le catalogue', async () => {
     afficher('/')
-    expect(await screen.findByRole('heading', { name: 'Catalogue' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { level: 1, name: /choisis avec soin et livrés chez vous/ }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Voir le catalogue' })).toHaveAttribute('href', '/catalogue')
   })
 
   it('affiche la fiche du produit demandé', async () => {
@@ -102,8 +105,12 @@ describe('routes de l espace client', () => {
   it('affiche le menu de l espace client', async () => {
     afficher('/catalogue')
     const menu = await screen.findByRole('navigation', { name: 'Menu principal' })
-    for (const nom of ['Catalogue', 'Mes commandes', 'Mes demandes', 'Panier', 'Connexion']) {
+    for (const nom of ['Catalogue', 'Mes commandes', 'Mes demandes']) {
       expect(within(menu).getByRole('link', { name: nom })).toBeInTheDocument()
+    }
+    const entete = within(document.querySelector('header.entete') as HTMLElement)
+    for (const nom of ['Panier', 'Connexion']) {
+      expect(entete.getByRole('link', { name: nom })).toBeInTheDocument()
     }
   })
 })

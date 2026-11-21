@@ -8,7 +8,6 @@ import { obtenirCommande } from '../../services/commandeService'
 import type { OccasionCadeau, Vente } from '../../types/vente'
 import { messageErreur } from '../../utils/erreurs'
 import { formatDate, formatXPF } from '../../utils/format'
-import './CommandePage.css'
 
 const occasions: Record<OccasionCadeau, string> = {
   noel: 'Noël',
@@ -57,7 +56,7 @@ function CommandePage() {
 
   if (!actuel) {
     return (
-      <div className="commande">
+      <div className="page-corps">
         <title>Commande · Feuillet</title>
         <Loader>Chargement de la commande…</Loader>
       </div>
@@ -66,12 +65,12 @@ function CommandePage() {
 
   if (actuel.introuvable) {
     return (
-      <div className="commande">
+      <div className="page-corps">
         <title>Commande introuvable · Feuillet</title>
         <section className="vide">
           <h2>Commande introuvable.</h2>
           <p>Cette commande n'existe pas ou n'est pas liée à votre compte.</p>
-          <Link className="common-button common-button--primary" to="/catalogue">
+          <Link className="bouton" to="/catalogue">
             Retour au catalogue
           </Link>
         </section>
@@ -81,9 +80,9 @@ function CommandePage() {
 
   if (!actuel.vente) {
     return (
-      <div className="commande">
+      <div className="page-corps">
         <title>Commande · Feuillet</title>
-        <div className="panier-erreur">
+        <div className="vide">
           <ErrorMessage>{actuel.erreur ?? ''}</ErrorMessage>
           <Button onClick={() => setEssai(essai + 1)}>Réessayer</Button>
         </div>
@@ -95,82 +94,112 @@ function CommandePage() {
   const titre = confirmee ? 'Commande confirmée' : `Commande du ${formatDate(vente.date)}`
 
   return (
-    <div className="commande">
+    <>
       <title>{`${titre} · Feuillet`}</title>
-      <div className="page-intro">
-        <h1>{titre}</h1>
-        <p>
-          {vente.statut === 'expediee'
-            ? `Expédiée${vente.dateExpedition ? ` le ${formatDate(vente.dateExpedition)}` : ''}`
-            : 'À préparer'}
+      <header className="page-tete">
+        <h1 className="page-titre">{titre}</h1>
+        <p className="page-intro">
+          <span className={vente.statut === 'expediee' ? 'statut statut-honoree' : 'statut statut-attente'}>
+            {vente.statut === 'expediee'
+              ? `Expédiée${vente.dateExpedition ? ` le ${formatDate(vente.dateExpedition)}` : ''}`
+              : 'À préparer'}
+          </span>
         </p>
-      </div>
+        {confirmee && (
+          <p className="commande-merci">
+            Merci {vente.client.nom}, votre commande est enregistrée. Nous préparons votre colis.
+          </p>
+        )}
+      </header>
 
-      {confirmee && (
-        <p className="commande-merci">
-          Merci {vente.client.nom}, votre commande est enregistrée. Nous préparons votre colis.
-        </p>
-      )}
-
-      <div className="commande-grille">
-        <section aria-labelledby="titre-articles">
-          <h2 id="titre-articles">Articles</h2>
-          <ul className="commande-lignes">
-            {vente.lignes.map((ligne) => (
-              <li key={ligne.produitId}>
-                <div>
-                  <span className="commande-designation">{ligne.designation}</span>
-                  <span className="commande-detail">
-                    {`${ligne.quantite} × ${formatXPF(ligne.prixUnitaire)}`}
-                    {ligne.remise > 0 && `, remise de ${ligne.remise} %`}
+      <div className="panier">
+        <div>
+          <section aria-labelledby="titre-articles">
+            <h2 className="visuellement-cache" id="titre-articles">
+              Articles
+            </h2>
+            <ul className="lignes">
+              {vente.lignes.map((ligne) => (
+                <li className="ligne" key={ligne.produitId}>
+                  <span className="tuile tuile-vide">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      aria-hidden="true"
+                    >
+                      <path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4Z" />
+                      <path d="M5 17a3 3 0 0 1 3-3h10" />
+                    </svg>
                   </span>
-                </div>
-                <span className="commande-montant">{formatXPF(ligne.montant)}</span>
-              </li>
-            ))}
-          </ul>
+                  <div>
+                    <Link className="ligne-titre" to={`/produits/${ligne.produitId}`}>
+                      {ligne.designation}
+                    </Link>
+                    <p className="ligne-unitaire">
+                      {`${ligne.quantite} × ${formatXPF(ligne.prixUnitaire)}`}
+                      {ligne.remise > 0 && `, remise de ${ligne.remise} %`}
+                    </p>
+                  </div>
+                  <p className="ligne-total">{formatXPF(ligne.montant)}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
 
-          <h2>Livraison</h2>
-          <p className="commande-adresse">{vente.adresseLivraison}</p>
-          {(vente.occasionCadeau || vente.emballageCadeau) && (
-            <p className="aide">
-              {[
-                vente.occasionCadeau && `Cadeau pour : ${occasions[vente.occasionCadeau]}`,
-                vente.emballageCadeau && 'Emballage cadeau',
-              ]
-                .filter(Boolean)
-                .join(', ')}
-            </p>
-          )}
-        </section>
+          <section className="options" aria-labelledby="titre-livraison">
+            <h2 className="titre-bloc titre-livraison" id="titre-livraison">
+              Livraison
+            </h2>
+            <p className="commande-adresse">{vente.adresseLivraison}</p>
+            {(vente.occasionCadeau || vente.emballageCadeau) && (
+              <p className="suivi-meta">
+                {[
+                  vente.occasionCadeau && `Cadeau pour : ${occasions[vente.occasionCadeau]}`,
+                  vente.emballageCadeau && 'Emballage cadeau',
+                ]
+                  .filter(Boolean)
+                  .join(', ')}
+              </p>
+            )}
+          </section>
+        </div>
 
         <aside className="recap" aria-labelledby="titre-montants">
           <h2 id="titre-montants">Montants</h2>
           <dl>
-            <dt>Articles</dt>
-            <dd>{formatXPF(vente.sousTotal)}</dd>
+            <div>
+              <dt>Articles</dt>
+              <dd>{formatXPF(vente.sousTotal)}</dd>
+            </div>
             {vente.fraisEmballage > 0 && (
-              <>
+              <div>
                 <dt>Emballage cadeau</dt>
                 <dd>{formatXPF(vente.fraisEmballage)}</dd>
-              </>
+              </div>
             )}
-            <dt>Livraison à domicile</dt>
-            <dd>{formatXPF(vente.fraisLivraison)}</dd>
-            <dt className="total">Total TTC</dt>
-            <dd className="total">{formatXPF(vente.total)}</dd>
-            <dt>dont TVA</dt>
-            <dd>{formatXPF(vente.montantTva)}</dd>
+            <div>
+              <dt>Livraison à domicile</dt>
+              <dd>{formatXPF(vente.fraisLivraison)}</dd>
+            </div>
           </dl>
-          <Link className="common-button common-button--secondary" to="/catalogue">
+          <div className="recap-total">
+            <span>Total TTC</span>
+            <strong>{formatXPF(vente.total)}</strong>
+          </div>
+          <p className="recap-tva">
+            <span>dont TVA</span> <span>{formatXPF(vente.montantTva)}</span>
+          </p>
+          <Link className="bouton bouton-blanc" to="/catalogue">
             Continuer mes achats
           </Link>
-          <Link className="commande-retour" to="/commandes">
-            Voir toutes mes commandes
-          </Link>
+          <p className="recap-note">
+            <Link to="/commandes">Voir toutes mes commandes</Link>
+          </p>
         </aside>
       </div>
-    </div>
+    </>
   )
 }
 
