@@ -37,32 +37,32 @@ Prises sur la démo Docker avec les données du seed. Toutes les images sont dan
 
 <table>
   <tr>
-    <td><img src="docs/captures/accueil.jpg" alt="Accueil"></td>
-    <td><img src="docs/captures/accueil-plus-vendus.jpg" alt="Accueil, rayons et meilleures ventes"></td>
+    <td><img src="docs/captures/accueil.jpg" alt="Accueil" width="440"></td>
+    <td><img src="docs/captures/accueil-plus-vendus.jpg" alt="Accueil, rayons et meilleures ventes" width="440"></td>
   </tr>
   <tr>
     <td align="center">Accueil</td>
     <td align="center">Rayons et meilleures ventes</td>
   </tr>
   <tr>
-    <td><img src="docs/captures/catalogue.jpg" alt="Catalogue"></td>
-    <td><img src="docs/captures/fiche-produit.jpg" alt="Fiche d'un livre"></td>
+    <td><img src="docs/captures/catalogue.jpg" alt="Catalogue" width="440"></td>
+    <td><img src="docs/captures/fiche-produit.jpg" alt="Fiche d'un livre" width="440"></td>
   </tr>
   <tr>
     <td align="center">Catalogue avec filtres et tri</td>
     <td align="center">Fiche d'un livre</td>
   </tr>
   <tr>
-    <td><img src="docs/captures/panier.png" alt="Panier et paiement de démonstration"></td>
-    <td><img src="docs/captures/mes-commandes.png" alt="Mes commandes"></td>
+    <td><img src="docs/captures/panier.png" alt="Panier et paiement de démonstration" width="440"></td>
+    <td><img src="docs/captures/mes-commandes.png" alt="Mes commandes" width="440"></td>
   </tr>
   <tr>
     <td align="center">Panier, options et paiement de démonstration</td>
     <td align="center">Mes commandes</td>
   </tr>
   <tr>
-    <td><img src="docs/captures/mes-demandes.png" alt="Mes demandes"></td>
-    <td><img src="docs/captures/connexion.jpg" alt="Connexion et inscription"></td>
+    <td><img src="docs/captures/mes-demandes.png" alt="Mes demandes" width="440"></td>
+    <td><img src="docs/captures/connexion.jpg" alt="Connexion et inscription" width="440"></td>
   </tr>
   <tr>
     <td align="center">Demander un livre absent ou épuisé</td>
@@ -74,32 +74,32 @@ Prises sur la démo Docker avec les données du seed. Toutes les images sont dan
 
 <table>
   <tr>
-    <td><img src="docs/captures/admin-tableau-de-bord.png" alt="Tableau de bord"></td>
-    <td><img src="docs/captures/admin-catalogue.png" alt="Catalogue et prix"></td>
+    <td><img src="docs/captures/admin-tableau-de-bord.png" alt="Tableau de bord" width="440"></td>
+    <td><img src="docs/captures/admin-catalogue.png" alt="Catalogue et prix" width="440"></td>
   </tr>
   <tr>
     <td align="center">Tableau de bord</td>
     <td align="center">Catalogue et prix, avec le seuil d'alerte</td>
   </tr>
   <tr>
-    <td><img src="docs/captures/admin-stock.png" alt="Stock et mouvements"></td>
-    <td><img src="docs/captures/admin-ventes.png" alt="Ventes et retours"></td>
+    <td><img src="docs/captures/admin-stock.png" alt="Stock et mouvements" width="440"></td>
+    <td><img src="docs/captures/admin-ventes.png" alt="Ventes et retours" width="440"></td>
   </tr>
   <tr>
     <td align="center">Stock et mouvements</td>
     <td align="center">Ventes et retours</td>
   </tr>
   <tr>
-    <td><img src="docs/captures/admin-demandes.png" alt="Demandes et mises de côté"></td>
-    <td><img src="docs/captures/admin-commandes.png" alt="Fournisseurs, commandes et réceptions"></td>
+    <td><img src="docs/captures/admin-demandes.png" alt="Demandes et mises de côté" width="440"></td>
+    <td><img src="docs/captures/admin-commandes.png" alt="Fournisseurs, commandes et réceptions" width="440"></td>
   </tr>
   <tr>
     <td align="center">Demandes et mises de côté</td>
     <td align="center">Fournisseurs, commandes et réceptions</td>
   </tr>
   <tr>
-    <td><img src="docs/captures/admin-rapports.png" alt="Réapprovisionnement et rapports"></td>
-    <td><img src="docs/captures/admin-parametres.png" alt="Paramètres"></td>
+    <td><img src="docs/captures/admin-rapports.png" alt="Réapprovisionnement et rapports" width="440"></td>
+    <td><img src="docs/captures/admin-parametres.png" alt="Paramètres" width="440"></td>
   </tr>
   <tr>
     <td align="center">Réapprovisionnement et rapports</td>
