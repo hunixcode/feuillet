@@ -17,7 +17,7 @@ Le responsable se connecte avec le même formulaire ; il est alors dirigé vers 
 
 ### 2. Accueil et catalogue
 
-C'est la première page de l'application.
+L'accueil (`/`) est la première page de l'application : meilleures ventes, rayons et demande d'un livre. Le catalogue complet, avec la recherche et les filtres, est sur `/catalogue`.
 
 - **But :** aider le client à découvrir les articles et à trouver ce qu'il cherche.
 - **Contenu :** meilleures ventes de la librairie (RG14) ; catégories de livres pour orienter le client ; liste des articles avec désignation, catégorie, prix, promotion éventuelle et disponibilité ; recherche et filtres par type et par catégorie.
