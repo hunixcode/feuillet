@@ -533,3 +533,10 @@ Fait :
 - Les règles de colonnes du catalogue sont remontées avant les media queries : 5 colonnes, 4 sous 1280 px, 3 sous 1100 px, 2 sous 640 px
 - Sous 640 px, « Type » et « Trier » sont sur deux lignes et le tri prend toute la largeur
 - Vérifié avec Playwright de 360 à 1440 px : plus aucun débordement (2 px restent à 320 px) ; 92 tests des pages client, lint, build et les 3 parcours de bout en bout passent
+
+20/11/2026 - Captures d'écran dans le README
+
+Fait :
+- Section « Captures d'écran » dans le README : un GIF du parcours d'achat (accueil, catalogue, fiche, panier), 8 écrans client, les 8 écrans du responsable et 2 captures sur téléphone
+- Prises avec Playwright sur la démo Docker après `npm run seed` (1440 × 900, et 390 × 844 pour le téléphone), images dans `docs/captures/` (4,3 Mo en tout)
+- En les prenant, on a vu le catalogue déborder sur téléphone : corrigé dans la PR #94 avant les captures
