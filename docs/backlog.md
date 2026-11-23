@@ -564,3 +564,8 @@ Fait :
 - La confirmation de commande du client et le tiroir d'une vente côté responsable affichent la livraison ligne par ligne
 - Tests Playwright mis à jour avec l'accord de Noah : nouvelle aide `remplirLivraison`, et l'en-tête qui se cache au défilement est retrouvé en remontant la page
 - Vérifié : 578 tests front dans deux fuseaux horaires, lint, build et les 3 parcours Playwright
+
+23/11/2026 - Docs : détails de livraison (#100)
+
+Fait :
+- `docs/rapport.md` (règle RG13 et décision « pas de retrait sur place »), `docs/ecrans.md` (écran Panier) et `docs/api.md` (champ `adresseLivraison`) parlent maintenant des coordonnées demandées depuis #98 : nom, téléphone, adresse, code postal, ville et indications facultatives
