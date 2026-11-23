@@ -142,6 +142,13 @@ function afficher(session: Partial<AuthContextValue> = {}) {
   return router
 }
 
+function remplirLivraison(adresse = 'BP 12') {
+  fireEvent.change(screen.getByLabelText('Téléphone'), { target: { value: '87 12 34 56' } })
+  fireEvent.change(screen.getByLabelText('Adresse'), { target: { value: adresse } })
+  fireEvent.change(screen.getByLabelText('Code postal'), { target: { value: '98714' } })
+  fireEvent.change(screen.getByLabelText('Ville'), { target: { value: 'Pirae' } })
+}
+
 async function boutonPayer() {
   const bouton = await screen.findByRole('button', { name: 'Payer (démo)' })
   await waitFor(() => expect(bouton).toBeEnabled())
@@ -404,9 +411,8 @@ describe('page Panier', () => {
     const router = afficher({ utilisateur: client })
     const bouton = await boutonPayer()
 
-    fireEvent.change(screen.getByLabelText('Adresse de livraison'), {
-      target: { value: '  12 rue des Remparts, Papeete  ' },
-    })
+    remplirLivraison('  12 rue des Remparts  ')
+    fireEvent.change(screen.getByLabelText('Indications'), { target: { value: 'Portail bleu' } })
     fireEvent.click(bouton)
 
     expect(await screen.findByRole('heading', { name: 'Commande' })).toBeInTheDocument()
@@ -417,7 +423,7 @@ describe('page Panier', () => {
     expect(JSON.parse(String(options?.body))).toEqual({
       lignes: [{ produitId: 'p-1', quantite: 2 }],
       emballageCadeau: false,
-      adresseLivraison: '12 rue des Remparts, Papeete',
+      adresseLivraison: 'Tiare\nTél. 87 12 34 56\n12 rue des Remparts\n98714 Pirae\nIndications : Portail bleu',
       paiementDemo: 'accepte',
     })
   })
@@ -438,14 +444,14 @@ describe('page Panier', () => {
     })
     const router = afficher({ utilisateur: client })
     await boutonPayer()
-    fireEvent.change(screen.getByLabelText('Adresse de livraison'), { target: { value: 'BP 12' } })
+    remplirLivraison()
 
     fireEvent.click(screen.getByRole('button', { name: 'Simuler un refus' }))
 
     expect(await screen.findByText(/Paiement refusé \(démonstration\)/)).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/panier')
     expect(panierEnregistre()).toEqual([{ produitId: 'p-1', quantite: 2 }])
-    expect(screen.getByLabelText('Adresse de livraison')).toHaveValue('BP 12')
+    expect(screen.getByLabelText('Adresse')).toHaveValue('BP 12')
     const [, refus] = appels(fetchMock, '/api/commandes')[0]
     expect(JSON.parse(String(refus?.body))).toMatchObject({ paiementDemo: 'refuse' })
 
@@ -472,13 +478,15 @@ describe('page Panier', () => {
         ),
     })
     afficher({ utilisateur: client })
+    const bouton = await boutonPayer()
+    remplirLivraison()
 
-    fireEvent.click(await boutonPayer())
+    fireEvent.click(bouton)
 
     expect(
       await screen.findByText('L\'adresse de livraison est obligatoire.'),
     ).toBeInTheDocument()
-    expect(screen.getByLabelText('Adresse de livraison')).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByLabelText('Adresse')).toHaveAttribute('aria-invalid', 'true')
     expect(panierEnregistre()).toEqual([{ produitId: 'p-1', quantite: 1 }])
   })
 
@@ -497,7 +505,7 @@ describe('page Panier', () => {
     })
     afficher({ utilisateur: client })
     const bouton = await boutonPayer()
-    fireEvent.change(screen.getByLabelText('Adresse de livraison'), { target: { value: 'BP 12' } })
+    remplirLivraison()
 
     fireEvent.click(bouton)
 
@@ -519,7 +527,7 @@ describe('page Panier', () => {
     })
     afficher({ utilisateur: client })
     const bouton = await boutonPayer()
-    fireEvent.change(screen.getByLabelText('Adresse de livraison'), { target: { value: 'BP 12' } })
+    remplirLivraison()
 
     fireEvent.click(bouton)
 
@@ -540,10 +548,43 @@ describe('page Panier', () => {
     expect(occasions.getByRole('button', { name: 'Noël' })).toHaveAttribute('aria-pressed', 'true')
     expect(occasions.getByRole('button', { name: 'Fête' })).toHaveAttribute('aria-pressed', 'false')
 
-    fireEvent.change(screen.getByLabelText('Adresse de livraison'), {
-      target: { value: '12 rue des Remparts, Papeete' },
-    })
-    expect(screen.getByLabelText('Adresse de livraison')).toHaveValue('12 rue des Remparts, Papeete')
+    expect(screen.getByLabelText('Nom complet')).toHaveValue('Tiare')
+    expect(screen.getByLabelText('Téléphone')).toHaveAttribute('autocomplete', 'tel')
+    expect(screen.getByLabelText('Code postal')).toHaveAttribute('autocomplete', 'postal-code')
+    expect(screen.getByLabelText('Indications')).toHaveValue('')
     expect(screen.queryByText(/retrait/i)).not.toBeInTheDocument()
+  })
+
+  it('vérifie chaque détail de livraison avant de payer, sans rien envoyer', async () => {
+    remplirPanier([{ produitId: 'p-1', quantite: 1 }])
+    const fetchMock = simulerApi([ile])
+    afficher({ utilisateur: client })
+    const bouton = await boutonPayer()
+    fireEvent.change(screen.getByLabelText('Nom complet'), { target: { value: ' ' } })
+    fireEvent.change(screen.getByLabelText('Téléphone'), { target: { value: '12 34' } })
+    fireEvent.change(screen.getByLabelText('Code postal'), { target: { value: '987' } })
+
+    fireEvent.click(bouton)
+
+    expect(screen.getByLabelText('Nom complet')).toHaveAccessibleDescription(
+      'Indiquez le nom de la personne qui reçoit le colis.',
+    )
+    expect(screen.getByLabelText('Nom complet')).toHaveFocus()
+    expect(screen.getByLabelText('Téléphone')).toHaveAccessibleDescription(
+      'Entrez un numéro de téléphone valide, par exemple 87 12 34 56.',
+    )
+    expect(screen.getByLabelText('Adresse')).toHaveAccessibleDescription(
+      /Livraison à domicile uniquement\. Indiquez le numéro et la rue, la boîte postale ou le lot\./,
+    )
+    expect(screen.getByLabelText('Code postal')).toHaveAccessibleDescription(
+      'Le code postal compte 5 chiffres, par exemple 98714.',
+    )
+    expect(screen.getByLabelText('Ville')).toHaveAccessibleDescription('Indiquez la ville ou la commune.')
+    expect(screen.getByLabelText('Indications')).not.toHaveAttribute('aria-invalid')
+    expect(appels(fetchMock, '/api/commandes')).toHaveLength(0)
+
+    fireEvent.change(screen.getByLabelText('Ville'), { target: { value: 'Pirae' } })
+    expect(screen.getByLabelText('Ville')).not.toHaveAttribute('aria-invalid')
+    expect(screen.getByLabelText('Téléphone')).toHaveAttribute('aria-invalid', 'true')
   })
 })

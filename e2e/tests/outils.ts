@@ -33,6 +33,13 @@ export async function ajouterAuPanier(page: Page, designation: string, quantite 
   await expect(page.getByText("Ajouté au panier.")).toBeVisible();
 }
 
+export async function remplirLivraison(page: Page, adresse: string, codePostal: string, ville: string): Promise<void> {
+  await page.getByLabel("Téléphone").fill("87 12 34 56");
+  await page.getByLabel("Adresse", { exact: true }).fill(adresse);
+  await page.getByLabel("Code postal").fill(codePostal);
+  await page.getByLabel("Ville").fill(ville);
+}
+
 export async function tokenApi(request: APIRequestContext, email: string, motDePasse: string): Promise<string> {
   const reponse = await request.post("/api/auth/connexion", { data: { email, motDePasse } });
   expect(reponse.ok()).toBe(true);

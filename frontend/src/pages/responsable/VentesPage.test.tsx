@@ -168,7 +168,7 @@ describe('page des ventes et retours', () => {
     fireEvent.click(ligne('Léa Martin'))
 
     expect(panneau().getByRole('heading', { name: 'Léa Martin' })).toBeInTheDocument()
-    expect(panneau().getByText('Livraison au BP 12, Papeete')).toBeInTheDocument()
+    expect(panneau().getByRole('heading', { name: 'Livraison' }).nextElementSibling).toHaveTextContent('BP 12, Papeete')
     expect(panneau().getByText('Colis expédié')).toBeInTheDocument()
     expect(panneau().getByText('Fin du délai de retour')).toBeInTheDocument()
     expect(panneau().getByText('Total TTC').nextElementSibling).toHaveTextContent('4 810 XPF')

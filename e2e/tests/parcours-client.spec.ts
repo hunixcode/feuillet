@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ajouterAuPanier, emailUnique, inscrire } from "./outils";
+import { ajouterAuPanier, emailUnique, inscrire, remplirLivraison } from "./outils";
 
 test("un client s'inscrit, commande un livre et retrouve sa commande", async ({ page }) => {
   await inscrire(page, "Hinano Client", emailUnique("client"));
@@ -13,7 +13,8 @@ test("un client s'inscrit, commande un livre et retrouve sa commande", async ({ 
   await expect(page.getByRole("textbox", { name: "Quantité de Le Petit Prince" })).toHaveValue("2");
   const recapitulatif = page.getByRole("complementary", { name: "Récapitulatif" });
   await expect(recapitulatif.getByText("2 400 XPF")).toBeVisible();
-  await page.getByLabel("Adresse de livraison").fill("12 rue des Remparts, Papeete");
+  await expect(page.getByLabel("Nom complet")).toHaveValue("Hinano Client");
+  await remplirLivraison(page, "12 rue des Remparts", "98713", "Papeete");
 
   // Un paiement refusé n'enregistre rien et garde le panier.
   await page.getByRole("button", { name: "Simuler un refus" }).click();
@@ -23,7 +24,10 @@ test("un client s'inscrit, commande un livre et retrouve sa commande", async ({ 
   await page.getByRole("button", { name: "Payer (démo)" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Commande confirmée" })).toBeVisible();
   await expect(page.getByText("À préparer")).toBeVisible();
-  await expect(page.getByText("12 rue des Remparts, Papeete")).toBeVisible();
+  const livraison = page.getByRole("region", { name: "Livraison" });
+  await expect(livraison.getByText("Tél. 87 12 34 56")).toBeVisible();
+  await expect(livraison.getByText("12 rue des Remparts")).toBeVisible();
+  await expect(livraison.getByText("98713 Papeete")).toBeVisible();
 
   await page.getByRole("link", { name: "Voir toutes mes commandes" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Mes commandes" })).toBeVisible();

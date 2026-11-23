@@ -93,6 +93,25 @@ describe('page d une commande', () => {
     expect(screen.queryByText(/Cadeau pour/)).not.toBeInTheDocument()
   })
 
+  it('affiche les détails de livraison ligne par ligne', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      reponse({
+        ...vente,
+        adresseLivraison: 'Tiare\nTél. 87 12 34 56\n12 rue des Remparts\n98714 Pirae\nIndications : Portail bleu',
+      }),
+    )
+    afficher()
+
+    const livraison = within(await screen.findByRole('region', { name: 'Livraison' }))
+    expect(livraison.getAllByText(/./, { selector: 'address span' }).map((ligne) => ligne.textContent)).toEqual([
+      'Tiare',
+      'Tél. 87 12 34 56',
+      '12 rue des Remparts',
+      '98714 Pirae',
+      'Indications : Portail bleu',
+    ])
+  })
+
   it('indique une commande introuvable', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       reponse({ code: 'INTROUVABLE', message: 'Commande introuvable.' }, 404),

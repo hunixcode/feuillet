@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { RESPONSABLE } from "../config.mjs";
-import { ajouterAuPanier, emailUnique, idProduit, inscrire, tokenApi } from "./outils";
+import { ajouterAuPanier, emailUnique, idProduit, inscrire, remplirLivraison, tokenApi } from "./outils";
 
 const ARTICLE = "Calculatrice collège";
 
@@ -11,7 +11,7 @@ test("un article épuisé au moment de payer : rien n'est enregistré et la lign
   await inscrire(page, "Moana Épuisé", emailUnique("epuise"));
   await ajouterAuPanier(page, ARTICLE, 2);
   await page.goto("/panier");
-  await page.getByLabel("Adresse de livraison").fill("Lot 3, 98714 Pirae");
+  await remplirLivraison(page, "Lot 3", "98714", "Pirae");
   const recapitulatif = page.getByRole("complementary", { name: "Récapitulatif" });
   await expect(recapitulatif.getByRole("button", { name: "Payer (démo)" })).toBeEnabled();
 
@@ -30,6 +30,8 @@ test("un article épuisé au moment de payer : rien n'est enregistré et la lign
   await expect(ligne).toContainText(/est épuisé|n'est plus disponible/);
   await expect(page.getByRole("textbox", { name: `Quantité de ${ARTICLE}` })).toHaveValue("2");
 
+  await page.mouse.wheel(0, -5000);
+  await expect(page.getByRole("link", { name: "Mes commandes" })).toBeInViewport();
   await page.getByRole("link", { name: "Mes commandes" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Mes commandes" })).toBeVisible();
   await expect(page.getByRole("main").getByRole("link", { name: /^Commande du/ })).toHaveCount(0);

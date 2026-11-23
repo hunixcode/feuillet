@@ -26,6 +26,7 @@ import {
 import { codeErreur, messageErreur, messageErreurRetour } from '../../utils/erreurs'
 import { useOuverture } from '../../utils/ouvertureAdmin'
 import { formatXPF, jourIso } from '../../utils/format'
+import { lignesAdresse } from '../../utils/livraison'
 import './VentesPage.css'
 
 type Filtre = StatutVente | 'tous'
@@ -425,9 +426,7 @@ function VentesPage() {
             <h2 className="tiroir-titre" style={{ marginTop: 4 }}>
               {vente.client.nom}
             </h2>
-            <p className="tiroir-meta">
-              {vente.adresseLivraison ? `Livraison au ${vente.adresseLivraison}` : vente.client.email}
-            </p>
+            <p className="tiroir-meta">{vente.client.email}</p>
             <div className="etiquettes" style={{ marginTop: 14 }}>
               <Statut vente={vente} />
               {vente.occasionCadeau && (
@@ -444,6 +443,19 @@ function VentesPage() {
                 <span>{message}</span>
               </p>
             )}
+
+            <section className="tiroir-section" aria-labelledby="titre-livraison-vente">
+              <h3 id="titre-livraison-vente">Livraison</h3>
+              {vente.adresseLivraison ? (
+                <address className="adresse-livraison">
+                  {lignesAdresse(vente.adresseLivraison).map((ligne, index) => (
+                    <span key={`${index}-${ligne}`}>{ligne}</span>
+                  ))}
+                </address>
+              ) : (
+                <p className="tiroir-note">Adresse non renseignée.</p>
+              )}
+            </section>
 
             <section className="tiroir-section">
               <h3>Suivi</h3>
