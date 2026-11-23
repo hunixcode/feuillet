@@ -554,3 +554,13 @@ Fait :
 
 À noter :
 - La colonne « En vente » du catalogue compare au stock en rayon, pas à la quantité achetée à l'origine : l'API ne donne cette quantité que pour les articles à recommander
+
+23/11/2026 - Détails de livraison dans le panier (#98)
+
+Fait :
+- Le bloc « Livraison » du panier reprend les champs de la maquette : nom complet (prérempli avec le nom du compte), téléphone, adresse, code postal, ville et indications facultatives
+- Chaque champ est vérifié avant le paiement (téléphone d'au moins 8 chiffres, code postal à 5 chiffres) et le message s'affiche sous le champ ; rien n'est envoyé tant qu'un champ est faux
+- Les détails partent dans `adresseLivraison`, une information par ligne, sous les 300 caractères acceptés : l'API et le backend ne changent pas
+- La confirmation de commande du client et le tiroir d'une vente côté responsable affichent la livraison ligne par ligne
+- Tests Playwright mis à jour avec l'accord de Noah : nouvelle aide `remplirLivraison`, et l'en-tête qui se cache au défilement est retrouvé en remontant la page
+- Vérifié : 578 tests front dans deux fuseaux horaires, lint, build et les 3 parcours Playwright
