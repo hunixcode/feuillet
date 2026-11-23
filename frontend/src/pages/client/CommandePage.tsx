@@ -8,6 +8,7 @@ import { obtenirCommande } from '../../services/commandeService'
 import type { OccasionCadeau, Vente } from '../../types/vente'
 import { messageErreur } from '../../utils/erreurs'
 import { formatDate, formatXPF } from '../../utils/format'
+import { lignesAdresse } from '../../utils/livraison'
 
 const occasions: Record<OccasionCadeau, string> = {
   noel: 'Noël',
@@ -152,7 +153,11 @@ function CommandePage() {
             <h2 className="titre-bloc titre-livraison" id="titre-livraison">
               Livraison
             </h2>
-            <p className="commande-adresse">{vente.adresseLivraison}</p>
+            <address className="commande-adresse">
+              {lignesAdresse(vente.adresseLivraison).map((ligne, index) => (
+                <span key={`${index}-${ligne}`}>{ligne}</span>
+              ))}
+            </address>
             {(vente.occasionCadeau || vente.emballageCadeau) && (
               <p className="suivi-meta">
                 {[

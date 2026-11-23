@@ -24,6 +24,15 @@ import type {
 } from '../../types/vente'
 import { erreursDesChamps, messageErreur, stockModifie } from '../../utils/erreurs'
 import { formatXPF } from '../../utils/format'
+import {
+  composerAdresse,
+  LIVRAISON_VIDE,
+  LONGUEURS_LIVRAISON,
+  ORDRE_LIVRAISON,
+  verifierLivraison,
+  type ChampLivraison,
+  type DetailsLivraison,
+} from '../../utils/livraison'
 
 const LIGNES_REFUSEES =
   "Rien n'a été enregistré : certains articles ne sont plus disponibles dans la quantité demandée. Corrigez votre panier puis payez à nouveau."
@@ -38,6 +47,31 @@ const OCCASIONS = [
   { valeur: 'fete', libelle: 'Fête' },
 ]
 
+const CHAMPS_LIVRAISON: {
+  champ: ChampLivraison
+  label: string
+  autoComplete: string
+  placeholder?: string
+  aide?: string
+  large?: boolean
+  type?: string
+  inputMode?: 'numeric' | 'tel'
+}[] = [
+  { champ: 'nom', label: 'Nom complet', autoComplete: 'name', placeholder: 'Prénom et nom' },
+  { champ: 'telephone', label: 'Téléphone', autoComplete: 'tel', placeholder: 'Pour le livreur', type: 'tel', inputMode: 'tel' },
+  {
+    champ: 'adresse',
+    label: 'Adresse',
+    autoComplete: 'street-address',
+    placeholder: 'Numéro et rue, BP ou lot',
+    aide: 'Livraison à domicile uniquement.',
+    large: true,
+  },
+  { champ: 'codePostal', label: 'Code postal', autoComplete: 'postal-code', placeholder: '98714', inputMode: 'numeric' },
+  { champ: 'ville', label: 'Ville', autoComplete: 'address-level2', placeholder: 'Ville ou commune' },
+  { champ: 'indications', label: 'Indications', autoComplete: 'off', placeholder: 'Facultatif : portail, étage, repère…', large: true },
+]
+
 function PanierPage() {
   const { utilisateur, chargement: sessionEnCours } = useAuth()
   const { lignes, nombreArticles, changerQuantite, retirer, vider } = usePanier()
@@ -49,13 +83,27 @@ function PanierPage() {
   const [cadeau, setCadeau] = useState(false)
   const [occasion, setOccasion] = useState('')
   const [emballage, setEmballage] = useState(false)
-  const [adresse, setAdresse] = useState('')
+  const [livraison, setLivraison] = useState<DetailsLivraison>(LIVRAISON_VIDE)
+  const [nomModifie, setNomModifie] = useState(false)
   const [devis, setDevis] = useState<{ cle: string; valeur: Devis } | null>(null)
   const [erreurDevis, setErreurDevis] = useState<{ cle: string; message: string } | null>(null)
   const [essaiDevis, setEssaiDevis] = useState(0)
   const [envoi, setEnvoi] = useState<PaiementDemo | null>(null)
   const [refus, setRefus] = useState<{ message: string; lignes: LigneCommande[] } | null>(null)
-  const [erreurAdresse, setErreurAdresse] = useState('')
+  const [erreursLivraison, setErreursLivraison] = useState<Partial<Record<ChampLivraison, string>>>({})
+
+  const details: DetailsLivraison = {
+    ...livraison,
+    nom: nomModifie ? livraison.nom : (utilisateur?.nom ?? ''),
+  }
+
+  function changerLivraison(champ: ChampLivraison, valeur: string) {
+    if (champ === 'nom') {
+      setNomModifie(true)
+    }
+    setLivraison((actuelle) => ({ ...actuelle, [champ]: valeur }))
+    setErreursLivraison(({ [champ]: _corrige, ...autres }) => autres)
+  }
 
   const manquants = lignes
     .map((ligne) => ligne.produitId)
@@ -141,12 +189,18 @@ function PanierPage() {
 
   async function payer(paiementDemo: PaiementDemo) {
     setRefus(null)
-    setErreurAdresse('')
+    const erreurs = verifierLivraison(details)
+    setErreursLivraison(erreurs)
+    const premier = ORDRE_LIVRAISON.find((champ) => erreurs[champ])
+    if (premier) {
+      document.getElementById(`livraison-${premier}`)?.focus()
+      return
+    }
     setEnvoi(paiementDemo)
     try {
       const vente = await passerCommande({
         ...panier,
-        adresseLivraison: adresse.trim(),
+        adresseLivraison: composerAdresse(details),
         paiementDemo,
       })
       vider()
@@ -161,7 +215,7 @@ function PanierPage() {
         setRefus({ message: STOCK_CHANGE, lignes: [] })
         setEssaiDevis((actuel) => actuel + 1)
       } else if (champs.adresseLivraison) {
-        setErreurAdresse(champs.adresseLivraison)
+        setErreursLivraison({ adresse: champs.adresseLivraison })
       } else if (paiementRefuse(raison)) {
         setRefus({ message: PAIEMENT_REFUSE, lignes: [] })
       } else {
@@ -326,20 +380,24 @@ function PanierPage() {
 
             <h2 className="titre-bloc titre-livraison">Livraison</h2>
             <div className="adresse">
-              <Champ
-                large
-                label="Adresse de livraison"
-                name="adresse"
-                autoComplete="street-address"
-                placeholder="Numéro, rue, code postal et ville"
-                aide="Livraison à domicile uniquement."
-                value={adresse}
-                error={erreurAdresse}
-                onChange={(evenement) => {
-                  setAdresse(evenement.target.value)
-                  setErreurAdresse('')
-                }}
-              />
+              {CHAMPS_LIVRAISON.map((description) => (
+                <Champ
+                  key={description.champ}
+                  id={`livraison-${description.champ}`}
+                  name={description.champ}
+                  label={description.label}
+                  large={description.large}
+                  type={description.type}
+                  inputMode={description.inputMode}
+                  autoComplete={description.autoComplete}
+                  placeholder={description.placeholder}
+                  aide={description.aide}
+                  maxLength={LONGUEURS_LIVRAISON[description.champ]}
+                  value={details[description.champ]}
+                  error={erreursLivraison[description.champ]}
+                  onChange={(evenement) => changerLivraison(description.champ, evenement.target.value)}
+                />
+              ))}
             </div>
           </form>
         </div>

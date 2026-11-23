@@ -5,6 +5,7 @@ import type { EtatRetours, IssueRetour, Retour } from '../../types/retour'
 import type { Vente } from '../../types/vente'
 import { codeErreur, erreursDesChamps, messageErreur, messageErreurRetour } from '../../utils/erreurs'
 import { formatDateHeure, formatJourTahiti, formatXPF } from '../../utils/format'
+import { adresseSurUneLigne } from '../../utils/livraison'
 import Button from '../common/Button.tsx'
 import ErrorMessage from '../common/ErrorMessage.tsx'
 import Input from '../common/Input.tsx'
@@ -466,7 +467,7 @@ function RetoursVente({ vente, produits, onChangement }: RetoursVenteProps) {
                   </div>
                   <p className="ventes-aide">
                     Le nouvel article part chez {vente.client.nom}, à l’adresse de la commande
-                    ({vente.adresseLivraison || 'adresse non renseignée'}), avec la livraison offerte.
+                    ({adresseSurUneLigne(vente.adresseLivraison) || 'adresse non renseignée'}), avec la livraison offerte.
                     La différence de prix est calculée à l’enregistrement.
                   </p>
                 </>
