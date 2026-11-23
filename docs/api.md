@@ -302,7 +302,7 @@ Tous les montants sont calculés par le back, en XPF entiers ; le front affiche 
 | `lignes` | De 1 à 100 lignes ; `produitId` obligatoire, `quantite` entier ≥ 1. Deux lignes du même produit sont regroupées (999 au plus par produit) |
 | `occasionCadeau` | Facultatif : `noel`, `anniversaire` ou `fete` ; une vente avec occasion est un cadeau (délai de retour allongé, RG09) |
 | `emballageCadeau` | Booléen, `false` par défaut ; ajoute les frais d'emballage des paramètres |
-| `adresseLivraison` | 300 caractères au plus. La librairie vend uniquement en ligne : toute commande est livrée, l'adresse est exigée à la confirmation et les frais de livraison sont toujours comptés |
+| `adresseLivraison` | 300 caractères au plus. La librairie vend uniquement en ligne : toute commande est livrée, l'adresse est exigée à la confirmation et les frais de livraison sont toujours comptés. Le panier y écrit les coordonnées du destinataire, une par ligne : nom, téléphone, adresse, code postal et ville, indications |
 | `paiementDemo` | Exigé à la confirmation (`POST /api/commandes`), ignoré par le devis : `accepte` ou `refuse`, résultat du paiement fictif choisi dans le front (voir [Paiement de démonstration](#paiement-de-démonstration)) |
 
 ### Calcul

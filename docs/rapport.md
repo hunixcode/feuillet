@@ -125,7 +125,7 @@ Hors périmètre : emprunt de livres (consigne de l'enseignant), paiement réel,
 | **RG10** | Un produit est à recommander quand son stock vendable est ≤ seuil d'alerte (%) × quantité achetée à l'origine. Quantité achetée à l'origine = total reçu lors de la dernière commande fournisseur reçue (à défaut, le stock initial) |
 | **RG11** | Prix appliqué = arrondi(prix TTC × (100 − remise) / 100), remise de la promotion active à la date de vente (au plus une par produit et par date). TVA incluse : montant de TVA = arrondi(prix appliqué × taux / (100 + taux)). Arrondi à l'unité la plus proche |
 | **RG12** | Issue d'un retour : **remboursement** (prix figé × quantité) ; **échange** si le plastique de protection est intact (l'article revient en stock, un autre est vendu, la différence est réglée ou remboursée) ; **remplacement** si l'article est défectueux (il passe en stock défectueux, un exemplaire neuf identique sort du stock ; sans exemplaire disponible → remboursement). Un article revendable retourné revient en stock physique, éventuellement remis sous cellophane |
-| **RG13** | Options de vente : emballage cadeau et livraison ont chacun des frais fixes (paramètres). La livraison exige une adresse. Les frais s'ajoutent au total et ne sont pas remboursés lors d'un retour |
+| **RG13** | Options de vente : emballage cadeau et livraison ont chacun des frais fixes (paramètres). La livraison exige les coordonnées du destinataire : nom, téléphone, adresse, code postal et ville (indications facultatives). Les frais s'ajoutent au total et ne sont pas remboursés lors d'un retour |
 | **RG14** | Meilleures ventes : les 10 produits les plus vendus (quantités nettes des retours) sur les 30 derniers jours, tous clients confondus ; la même liste pour tous, connecté ou non |
 | **RG15** | La création d'un produit puis chaque changement de prix catalogue ajoutent une entrée datée à l'historique des prix (au moins une entrée par produit) ; cet historique n'est jamais modifié |
 
@@ -185,7 +185,7 @@ Source **Prof** : réponse de l'enseignant (notes dans `questions-prof.md`). Sou
 | 21 | Semaine du lundi 00:00 au dimanche 23:59 (heure de Tahiti) ; période libre possible | Équipe |
 | 22 | Ventes, retours, net, stock restant, pourcentage vendu de la quantité achetée, statistiques globales, aucune par employé | Prof |
 | — | Frais d'emballage cadeau et de livraison : montants fixes paramétrables | Équipe |
-| | Toute commande est livrée (pas de retrait sur place) : adresse obligatoire, frais de livraison toujours comptés. Les retours et échanges arrivent par colis | Équipe |
+| | Toute commande est livrée (pas de retrait sur place) : coordonnées de livraison obligatoires (nom, téléphone, adresse, code postal, ville), frais de livraison toujours comptés. Les retours et échanges arrivent par colis | Équipe |
 | — | Pas d'emprunt de livres | Prof |
 | — | Pas de type de client : les meilleures ventes sont les mêmes pour tous (RG14). Écart assumé à la demande de l'enseignant (meilleures ventes selon le type du client) | Équipe |
 
