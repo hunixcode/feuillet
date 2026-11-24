@@ -569,3 +569,13 @@ Fait :
 
 Fait :
 - `docs/rapport.md` (règle RG13 et décision « pas de retrait sur place »), `docs/ecrans.md` (écran Panier) et `docs/api.md` (champ `adresseLivraison`) parlent maintenant des coordonnées demandées depuis #98 : nom, téléphone, adresse, code postal, ville et indications facultatives
+
+23/11/2026 - Docs : README, licence et fichiers de configuration
+
+Fait :
+- README réordonné pour quelqu'un qui découvre le dépôt : présentation du projet, démarrage avec Docker puis sans Docker (Node 22, MongoDB en replica set, `.env`, seed), connexion après le seed, tests, déploiement, limites connues, contribution
+- Retrait de la date de rendu, des branches personnelles qui n'existent plus et de la mention de Render
+- `backend/.env.example` : variables obligatoires séparées des facultatives, exemple d'adresse MongoDB locale, longueur minimale de `JWT_SECRET`
+- `frontend/README.md` mis à jour : style Feuillet en Albert Sans, branche commune `dev-front` retirée, types de l'API
+- `docs/architecture.md` : la commande de génération des diagrammes (le script cité n'existait pas) est remplacée par PlantUML et l'image Docker
+- Fichier `LICENSE` (ISC, comme le `package.json` du backend)
