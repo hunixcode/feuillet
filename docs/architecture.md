@@ -8,13 +8,17 @@
 | Classes | [`diagrammes/2_Classes_librairie.svg`](./diagrammes/2_Classes_librairie.svg) |
 | Séquence — réception fournisseur | [`diagrammes/Sequence_reception_fournisseur.svg`](./diagrammes/Sequence_reception_fournisseur.svg) |
 
-Les diagrammes sont au format SVG (vectoriel : nets à tout zoom, légers, lisibles directement sur GitHub et dans un navigateur). Ils sont générés avec [PlantUML](https://plantuml.com) à partir des sources de `diagrammes/src/` (style commun dans `style.iuml`). Pour modifier un diagramme, éditer le `.puml` puis lancer :
+Les diagrammes sont au format SVG (vectoriel : nets à tout zoom, légers, lisibles directement sur GitHub et dans un navigateur). Ils sont générés avec [PlantUML](https://plantuml.com) à partir des sources de `diagrammes/src/` (style commun dans `style.iuml`). Pour modifier un diagramme, éditer le `.puml` puis régénérer le SVG avec PlantUML (Java et Graphviz sont nécessaires), depuis le dossier `docs/diagrammes/src` :
 
 ```
-docs/diagrammes/generer.sh chemin/vers/plantuml.jar
+java -jar chemin/vers/plantuml.jar -tsvg -o .. *.puml
 ```
 
-(`plantuml.jar` se télécharge sur plantuml.com ou Maven Central ; Java et Graphviz sont nécessaires.)
+`plantuml.jar` se télécharge sur plantuml.com ou Maven Central. Sans Graphviz, l'image Docker `plantuml/plantuml` fait la même chose, depuis la racine du dépôt :
+
+```
+docker run --rm -v "$PWD/docs/diagrammes:/data" -w /data/src plantuml/plantuml -tsvg -o /data *.puml
+```
 
 Le diagramme de séquence suit les noms de services de `rapport.md` (`ReapproService`, `DemandeService`) et l'écran 11 de `ecrans.md`.
 

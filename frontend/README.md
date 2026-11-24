@@ -1,4 +1,4 @@
-# Frontend — Gestionnaire de stock de librairie
+# Frontend : gestionnaire de stock de librairie
 
 React + Vite + TypeScript, routes avec react-router-dom, tests avec Vitest et Testing Library.
 
@@ -34,7 +34,7 @@ Le proxy Vite redirige `/api/...` vers le backend sur le port 3000 (à changer d
 - services/api.ts : client HTTP commun (`get`, `post`, `put`, `delete`), préfixe `/api`, JSON et token `localStorage`
 - services/ : services d'accès aux données ; les pages et composants ne font pas d'appel réseau directement
 - contexts/ : l'état partagé entre les pages (utilisateur connecté, panier)
-- types/ : propositions de contrats TypeScript pour l'API, à valider avec le backend
+- types/ : les types TypeScript des contrats de l'API, qui suivent `docs/api.md`
 - utils/format.ts : formatage des prix entiers en XPF et des dates en français
 
 Le contrat de l'API (routes, champs, codes d'erreur) est dans `docs/api.md` : les services et les types du front le suivent. Ne pas supposer le comportement d'une route qui n'y est pas encore décrite. Les réponses réseau ne sont pas validées à l'exécution contre les types TypeScript.
@@ -51,7 +51,7 @@ Pour l'espace responsable : ajouter la page dans le bloc /admin de router.tsx (e
 
 ## Style
 
-Le style suit la maquette V2 : noir, blanc et laiton, polices Geist (texte) et Archivo étroite (gros chiffres). Les couleurs, les arrondis et la marge sont des variables au début de src/index.css (--encre, --gris, --ligne, --laiton, --laiton-fonce, --manque, --marge...), avec les mêmes noms que dans la maquette : on peut reprendre le CSS d'une page de la maquette presque tel quel. On utilise ces variables plutôt que d'écrire des couleurs en dur, comme ça le thème reste le même partout.
+Le style suit la maquette Feuillet : noir, blanc et sable, police Albert Sans. Les couleurs, la police, les arrondis et la marge sont des variables CSS au début de src/index.css et de src/styles/feuillet.css (--encre, --gris, --laiton, --laiton-fonce, --marge...). L'espace client utilise `src/styles/feuillet.css` ; l'espace responsable utilise `src/styles/feuillet-admin.css`, dont les règles sont limitées à `.espace-responsable`. On utilise ces variables plutôt que d'écrire des couleurs en dur, comme ça le thème reste le même partout.
 
 ## Règles de l'équipe
 
@@ -60,7 +60,7 @@ Le style suit la maquette V2 : noir, blanc et laiton, polices Geist (texte) et A
 - Prix en XPF, nombres entiers, TTC ; prix remisé et TVA calculés par le backend (RG11)
 - Les écrans suivent `docs/ecrans.md`
 - Pas de commentaires dans le code
-- Branche commune `dev-front` pour les deux fronts (`git pull` avant de travailler et avant de pousser) ; quand les deux fronts sont d'accord, une PR `dev-front` → `main` relue par le chef de projet
+- Une branche par tâche, fusionnée par une pull request relue par un autre membre (voir le README à la racine)
 - Les fichiers partagés (router.tsx, types/, services/api.ts, layouts/) se modifient par petite PR
 
 Les fichiers `*.test.ts` et `*.test.tsx` sont exécutés par Vitest en environnement jsdom. Les pages reliées à l'API sont testées avec un `fetch` simulé : `npm test` ne demande pas de lancer le backend.

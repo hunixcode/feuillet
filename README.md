@@ -1,8 +1,12 @@
 <div align="center"><h1>Gestionnaire de stock de librairie</h1>
 
-<p>Application web de gestion de stock de librairie (catalogue, ventes, retours,
-réapprovisionnement), Projet de Génie Logiciel, à rendre <b>fin novembre</b>.</p>
+<p>Feuillet : application web de gestion de stock pour une librairie qui vend uniquement en ligne
+(catalogue, ventes, retours, réapprovisionnement). Projet de Génie Logiciel, L3.</p>
 </div>
+
+Deux espaces dans une seule application : les clients cherchent, commandent et suivent leurs commandes ;
+le responsable de stock gère le catalogue, le stock, les fournisseurs et les rapports.
+Front React, API REST Node.js et Express, base MongoDB, le tout en TypeScript.
 
 ## Équipe
 | Nom |
@@ -14,7 +18,7 @@ réapprovisionnement), Projet de Génie Logiciel, à rendre <b>fin novembre</b>.
 ## Fonctionnalités
 - Catalogue (création, modification, archivage, recherche, filtres par type et catégorie), prix TTC avec TVA, promotions et courbe d'évolution des prix
 - Accueil avec meilleures ventes et catégories de livres
-- Panier et validation de vente — tout ou rien, disponibilités revérifiées ; options cadeau, emballage et livraison
+- Panier et validation de vente (tout ou rien), disponibilités revérifiées ; options cadeau, emballage et livraison
 - Mouvements de stock, corrections d'inventaire et stock défectueux
 - Disponibilité client : stock vendable, arrivages prévus, mises de côté et leurs échéances
 - Demandes de livres indisponibles (même hors catalogue) + notifications de réapprovisionnement
@@ -25,6 +29,51 @@ réapprovisionnement), Projet de Génie Logiciel, à rendre <b>fin novembre</b>.
 - Comptes client et responsable ; deux espaces dans l'application
 
 Le détail (exigences EX01–EX11, règles RG01–RG15, décisions de cadrage issues des réponses de l'enseignant) est dans [`docs/rapport.md`](docs/rapport.md).
+
+## Démarrer avec Docker
+
+La façon la plus simple : seul Docker est nécessaire, MongoDB tourne dans un conteneur, en replica set à un nœud.
+
+```sh
+cp backend/.env.example backend/.env   # puis remplir JWT_SECRET, RESPONSABLE_EMAIL, RESPONSABLE_MOT_DE_PASSE
+docker compose up --build              # MongoDB, API (rechargée à chaque modification de backend/src), front Vite
+docker compose run --rm backend npm run seed   # une fois : compte responsable, catégories, produits de démonstration
+```
+
+- Front : http://localhost:5173 (le proxy `/api` de Vite pointe vers le conteneur `backend`) ; API : http://localhost:3000 ; MongoDB : `localhost:27017`.
+- Se connecter : le responsable avec `RESPONSABLE_EMAIL` et `RESPONSABLE_MOT_DE_PASSE` de `backend/.env` (page `/connexion`, il arrive sur `/admin`) ; un client s'inscrit lui-même depuis la même page.
+- Ports déjà pris : `PORT_FRONT`, `PORT_API`, `PORT_MONGO`, par exemple `PORT_API=3001 docker compose up`.
+- `MONGODB_URI` de `backend/.env` est remplacée par la base du conteneur ; aucun secret n'est écrit dans les fichiers Docker.
+- `docker compose down` arrête tout ; `docker compose down -v` efface aussi la base. Relancer `npm run seed` remet les données de démonstration.
+
+Image de production (API + front compilé, utilisateur non root, `HEALTHCHECK` sur `/api/health`) :
+
+```sh
+docker build -f backend/Dockerfile -t librairie .
+docker run -p 3000:3000 -e MONGODB_URI=… -e JWT_SECRET=… librairie
+```
+
+## Démarrer sans Docker
+
+Il faut Node.js 22 et une base MongoDB en replica set (par exemple un cluster Atlas gratuit, ou `mongod --replSet rs0` en local puis `rs.initiate()`), parce que les transactions n'existent pas sur une instance seule.
+
+```sh
+cp backend/.env.example backend/.env   # MONGODB_URI, JWT_SECRET (32 caractères au moins), compte responsable
+cd backend
+npm i
+npm run seed                           # une fois : compte responsable, catégories, produits de démonstration
+npm run dev                            # API sur http://localhost:3000
+```
+
+Dans un second terminal :
+
+```sh
+cd frontend
+npm i
+npm run dev                            # front sur http://localhost:5173, le proxy Vite envoie /api vers le port 3000
+```
+
+Les tests unitaires et d'API (`npm test` dans `backend/` et dans `frontend/`) n'ont besoin ni de MongoDB ni du backend lancé : ils utilisent une base en mémoire et un `fetch` simulé.
 
 ## Captures d'écran
 
@@ -116,33 +165,17 @@ Prises sur la démo Docker avec les données du seed. Toutes les images sont dan
 </p>
 
 ## Stack
-- Front : React + Vite + TypeScript
-- Back : Node.js + Express + TypeScript, API REST décrite dans [`docs/api.md`](docs/api.md)
-- Base de données : MongoDB
-- Tests : Vitest, et Playwright pour les parcours de bout en bout
-- CI : GitHub Actions
+- Front : React 19, Vite, React Router, TypeScript
+- Back : Node.js 22, Express 5, TypeScript, API REST décrite dans [`docs/api.md`](docs/api.md)
+- Base de données : MongoDB 7 en replica set (les ventes et les réceptions utilisent des transactions)
+- Tests : Vitest et Testing Library, supertest pour l'API, Playwright pour les parcours de bout en bout
+- CI : GitHub Actions ; Docker et Docker Compose pour la démo
 
-## Lancer le projet
+## Tests
 
-Pour lancer le backend
+`npm test` dans `backend/` et dans `frontend/` lance les tests unitaires, d'API et de persistance ; `npm run lint` (front) et `npm run typecheck` (back) vérifient le code.
 
-```sh
-cd backend
-npm i
-
-npm run dev
-```
-
-Pour lancer le frontend
-
-```sh
-cd frontend
-npm i
-
-npm run dev
-```
-
-## Tests de bout en bout
+### Tests de bout en bout
 
 Les tests du dossier `e2e/` font de vrais parcours dans Chromium sur l'application lancée comme en production : une base MongoDB temporaire en replica set (mongodb-memory-server), le seed, puis l'API qui sert le front compilé sur http://localhost:4173. La base est neuve à chaque lancement et `backend/.env` n'est pas lu : la base partagée n'est jamais touchée.
 
@@ -160,33 +193,11 @@ npx playwright test                      # ou --ui pour suivre les tests pas à 
 
 Le port se change avec `E2E_PORT`. Le workflow `E2E` les lance sur chaque PR qui touche `backend/`, `frontend/` ou `e2e/` ; s'ils échouent, les captures et les traces sont dans l'artefact `playwright-captures-et-traces` (`npx playwright show-trace trace.zip`).
 
-## Lancer avec Docker
-
-Seul Docker est nécessaire : MongoDB tourne dans un conteneur, en replica set à un nœud (les ventes et les réceptions utilisent des transactions).
-
-```sh
-cp backend/.env.example backend/.env   # puis remplir JWT_SECRET, RESPONSABLE_EMAIL, RESPONSABLE_MOT_DE_PASSE
-docker compose up --build              # MongoDB, API (rechargée à chaque modification de backend/src), front Vite
-docker compose run --rm backend npm run seed   # une fois : compte responsable, catégories, produits de démonstration
-```
-
-- Front : http://localhost:5173 (le proxy `/api` de Vite pointe vers le conteneur `backend`) ; API : http://localhost:3000 ; MongoDB : `localhost:27017`.
-- Ports déjà pris : `PORT_FRONT`, `PORT_API`, `PORT_MONGO`, par exemple `PORT_API=3001 docker compose up`.
-- `MONGODB_URI` de `backend/.env` est remplacée par la base du conteneur ; aucun secret n'est écrit dans les fichiers Docker.
-- `docker compose down` arrête tout ; `docker compose down -v` efface aussi la base.
-
-Image de production (API + front compilé, utilisateur non root, `HEALTHCHECK` sur `/api/health`) :
-
-```sh
-docker build -f backend/Dockerfile -t librairie .
-docker run -p 3000:3000 -e MONGODB_URI=… -e JWT_SECRET=… librairie
-```
-
 ## Déployer
 
 En production, l'API sert aussi le front compilé : une seule application, une seule origine, pas de CORS.
 
-1. Variables d'environnement (voir `backend/.env.example`) : `NODE_ENV=production`, `MONGODB_URI` (MongoDB en replica set, pour les transactions), `JWT_SECRET` (32 caractères au moins), `PORT` (souvent fourni par l'hébergeur). `DOSSIER_FRONT` est facultatif (par défaut `frontend/dist`). Derrière le proxy d'un hébergeur comme Render, `TRUST_PROXY=1`, sinon les limites de requêtes comptent tous les clients comme une seule IP ; `CORS_ORIGINES` reste vide tant que le front est servi par l'API. Le seed demande aussi `RESPONSABLE_EMAIL` et `RESPONSABLE_MOT_DE_PASSE`.
+1. Variables d'environnement (voir `backend/.env.example`) : `NODE_ENV=production`, `MONGODB_URI` (MongoDB en replica set, pour les transactions), `JWT_SECRET` (32 caractères au moins), `PORT` (souvent fourni par l'hébergeur). `DOSSIER_FRONT` est facultatif (par défaut `frontend/dist`). Derrière le proxy d'un hébergeur, `TRUST_PROXY=1`, sinon les limites de requêtes comptent tous les clients comme une seule IP ; `CORS_ORIGINES` reste vide tant que le front est servi par l'API. Le seed demande aussi `RESPONSABLE_EMAIL` et `RESPONSABLE_MOT_DE_PASSE`.
 2. Construire, depuis la racine du dépôt :
 
    ```sh
@@ -199,8 +210,24 @@ En production, l'API sert aussi le front compilé : une seule application, une s
 
 Au démarrage, toutes les variables sont vérifiées et chaque problème est signalé ; les index MongoDB sont créés. Chaque requête écrit une ligne dans le journal (méthode, chemin sans paramètres, statut, durée, identifiant), jamais le corps ni les en-têtes. Les en-têtes de sécurité (CSP, HSTS en production) et les limites de requêtes sont détaillés dans [`docs/api.md`](docs/api.md). Une erreur 500 renvoie seulement un identifiant (`Référence : …`, aussi dans l'en-tête `X-Request-Id`) qui permet de retrouver la trace dans le journal. Sur `SIGTERM`, le serveur n'accepte plus de requêtes, termine celles en cours (10 s au plus) puis ferme la connexion MongoDB.
 
+## Limites connues
+
+Choix faits pour un projet de classe, détaillés dans [`docs/rapport.md`](docs/rapport.md) :
+
+- Pas d'hébergement : la démo tourne en local avec Docker.
+- Le paiement est simulé, aucune donnée de carte n'est reçue.
+- Le token JWT (8 h) est gardé dans `localStorage` plutôt que dans un cookie `httpOnly`, limité par une CSP stricte.
+- Les limites de requêtes comptent en mémoire : elles valent pour une seule instance du serveur.
+- Les listes (ventes, demandes, commandes fournisseur, mouvements) renvoient les 500 éléments les plus récents, sans pagination.
+- Les écritures d'un produit relisent puis remplacent le document entier : à deux modifications simultanées, la dernière gagne.
+- Un échange de retour fait deux transactions ; si la seconde échoue, la commande d'échange reste et le retour est à refaire.
+- Les meilleures ventes sont les mêmes pour tous les clients, faute de types de clients.
+- Pas d'e-mail : les clients sont prévenus dans l'application.
+
+Les comptes rendus de développement (`docs/backlog.md`) et les échanges avec l'enseignant (`docs/questions-prof.md`) sont conservés comme traces du projet.
+
 ## Documentation
-- [`docs/rapport.md`](docs/rapport.md) : choix techniques, spécification, décisions de cadrage, traçabilité — **fait foi en cas de désaccord**
+- [`docs/rapport.md`](docs/rapport.md) : choix techniques, spécification, décisions de cadrage, traçabilité : **fait foi en cas de désaccord**
 - [`docs/ecrans.md`](docs/ecrans.md) : description des écrans client et responsable
 - [`docs/architecture.md`](docs/architecture.md) : diagrammes UML et modèle de données de référence
 - [`docs/api.md`](docs/api.md) : contrat de l'API REST (format d'erreur, authentification)
@@ -208,13 +235,16 @@ Au démarrage, toutes les variables sont vérifiées et chaque problème est sig
 - [`docs/backlog.md`](docs/backlog.md) : journal d'avancement
 - [`frontend/README.md`](frontend/README.md) : fiche du frontend (organisation, règles)
 
-## Conventions Git
+## Contribuer
+
+### Conventions Git
 - Commits atomiques : une seule intention, fonctionnalité opérationnelle
 - Messages explicites : `feat(produit): ...`, `fix(stock): ...`, `docs: ...` (voir conventional commits)
-- Branches personnelles (`hau`, `hiva`, `noah`) ou par tâche (`feature/...`, ex. `feature/front-connexion`), fusion via pull request relue par un autre membre
+- Une branche par tâche (`feature/...`, `fix/...`, `docs/...`), fusion via pull request relue par un autre membre
 - `main` toujours exécutable : les tests passent à chaque fusion
+- Une issue GitHub par tâche, assignée et avec un label : [issues](https://github.com/hunixcode/Groupe-5-Genie-Log-DM/issues)
 
-## Sécurité des dépendances
+### Sécurité des dépendances
 La CI lance `npm audit --omit=dev --audit-level=high` dans `backend/` et `frontend/` : elle échoue si une dépendance de production a une vulnérabilité haute ou critique, même sur une PR qui n'y touche pas. Dependabot ouvre chaque lundi des PR de mise à jour (labels `devops` et `backend` ou `frontend`).
 
 Quand la CI signale une vulnérabilité :
@@ -225,6 +255,6 @@ Quand la CI signale une vulnérabilité :
 
 Une PR Dependabot se relit comme les autres : la CI doit passer, et une mise à jour majeure se teste à la main avant la fusion.
 
-## Répartition des tâches
-Un issue GitHub par tâche, assigné et avec label.
-[Issues](https://github.com/hunixcode/Groupe-5-Genie-Log-DM/issues)
+## Licence
+
+[ISC](LICENSE)
