@@ -579,3 +579,10 @@ Fait :
 - `frontend/README.md` mis à jour : style Feuillet en Albert Sans, branche commune `dev-front` retirée, types de l'API
 - `docs/architecture.md` : la commande de génération des diagrammes (le script cité n'existait pas) est remplacée par PlantUML et l'image Docker
 - Fichier `LICENSE` (ISC, comme le `package.json` du backend)
+
+24/11/2026 - Rapport : architecture, sécurité, interface et limites
+
+Fait :
+- `docs/rapport.md` : trois sections ajoutées aux choix techniques (architecture du back-end en couches, sécurité, interface Feuillet) et une section « Limites connues » ; le rapport couvre maintenant ce que présente la soutenance
+- Passages périmés corrigés : Vitest côté back (déjà en place), replica set fourni aussi par Docker Compose, titre sans tiret long
+- `docs/architecture.md` : la liste des routes « pour l'instant » renvoie au contrat complet de `docs/api.md`
