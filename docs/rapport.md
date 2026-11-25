@@ -60,9 +60,9 @@ Pas de mise en ligne : c'est un projet de classe, sans hébergement ni base de p
 
 Une requête traverse quatre couches, dans l'ordre :
 
-1. **Sécurité** : en-têtes (helmet), CORS, limite de taille du corps, limites de requêtes (voir « Sécurité » plus bas).
-2. **Routes** : routeurs Express. Elles lisent la requête, vérifient le token JWT et le rôle (`authentifier`, `exigerRole`), appellent un service et renvoient du JSON. Elles ne contiennent aucune règle métier.
-3. **Services** : les règles métier (RG01 à RG15), dans dix services (`AuthService`, `CategorieService`, `DemandeService`, `ParametresService`, `ProduitService`, `RapportService`, `ReapproService`, `RetourService`, `StockService`, `VenteService`). Une règle violée lève une `ErreurApi` au format commun `{ code, message, details? }`.
+1. **Sécurité** : en-têtes HTTP (helmet), politique CORS, taille maximale du corps, rate limiting (voir « Sécurité » plus bas).
+2. **Routes** : routeurs Express. Elles lisent la requête, vérifient le token JWT et le rôle (`authentifier`, `exigerRole`), appellent un service et renvoient du JSON. Elles ne contiennent aucune logique métier.
+3. **Services** : la logique métier (règles RG01 à RG15), dans dix services (`AuthService`, `CategorieService`, `DemandeService`, `ParametresService`, `ProduitService`, `RapportService`, `ReapproService`, `RetourService`, `StockService`, `VenteService`). Une règle violée lève une `ErreurApi` au format commun `{ code, message, details? }`.
 4. **Repositories** : une interface par domaine, avec deux implémentations : Mongoose en production, en mémoire pour les tests (EQ01). Les services ne connaissent que l'interface.
 
 Les dépendances (repositories, horloge, secret) sont injectées par constructeur et `createApp(dependances)` assemble le tout : les tests unitaires n'ont besoin ni de navigateur ni de base. Les opérations qui écrivent plusieurs documents (validation d'une vente, réception fournisseur) s'exécutent dans une transaction ; le stock n'est réécrit que s'il n'a pas changé entre la lecture et l'écriture, sinon l'opération échoue et rien n'est enregistré (EQ04).
@@ -74,10 +74,10 @@ En production, le même serveur Node.js sert l'API et le front compilé : une se
 | Sujet | Mesure |
 |---|---|
 | Mots de passe | Hachés avec bcrypt, jamais stockés ni journalisés en clair ; 8 caractères au moins, 72 octets au plus |
-| Session | Token JWT de 8 h (voir « Session » plus haut) ; le rôle (client ou responsable) est vérifié sur chaque route protégée ; même réponse que l'e-mail existe ou non à la connexion |
-| Navigateur | Content Security Policy stricte (`script-src 'self'`, aucun script inline ni externe), `X-Frame-Options: DENY`, `frame-ancestors 'none'`, `Referrer-Policy: no-referrer`, `nosniff`, HSTS d'un an en production seulement |
-| CORS | Aucun en-tête par défaut (même origine) ; `CORS_ORIGINES` liste les origines autorisées si le front est servi ailleurs |
-| Limites de requêtes | 10 connexions échouées par 15 minutes (par IP et e-mail), 5 inscriptions par heure (par IP), 120 lectures publiques par minute (par IP) ; au-delà, `429 TROP_DE_REQUETES` avec `Retry-After` |
+| Authentification | Token JWT de 8 h (voir « Session » plus haut) ; le rôle (client ou responsable) est vérifié sur chaque route protégée ; réponse identique que l'e-mail existe ou non à la connexion |
+| En-têtes de sécurité | Content Security Policy stricte (`script-src 'self'`, aucun script inline ni externe), `X-Frame-Options: DENY`, `frame-ancestors 'none'`, `Referrer-Policy: no-referrer`, `nosniff`, HSTS d'un an en production seulement |
+| Politique CORS | Aucun en-tête par défaut (même origine) ; `CORS_ORIGINES` liste les origines autorisées si le front est servi ailleurs |
+| Rate limiting | 10 connexions échouées par 15 minutes (par IP et e-mail), 5 inscriptions par heure (par IP), 120 lectures publiques par minute (par IP) ; au-delà, `429 TROP_DE_REQUETES` avec `Retry-After` |
 | Corps des requêtes | 100 ko au plus (`413 CORPS_TROP_VOLUMINEUX`) |
 | Erreurs | Format commun ; une erreur 500 ne renvoie ni trace ni message d'origine, seulement une référence (aussi dans `X-Request-Id`) qui retrouve la ligne du journal |
 | Paiement | Simulé : aucune donnée de carte n'est reçue ni gardée |
@@ -268,7 +268,7 @@ Choix faits pour un projet de classe ; ils sont assumés et chacun a sa piste d'
 | Pas d'hébergement | Démo en local avec Docker ; il suffirait d'une vraie `MONGODB_URI` et d'un hébergeur |
 | Paiement simulé | Le sujet n'en demande pas ; un prestataire en mode test demanderait un compte et des clés secrètes |
 | Token JWT dans `localStorage` | Limité par la CSP ; un cookie `httpOnly` demanderait de changer l'authentification et de se protéger du CSRF (#51) |
-| Limites de requêtes en mémoire | Valables pour une seule instance du serveur ; à partager (Redis ou la base) avec plusieurs instances |
+| Rate limiting en mémoire | Valable pour une seule instance du serveur ; compteurs à partager (Redis ou la base) avec plusieurs instances |
 | Listes plafonnées à 500 éléments | Ventes, demandes, commandes fournisseur et mouvements renvoient les 500 plus récents, sans pagination |
 | Écritures d'un produit | Le produit est relu puis remplacé en entier : à deux modifications simultanées, la dernière gagne (un seul responsable) |
 | Échange lors d'un retour | La commande d'échange et le retour sont deux transactions ; si le retour échoue ensuite, la commande d'échange reste et le retour est à refaire |
