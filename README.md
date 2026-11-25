@@ -1,8 +1,29 @@
-<div align="center"><h1>Gestionnaire de stock de librairie</h1>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo/feuillet-sombre.png">
+    <img src="docs/logo/feuillet-clair.png" alt="Feuillet" width="460">
+  </picture>
+</p>
 
-<p>Feuillet : application web de gestion de stock pour une librairie qui vend uniquement en ligne
-(catalogue, ventes, retours, réapprovisionnement). Projet de Génie Logiciel, L3.</p>
-</div>
+<p align="center"><b>Gestionnaire de stock d'une librairie en ligne</b><br>
+Catalogue, ventes, retours et réapprovisionnement. Projet de Génie Logiciel, L3.</p>
+
+<p align="center">
+  <a href="https://github.com/hunixcode/Groupe-5-Genie-Log-DM/actions/workflows/backend.yml"><img src="https://img.shields.io/github/actions/workflow/status/hunixcode/Groupe-5-Genie-Log-DM/backend.yml?branch=main&label=backend&style=flat-square&labelColor=141413&logoColor=white&logo=githubactions" alt="CI backend"></a>
+  <a href="https://github.com/hunixcode/Groupe-5-Genie-Log-DM/actions/workflows/frontend.yml"><img src="https://img.shields.io/github/actions/workflow/status/hunixcode/Groupe-5-Genie-Log-DM/frontend.yml?branch=main&label=frontend&style=flat-square&labelColor=141413&logoColor=white&logo=githubactions" alt="CI frontend"></a>
+  <a href="https://github.com/hunixcode/Groupe-5-Genie-Log-DM/actions/workflows/e2e.yml"><img src="https://img.shields.io/github/actions/workflow/status/hunixcode/Groupe-5-Genie-Log-DM/e2e.yml?branch=main&label=e2e&style=flat-square&labelColor=141413&logoColor=white&logo=githubactions" alt="CI e2e"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/hunixcode/Groupe-5-Genie-Log-DM?style=flat-square&labelColor=141413&logoColor=white&color=5c4a35" alt="Licence ISC"></a>
+  <br>
+  <img src="https://img.shields.io/badge/TypeScript-7-5c4a35?style=flat-square&labelColor=141413&logoColor=white&logo=typescript" alt="TypeScript 7">
+  <img src="https://img.shields.io/badge/React-19-5c4a35?style=flat-square&labelColor=141413&logoColor=white&logo=react" alt="React 19">
+  <img src="https://img.shields.io/badge/Vite-8-5c4a35?style=flat-square&labelColor=141413&logoColor=white&logo=vite" alt="Vite 8">
+  <img src="https://img.shields.io/badge/Node.js-22-5c4a35?style=flat-square&labelColor=141413&logoColor=white&logo=nodedotjs" alt="Node.js 22">
+  <img src="https://img.shields.io/badge/Express-5-5c4a35?style=flat-square&labelColor=141413&logoColor=white&logo=express" alt="Express 5">
+  <img src="https://img.shields.io/badge/MongoDB-7-5c4a35?style=flat-square&labelColor=141413&logoColor=white&logo=mongodb" alt="MongoDB 7">
+  <img src="https://img.shields.io/badge/Vitest-5-5c4a35?style=flat-square&labelColor=141413&logoColor=white&logo=vitest" alt="Vitest 5">
+  <img src="https://img.shields.io/badge/Playwright-1.65-5c4a35?style=flat-square&labelColor=141413&logoColor=white" alt="Playwright 1.65">
+  <img src="https://img.shields.io/badge/Docker-Compose-5c4a35?style=flat-square&labelColor=141413&logoColor=white&logo=docker" alt="Docker Compose">
+</p>
 
 Deux espaces dans une seule application : les clients cherchent, commandent et suivent leurs commandes ;
 le responsable de stock gère le catalogue, le stock, les fournisseurs et les rapports.
