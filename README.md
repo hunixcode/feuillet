@@ -8,20 +8,20 @@
 Catalogue, ventes, retours et réapprovisionnement. Projet de Génie Logiciel, L3.</p>
 
 <p align="center">
-  <a href="https://github.com/hunixcode/feuillet/actions/workflows/backend.yml"><img src="https://img.shields.io/github/actions/workflow/status/hunixcode/feuillet/backend.yml?branch=main&label=backend&style=flat-square&labelColor=141413&logoColor=white&logo=githubactions" alt="CI backend"></a>
-  <a href="https://github.com/hunixcode/feuillet/actions/workflows/frontend.yml"><img src="https://img.shields.io/github/actions/workflow/status/hunixcode/feuillet/frontend.yml?branch=main&label=frontend&style=flat-square&labelColor=141413&logoColor=white&logo=githubactions" alt="CI frontend"></a>
-  <a href="https://github.com/hunixcode/feuillet/actions/workflows/e2e.yml"><img src="https://img.shields.io/github/actions/workflow/status/hunixcode/feuillet/e2e.yml?branch=main&label=e2e&style=flat-square&labelColor=141413&logoColor=white&logo=githubactions" alt="CI e2e"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/hunixcode/feuillet?style=flat-square&labelColor=141413&logoColor=white&color=5c4a35" alt="Licence ISC"></a>
+  <a href="https://github.com/hunixcode/feuillet/actions/workflows/backend.yml"><img src="https://img.shields.io/github/actions/workflow/status/hunixcode/feuillet/backend.yml?branch=main&label=backend&style=flat-square&labelColor=000000&logoColor=white&logo=githubactions&color=333333" alt="CI backend"></a>
+  <a href="https://github.com/hunixcode/feuillet/actions/workflows/frontend.yml"><img src="https://img.shields.io/github/actions/workflow/status/hunixcode/feuillet/frontend.yml?branch=main&label=frontend&style=flat-square&labelColor=000000&logoColor=white&logo=githubactions&color=333333" alt="CI frontend"></a>
+  <a href="https://github.com/hunixcode/feuillet/actions/workflows/e2e.yml"><img src="https://img.shields.io/github/actions/workflow/status/hunixcode/feuillet/e2e.yml?branch=main&label=e2e&style=flat-square&labelColor=000000&logoColor=white&logo=githubactions&color=333333" alt="CI e2e"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/hunixcode/feuillet?style=flat-square&labelColor=000000&logoColor=white&color=333333" alt="Licence ISC"></a>
   <br>
-  <img src="https://img.shields.io/badge/TypeScript-7-5c4a35?style=flat-square&labelColor=141413&logoColor=white&logo=typescript" alt="TypeScript 7">
-  <img src="https://img.shields.io/badge/React-19-5c4a35?style=flat-square&labelColor=141413&logoColor=white&logo=react" alt="React 19">
-  <img src="https://img.shields.io/badge/Vite-8-5c4a35?style=flat-square&labelColor=141413&logoColor=white&logo=vite" alt="Vite 8">
-  <img src="https://img.shields.io/badge/Node.js-22-5c4a35?style=flat-square&labelColor=141413&logoColor=white&logo=nodedotjs" alt="Node.js 22">
-  <img src="https://img.shields.io/badge/Express-5-5c4a35?style=flat-square&labelColor=141413&logoColor=white&logo=express" alt="Express 5">
-  <img src="https://img.shields.io/badge/MongoDB-7-5c4a35?style=flat-square&labelColor=141413&logoColor=white&logo=mongodb" alt="MongoDB 7">
-  <img src="https://img.shields.io/badge/Vitest-5-5c4a35?style=flat-square&labelColor=141413&logoColor=white&logo=vitest" alt="Vitest 5">
-  <img src="https://img.shields.io/badge/Playwright-1.65-5c4a35?style=flat-square&labelColor=141413&logoColor=white" alt="Playwright 1.65">
-  <img src="https://img.shields.io/badge/Docker-Compose-5c4a35?style=flat-square&labelColor=141413&logoColor=white&logo=docker" alt="Docker Compose">
+  <img src="https://img.shields.io/badge/TypeScript-7-333333?style=flat-square&labelColor=000000&logoColor=white&logo=typescript" alt="TypeScript 7">
+  <img src="https://img.shields.io/badge/React-19-333333?style=flat-square&labelColor=000000&logoColor=white&logo=react" alt="React 19">
+  <img src="https://img.shields.io/badge/Vite-8-333333?style=flat-square&labelColor=000000&logoColor=white&logo=vite" alt="Vite 8">
+  <img src="https://img.shields.io/badge/Node.js-22-333333?style=flat-square&labelColor=000000&logoColor=white&logo=nodedotjs" alt="Node.js 22">
+  <img src="https://img.shields.io/badge/Express-5-333333?style=flat-square&labelColor=000000&logoColor=white&logo=express" alt="Express 5">
+  <img src="https://img.shields.io/badge/MongoDB-7-333333?style=flat-square&labelColor=000000&logoColor=white&logo=mongodb" alt="MongoDB 7">
+  <img src="https://img.shields.io/badge/Vitest-5-333333?style=flat-square&labelColor=000000&logoColor=white&logo=vitest" alt="Vitest 5">
+  <img src="https://img.shields.io/badge/Playwright-1.65-333333?style=flat-square&labelColor=000000&logoColor=white" alt="Playwright 1.65">
+  <img src="https://img.shields.io/badge/Docker-Compose-333333?style=flat-square&labelColor=000000&logoColor=white&logo=docker" alt="Docker Compose">
 </p>
 
 Deux espaces dans une seule application : les clients cherchent, commandent et suivent leurs commandes ;
