@@ -1,9 +1,8 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/logo/feuillet-sombre.png">
-    <img src="docs/logo/feuillet-clair.png" alt="Feuillet" width="460">
-  </picture>
+  <img src="docs/logo/feuillet-logo.svg" alt="Logo Feuillet" width="140">
 </p>
+
+<h1 align="center">Feuillet</h1>
 
 <p align="center"><b>Gestionnaire de stock d'une librairie en ligne</b><br>
 Catalogue, ventes, retours et réapprovisionnement. Projet de Génie Logiciel, L3.</p>

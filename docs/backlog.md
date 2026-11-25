@@ -590,6 +590,6 @@ Fait :
 24/11/2026 - Logo Feuillet et badges du README
 
 Fait :
-- Logo du dépôt : le nom Feuillet en Literata semi-gras, comme dans l'en-tête de l'application, en version claire et sombre (`docs/logo/`), en tête du README
+- Logo du dépôt : un F majuscule en Albert Sans gras (la police de l'application), blanc sur une carte noire aux coins arrondis (`docs/logo/feuillet-logo.svg`), en tête du README avec le nom Feuillet
 - Badges sous le logo : état des workflows backend, frontend et e2e, licence, et la stack (TypeScript, React, Vite, Node.js, Express, MongoDB, Vitest, Playwright, Docker)
-- Icône d'onglet : le F de Literata, blanc sur carré noir arrondi, à la place de l'icône par défaut de Vite (`frontend/public/favicon.svg`, aussi dans `docs/logo/feuillet-icone.svg`) ; rien d'autre ne change dans l'application
+- Icône d'onglet : la même carte noire au F, à la place de l'icône par défaut de Vite (`frontend/public/favicon.svg`, aussi dans `docs/logo/feuillet-icone.svg`) ; rien d'autre ne change dans l'application
