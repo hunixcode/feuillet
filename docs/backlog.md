@@ -593,3 +593,9 @@ Fait :
 - Logo du dépôt : un F majuscule en Albert Sans gras (la police de l'application), blanc sur une carte noire aux coins arrondis (`docs/logo/feuillet-logo.svg`), en tête du README avec le nom Feuillet
 - Badges sous le logo : état des workflows backend, frontend et e2e, licence, et la stack (TypeScript, React, Vite, Node.js, Express, MongoDB, Vitest, Playwright, Docker)
 - Icône d'onglet : la même carte noire au F, à la place de l'icône par défaut de Vite (`frontend/public/favicon.svg`, aussi dans `docs/logo/feuillet-icone.svg`) ; rien d'autre ne change dans l'application
+
+24/11/2026 - Logo en Times New Roman, badges noir et blanc
+
+Fait :
+- Le F du logo et de l'icône d'onglet passe en Times New Roman, toujours blanc sur la carte noire arrondie : normal pour le logo du README, gras pour l'icône (plus lisible à 16 pixels). Le contour vient directement de la police, sans image intermédiaire
+- Badges du README en noir et blanc : étiquette noire, valeur gris foncé, logos blancs, y compris l'état des workflows
