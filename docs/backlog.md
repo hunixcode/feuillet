@@ -586,3 +586,10 @@ Fait :
 - `docs/rapport.md` : trois sections ajoutées aux choix techniques (architecture du back-end en couches, sécurité, interface Feuillet) et une section « Limites connues » ; le rapport couvre maintenant ce que présente la soutenance
 - Passages périmés corrigés : Vitest côté back (déjà en place), replica set fourni aussi par Docker Compose, titre sans tiret long
 - `docs/architecture.md` : la liste des routes « pour l'instant » renvoie au contrat complet de `docs/api.md`
+
+24/11/2026 - Logo Feuillet et badges du README
+
+Fait :
+- Logo du dépôt : le nom Feuillet en Literata semi-gras, comme dans l'en-tête de l'application, en version claire et sombre (`docs/logo/`), en tête du README
+- Badges sous le logo : état des workflows backend, frontend et e2e, licence, et la stack (TypeScript, React, Vite, Node.js, Express, MongoDB, Vitest, Playwright, Docker)
+- Icône d'onglet : le F de Literata, blanc sur carré noir arrondi, à la place de l'icône par défaut de Vite (`frontend/public/favicon.svg`, aussi dans `docs/logo/feuillet-icone.svg`) ; rien d'autre ne change dans l'application
