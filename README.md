@@ -9,10 +9,10 @@
 Catalogue, ventes, retours et réapprovisionnement. Projet de Génie Logiciel, L3.</p>
 
 <p align="center">
-  <a href="https://github.com/hunixcode/Groupe-5-Genie-Log-DM/actions/workflows/backend.yml"><img src="https://img.shields.io/github/actions/workflow/status/hunixcode/Groupe-5-Genie-Log-DM/backend.yml?branch=main&label=backend&style=flat-square&labelColor=141413&logoColor=white&logo=githubactions" alt="CI backend"></a>
-  <a href="https://github.com/hunixcode/Groupe-5-Genie-Log-DM/actions/workflows/frontend.yml"><img src="https://img.shields.io/github/actions/workflow/status/hunixcode/Groupe-5-Genie-Log-DM/frontend.yml?branch=main&label=frontend&style=flat-square&labelColor=141413&logoColor=white&logo=githubactions" alt="CI frontend"></a>
-  <a href="https://github.com/hunixcode/Groupe-5-Genie-Log-DM/actions/workflows/e2e.yml"><img src="https://img.shields.io/github/actions/workflow/status/hunixcode/Groupe-5-Genie-Log-DM/e2e.yml?branch=main&label=e2e&style=flat-square&labelColor=141413&logoColor=white&logo=githubactions" alt="CI e2e"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/hunixcode/Groupe-5-Genie-Log-DM?style=flat-square&labelColor=141413&logoColor=white&color=5c4a35" alt="Licence ISC"></a>
+  <a href="https://github.com/hunixcode/feuillet/actions/workflows/backend.yml"><img src="https://img.shields.io/github/actions/workflow/status/hunixcode/feuillet/backend.yml?branch=main&label=backend&style=flat-square&labelColor=141413&logoColor=white&logo=githubactions" alt="CI backend"></a>
+  <a href="https://github.com/hunixcode/feuillet/actions/workflows/frontend.yml"><img src="https://img.shields.io/github/actions/workflow/status/hunixcode/feuillet/frontend.yml?branch=main&label=frontend&style=flat-square&labelColor=141413&logoColor=white&logo=githubactions" alt="CI frontend"></a>
+  <a href="https://github.com/hunixcode/feuillet/actions/workflows/e2e.yml"><img src="https://img.shields.io/github/actions/workflow/status/hunixcode/feuillet/e2e.yml?branch=main&label=e2e&style=flat-square&labelColor=141413&logoColor=white&logo=githubactions" alt="CI e2e"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/hunixcode/feuillet?style=flat-square&labelColor=141413&logoColor=white&color=5c4a35" alt="Licence ISC"></a>
   <br>
   <img src="https://img.shields.io/badge/TypeScript-7-5c4a35?style=flat-square&labelColor=141413&logoColor=white&logo=typescript" alt="TypeScript 7">
   <img src="https://img.shields.io/badge/React-19-5c4a35?style=flat-square&labelColor=141413&logoColor=white&logo=react" alt="React 19">
@@ -263,7 +263,7 @@ Les comptes rendus de développement (`docs/backlog.md`) et les échanges avec l
 - Messages explicites : `feat(produit): ...`, `fix(stock): ...`, `docs: ...` (voir conventional commits)
 - Une branche par tâche (`feature/...`, `fix/...`, `docs/...`), fusion via pull request relue par un autre membre
 - `main` toujours exécutable : les tests passent à chaque fusion
-- Une issue GitHub par tâche, assignée et avec un label : [issues](https://github.com/hunixcode/Groupe-5-Genie-Log-DM/issues)
+- Une issue GitHub par tâche, assignée et avec un label : [issues](https://github.com/hunixcode/feuillet/issues)
 
 ### Sécurité des dépendances
 La CI lance `npm audit --omit=dev --audit-level=high` dans `backend/` et `frontend/` : elle échoue si une dépendance de production a une vulnérabilité haute ou critique, même sur une PR qui n'y touche pas. Dependabot ouvre chaque lundi des PR de mise à jour (labels `devops` et `backend` ou `frontend`).
