@@ -605,3 +605,9 @@ Fait :
 Fait :
 - `docs/presentation.pdf` : la diapo de la présentation de la livraison (20 diapos, version du 24/11/2026), dans le dépôt avec le reste de la documentation
 - Lien ajouté dans la section Documentation du README
+
+25/11/2026 - Diapo en PowerPoint
+
+Fait :
+- `docs/presentation.pptx` : la dernière version de la diapo (25/11/2026, 20 diapos), avec les notes d'orateur de chaque diapo. Chaque diapo est une image pleine page : le texte se modifie dans la présentation d'origine, pas dans le PowerPoint
+- Lien ajouté dans la section Documentation du README
