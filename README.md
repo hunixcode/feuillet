@@ -251,6 +251,7 @@ Les comptes rendus de développement (`docs/backlog.md`) et les échanges avec l
 - [`docs/ecrans.md`](docs/ecrans.md) : description des écrans client et responsable
 - [`docs/architecture.md`](docs/architecture.md) : diagrammes UML et modèle de données de référence
 - [`docs/api.md`](docs/api.md) : contrat de l'API REST (format d'erreur, authentification)
+- [`docs/presentation.pdf`](docs/presentation.pdf) : diapo de la présentation de la livraison (20 diapos)
 - [`docs/questions-prof.md`](docs/questions-prof.md) : questions pour l'enseignant et ses réponses
 - [`docs/backlog.md`](docs/backlog.md) : journal d'avancement
 - [`frontend/README.md`](frontend/README.md) : fiche du frontend (organisation, règles)

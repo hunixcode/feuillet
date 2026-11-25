@@ -599,3 +599,9 @@ Fait :
 Fait :
 - Le F du logo et de l'icône d'onglet passe en Times New Roman, toujours blanc sur la carte noire arrondie : normal pour le logo du README, gras pour l'icône (plus lisible à 16 pixels). Le contour vient directement de la police, sans image intermédiaire
 - Badges du README en noir et blanc : étiquette noire, valeur gris foncé, logos blancs, y compris l'état des workflows
+
+25/11/2026 - Diapo de la présentation
+
+Fait :
+- `docs/presentation.pdf` : la diapo de la présentation de la livraison (20 diapos, version du 24/11/2026), dans le dépôt avec le reste de la documentation
+- Lien ajouté dans la section Documentation du README
