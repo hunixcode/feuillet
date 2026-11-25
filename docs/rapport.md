@@ -1,4 +1,4 @@
-# Rapport — Gestion du stock de librairie
+# Rapport : gestion du stock de librairie
 
 Ce document est la **source de vérité** du projet : en cas de désaccord entre deux documents, c'est lui qui fait foi. `ecrans.md` décrit l'interface, `architecture.md` le modèle et les diagrammes.
 
@@ -12,7 +12,7 @@ Typage statique : les règles métier (calculs de stock, invariants) sont vérif
 
 ### Tests — **Vitest**
 
-Conçu pour Vite, configuration partagée avec le front-end, rapide, couverture native. Utilisé côté front (déjà en place) et côté back (à installer avec la première logique métier, avec supertest pour les tests d'API). Alternative écartée : Jest (moins intégré à Vite), Mocha (trop de config).
+Conçu pour Vite, configuration partagée avec le front-end, rapide, couverture native. Utilisé côté front et côté back, avec supertest pour les tests d'API et une base MongoDB en mémoire (mongodb-memory-server) pour les tests de persistance. Alternative écartée : Jest (moins intégré à Vite), Mocha (trop de config).
 
 **Bout en bout : Playwright** (`e2e/`, #56). Trois parcours dans Chromium sur l'application lancée comme en production (API qui sert le front compilé, base MongoDB temporaire en replica set, seed) : achat par un client, expédition et journal du stock par le responsable, article épuisé au moment de payer. Ils vérifient ce que les tests séparés du front et du back ne voient pas : les deux branchés ensemble, avec la vraie CSP et les vraies transactions. Alternative écartée : Cypress, qui demande un outil en plus pour lancer l'application avant les tests (Playwright le fait avec `webServer`).
 
@@ -30,7 +30,7 @@ Composants réutilisables, build instantané, une seule base de code pour les 2 
 
 Flexibilité sur les attributs variables par type de produit, framework d'agrégation pour les rapports hebdo et les stocks à date, seed réinitialisable. Alternative écartée : PostgreSQL (pourtant valable — choix assumé pour découvrir le NoSQL).
 
-La validation d'une vente (RG03) modifie plusieurs documents : elle s'exécute dans une **transaction MongoDB** (replica set requis, fourni par MongoDB Atlas).
+La validation d'une vente (RG03) modifie plusieurs documents : elle s'exécute dans une **transaction MongoDB** (replica set requis : fourni par MongoDB Atlas, et par Docker Compose pour la démonstration).
 
 ### Dates et horloge — **service `Clock` injectable + UTC**
 
@@ -55,6 +55,40 @@ Deux workflows dans `.github/workflows/` (`backend.yml`, `frontend.yml`), lancé
 ### Déploiement : **démo en local avec Docker**
 
 Pas de mise en ligne : c'est un projet de classe, sans hébergement ni base de production. La démonstration se fait en local avec `docker compose` (MongoDB en replica set, API et front), puis `npm run seed` pour les données de démonstration. L'application reste prête à être hébergée : image de production (`backend/Dockerfile`), front servi par l'API, variables vérifiées au démarrage, arrêt propre, en-têtes de sécurité et limites de requêtes ; il suffirait d'une vraie `MONGODB_URI` et d'un hébergeur. Alternative écartée : un environnement de démonstration sur Render avec MongoDB Atlas (#55), qui demande des comptes et des secrets en dehors du dépôt.
+
+### Architecture du back-end : routes, services, repositories
+
+Une requête traverse quatre couches, dans l'ordre :
+
+1. **Sécurité** : en-têtes HTTP (helmet), politique CORS, taille maximale du corps, rate limiting (voir « Sécurité » plus bas).
+2. **Routes** : routeurs Express. Elles lisent la requête, vérifient le token JWT et le rôle (`authentifier`, `exigerRole`), appellent un service et renvoient du JSON. Elles ne contiennent aucune logique métier.
+3. **Services** : la logique métier (règles RG01 à RG15), dans dix services (`AuthService`, `CategorieService`, `DemandeService`, `ParametresService`, `ProduitService`, `RapportService`, `ReapproService`, `RetourService`, `StockService`, `VenteService`). Une règle violée lève une `ErreurApi` au format commun `{ code, message, details? }`.
+4. **Repositories** : une interface par domaine, avec deux implémentations : Mongoose en production, en mémoire pour les tests (EQ01). Les services ne connaissent que l'interface.
+
+Les dépendances (repositories, horloge, secret) sont injectées par constructeur et `createApp(dependances)` assemble le tout : les tests unitaires n'ont besoin ni de navigateur ni de base. Les opérations qui écrivent plusieurs documents (validation d'une vente, réception fournisseur) s'exécutent dans une transaction ; le stock n'est réécrit que s'il n'a pas changé entre la lecture et l'écriture, sinon l'opération échoue et rien n'est enregistré (EQ04).
+
+En production, le même serveur Node.js sert l'API et le front compilé : une seule origine, donc pas de CORS à ouvrir. Chaque requête écrit une ligne dans le journal (méthode, chemin sans paramètres, statut, durée, identifiant, jamais le corps ni les en-têtes). Au démarrage, les variables d'environnement sont vérifiées et les index MongoDB créés ; sur `SIGTERM`, le serveur termine les requêtes en cours (10 s au plus) puis ferme la connexion. Le détail des dossiers est dans [`architecture.md`](./architecture.md), le contrat des routes dans [`api.md`](./api.md).
+
+### Sécurité
+
+| Sujet | Mesure |
+|---|---|
+| Mots de passe | Hachés avec bcrypt, jamais stockés ni journalisés en clair ; 8 caractères au moins, 72 octets au plus |
+| Authentification | Token JWT de 8 h (voir « Session » plus haut) ; le rôle (client ou responsable) est vérifié sur chaque route protégée ; réponse identique que l'e-mail existe ou non à la connexion |
+| En-têtes de sécurité | Content Security Policy stricte (`script-src 'self'`, aucun script inline ni externe), `X-Frame-Options: DENY`, `frame-ancestors 'none'`, `Referrer-Policy: no-referrer`, `nosniff`, HSTS d'un an en production seulement |
+| Politique CORS | Aucun en-tête par défaut (même origine) ; `CORS_ORIGINES` liste les origines autorisées si le front est servi ailleurs |
+| Rate limiting | 10 connexions échouées par 15 minutes (par IP et e-mail), 5 inscriptions par heure (par IP), 120 lectures publiques par minute (par IP) ; au-delà, `429 TROP_DE_REQUETES` avec `Retry-After` |
+| Corps des requêtes | 100 ko au plus (`413 CORPS_TROP_VOLUMINEUX`) |
+| Erreurs | Format commun ; une erreur 500 ne renvoie ni trace ni message d'origine, seulement une référence (aussi dans `X-Request-Id`) qui retrouve la ligne du journal |
+| Paiement | Simulé : aucune donnée de carte n'est reçue ni gardée |
+| Dépendances | `npm audit` bloquant en CI (vulnérabilité haute d'une dépendance de production), Dependabot chaque lundi |
+| Conteneur | Image de production avec utilisateur non root et contrôle de santé sur `/api/health` |
+
+Les valeurs exactes et les codes d'erreur sont dans [`api.md`](./api.md) (sections « Erreurs », « Sécurité HTTP » et « Limites de requêtes »).
+
+### Interface : maquette Feuillet
+
+Les deux espaces suivent la maquette Feuillet validée en équipe : police Albert Sans, palette noir, blanc et sable, styles dans `frontend/src/styles/feuillet.css` (espace client) et `feuillet-admin.css` (espace responsable, limité à `.espace-responsable`). Les couvertures viennent d'Open Library à partir de l'ISBN, avec une icône quand il n'y en a pas. L'interface s'adapte au téléphone. L'espace responsable propose une apparence claire, sombre ou celle du système, et une recherche rapide (Ctrl K) vers les pages, articles, commandes, demandes et fournisseurs. Les composants portent des rôles et des libellés clairs, que les tests réutilisent pour les trouver.
 
 ---
 
@@ -224,6 +258,22 @@ Le détail de chaque écran est dans [`ecrans.md`](./ecrans.md). Les pages du re
 | EX09 | `AuthService` | — |
 | EX10 | `RapportService` | — |
 | EX11 | `ProduitService` | Classes (`HistoriquePrix`) |
+
+## 5. Limites connues
+
+Choix faits pour un projet de classe ; ils sont assumés et chacun a sa piste d'évolution.
+
+| Limite | Pourquoi, et ce qu'il faudrait pour aller plus loin |
+|---|---|
+| Pas d'hébergement | Démo en local avec Docker ; il suffirait d'une vraie `MONGODB_URI` et d'un hébergeur |
+| Paiement simulé | Le sujet n'en demande pas ; un prestataire en mode test demanderait un compte et des clés secrètes |
+| Token JWT dans `localStorage` | Limité par la CSP ; un cookie `httpOnly` demanderait de changer l'authentification et de se protéger du CSRF (#51) |
+| Rate limiting en mémoire | Valable pour une seule instance du serveur ; compteurs à partager (Redis ou la base) avec plusieurs instances |
+| Listes plafonnées à 500 éléments | Ventes, demandes, commandes fournisseur et mouvements renvoient les 500 plus récents, sans pagination |
+| Écritures d'un produit | Le produit est relu puis remplacé en entier : à deux modifications simultanées, la dernière gagne (un seul responsable) |
+| Échange lors d'un retour | La commande d'échange et le retour sont deux transactions ; si le retour échoue ensuite, la commande d'échange reste et le retour est à refaire |
+| Meilleures ventes identiques pour tous | Pas de type de client (écart assumé à la demande de l'enseignant, RG14) |
+| Pas d'e-mail ni de SMS | Les clients sont prévenus dans l'application (collection `notifications`) |
 
 ---
 
